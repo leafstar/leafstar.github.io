@@ -1,4 +1,6 @@
 ---
 layout:page
-title:"Blog"
+title:""
 ---
+
+I am a postgraduate student at the University of Edinburgh.
