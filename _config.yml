@@ -17,7 +17,7 @@ minimal: false             # use a dark header
 
 navigation:                # accepts {file, title, url, icon, sidebaricon}
   - {url: "https://leafstar.github.io/MuxingWang.pdf", title: "CV"}
-  - {url: "https://github.com/leafstar/OutcomeBasketball/blob/main/MyThesis.pdf", title: "MSc Thesis"}
+  - {url: "https://leafstar.github.io/MyThesis.pdf", title: "MSc Thesis"}
 
 external:                  # shows a footer with social links - for available icons see fontawesome.com/icons
   - {title: Mail, icon: envelope, url: "mailto:s2201749@ed.ac.uk"}
