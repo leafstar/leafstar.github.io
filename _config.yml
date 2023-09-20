@@ -1,6 +1,6 @@
 title: "Muxing Wang"
 author: "Muxing Wang"
-description: "University of Edinburgh"
+description: "NEU"
 permalink: /:title/
 lang: "en"
 excerpt_separator: "\n\n\n"
@@ -20,7 +20,7 @@ navigation:                # accepts {file, title, url, icon, sidebaricon}
   - {url: "https://leafstar.github.io/MyThesis.pdf", title: "MSc Thesis"}
 
 external:                  # shows a footer with social links - for available icons see fontawesome.com/icons
-  - {title: Mail, icon: envelope, url: "mailto:s2201749@ed.ac.uk"}
+  - {title: Mail, icon: envelope, url: "mailto:wang.muxin@northeastern.edu"}
   - {title: Github, icon: github, url: "https://github.com/leafstar"}
 
 comments:
