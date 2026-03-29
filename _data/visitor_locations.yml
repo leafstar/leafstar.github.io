@@ -6,6 +6,8 @@
   period: 2023 - Present
   x: 303
   y: 132
+  label_x: 334
+  label_y: 126
 
 - city: Waterloo
   country: Canada
@@ -15,6 +17,8 @@
   period: 2015 - 2020
   x: 276
   y: 129
+  label_x: 286
+  label_y: 118
 
 - city: Edinburgh
   country: UK
@@ -24,3 +28,5 @@
   period: 2021 - 2022
   x: 491
   y: 95
+  label_x: 501
+  label_y: 86

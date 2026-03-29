@@ -4,7 +4,6 @@
       <h2>News</h2>
       <p>Short updates, milestones, and announcements.</p>
     </div>
-    <a href="{{ '/blog/' | relative_url }}" class="section-link">All posts</a>
   </div>
 
   <div class="news-grid">
@@ -27,7 +26,6 @@
       <h2>Education Journey</h2>
       <p>A map of the places that shaped my academic path.</p>
     </div>
-    <p class="map-note">Locations are loaded from <code>_data/visitor_locations.yml</code>.</p>
   </div>
 
   {% assign country_total = site.data.visitor_locations | map: "country" | uniq | size %}
@@ -75,7 +73,7 @@
         {% for location in site.data.visitor_locations %}
           <circle cx="{{ location.x }}" cy="{{ location.y }}" r="11" class="visitor-pin-pulse"></circle>
           <circle cx="{{ location.x }}" cy="{{ location.y }}" r="4.5" class="visitor-pin-dot" filter="url(#glow)"></circle>
-          <text x="{{ location.x | plus: 10 }}" y="{{ location.y | minus: 10 }}" class="visitor-pin-label">
+          <text x="{{ location.label_x | default: location.x | plus: 10 }}" y="{{ location.label_y | default: location.y | minus: 10 }}" class="visitor-pin-label">
             {{ location.label }}, {{ location.city }}
           </text>
         {% endfor %}
