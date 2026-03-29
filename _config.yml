@@ -18,11 +18,11 @@ minimal: false             # use a dark header
 navigation:                # accepts {file, title, url, icon, sidebaricon}
   - {url: "/blog/", title: "Blog"}
   - {url: "https://leafstar.github.io/MuxingWang.pdf", title: "CV"}
-  - {url: "https://leafstar.github.io/myblog", title: "Blogs"}
 
 external:                  # shows a footer with social links - for available icons see fontawesome.com/icons
   - {title: Mail, icon: envelope, url: "mailto:wang.muxin@northeastern.edu"}
   - {title: Github, icon: github, url: "https://github.com/leafstar"}
+  - {title: Google Scholar, icon: graduation-cap, url: "https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en"}
 
 comments:
 #  disqus_shortname: ""    # see https://disqus.com/
@@ -30,7 +30,3 @@ comments:
 
 plugins:
  - jekyll-feed
-
-visitor_map:
-#  read_url: "https://your-worker-domain/visitors"
-#  submit_url: "https://your-worker-domain/visitors"

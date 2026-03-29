@@ -7,78 +7,12 @@
   }
 
   function uniqueLocations(locations) {
-    const grouped = new Map();
-
-    locations.forEach((location) => {
-      const key = [
-        location.city || "",
-        location.region || "",
-        location.country || "",
-        location.lat,
-        location.lon
-      ].join("|");
-
-      if (!grouped.has(key)) {
-        grouped.set(key, {
-          city: location.city || "",
-          region: location.region || "",
-          country: location.country || "",
-          lat: location.lat,
-          lon: location.lon,
-          count: Number(location.count || location.visit_count || 1)
-        });
-        return;
-      }
-
-      const current = grouped.get(key);
-      current.count += Number(location.count || location.visit_count || 1);
-    });
-
-    return Array.from(grouped.values());
+    return locations.filter((location) => typeof location.lat === "number" && typeof location.lon === "number");
   }
 
   function describeLocation(location) {
-    return [location.city, location.region, location.country].filter(Boolean).join(", ");
-  }
-
-  async function loadLocations(shell) {
-    const embedded = JSON.parse(shell.dataset.locations || "[]");
-    const readUrl = shell.dataset.readUrl;
-
-    if (!readUrl) return embedded;
-
-    try {
-      const response = await fetch(readUrl, { headers: { Accept: "application/json" } });
-      if (!response.ok) throw new Error("Failed to load remote visitor data");
-      const remoteLocations = await response.json();
-      return Array.isArray(remoteLocations) ? remoteLocations : embedded;
-    } catch (error) {
-      console.warn("Falling back to local visitor locations.", error);
-      return embedded;
-    }
-  }
-
-  async function submitVisitor(shell) {
-    const submitUrl = shell.dataset.submitUrl;
-    if (!submitUrl || sessionStorage.getItem("visitor-map-submitted")) return;
-
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const language = navigator.language;
-
-    try {
-      await fetch(submitUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          timezone: timezone,
-          language: language,
-          visitedAt: new Date().toISOString()
-        })
-      });
-      sessionStorage.setItem("visitor-map-submitted", "true");
-    } catch (error) {
-      console.warn("Visitor location submission skipped.", error);
-    }
+    const place = [location.label, location.city, location.country].filter(Boolean).join(", ");
+    return location.period ? place + " (" + location.period + ")" : place;
   }
 
   function renderPins(shell, locations) {
@@ -91,8 +25,6 @@
     locationList.innerHTML = "";
 
     uniqueLocations(locations).forEach((location) => {
-      if (typeof location.lat !== "number" || typeof location.lon !== "number") return;
-
       const point = projectPoint(location.lat, location.lon, width, height);
       const marker = document.createElementNS("http://www.w3.org/2000/svg", "g");
       const pulse = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -123,15 +55,14 @@
       pinLayer.appendChild(marker);
 
       const item = document.createElement("li");
-      item.textContent = location.count > 1 ? title + " (" + location.count + " visits)" : title;
+      item.textContent = title;
       locationList.appendChild(item);
     });
   }
 
-  async function boot(shell) {
-    const locations = await loadLocations(shell);
-    renderPins(shell, locations);
-    submitVisitor(shell);
+  function boot(shell) {
+    const locations = JSON.parse(shell.dataset.locations || "[]");
+    renderPins(shell, uniqueLocations(locations));
   }
 
   document.addEventListener("DOMContentLoaded", function () {

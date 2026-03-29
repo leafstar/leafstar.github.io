@@ -24,33 +24,28 @@
 <section class="home-section visitor-section">
   <div class="section-heading">
     <div>
-      <h2>Visitors Around the World</h2>
-      <p>A live-ready map for showing where site visitors come from.</p>
+      <h2>Education Journey</h2>
+      <p>A map of the places that shaped my academic path.</p>
     </div>
-    <p class="map-note">If no backend is configured, markers fall back to <code>_data/visitor_locations.yml</code>.</p>
+    <p class="map-note">Locations are loaded from <code>_data/visitor_locations.yml</code>.</p>
   </div>
 
   {% assign country_total = site.data.visitor_locations | map: "country" | uniq | size %}
   {% assign city_total = site.data.visitor_locations | size %}
 
-  <div
-    class="visitor-map-shell"
-    data-visitor-map
-    data-locations='{{ site.data.visitor_locations | jsonify | escape }}'
-    data-read-url='{{ site.visitor_map.read_url | default: "" | escape }}'
-    data-submit-url='{{ site.visitor_map.submit_url | default: "" | escape }}'>
+  <div class="visitor-map-shell" data-visitor-map data-locations='{{ site.data.visitor_locations | jsonify | escape }}'>
     <div class="visitor-map-stats">
       <div>
         <strong>{{ city_total }}</strong>
-        <span>seed locations shown</span>
+        <span>academic locations</span>
       </div>
       <div>
         <strong>{{ country_total }}</strong>
-        <span>seed countries represented</span>
+        <span>countries represented</span>
       </div>
     </div>
 
-    <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing visitor locations">
+    <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing education history locations">
       <defs>
         <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
@@ -81,7 +76,7 @@
 
     <ul class="visitor-list" data-location-list>
       {% for location in site.data.visitor_locations %}
-        <li>{{ location.city }}, {{ location.country }}</li>
+        <li>{{ location.label }}, {{ location.city }}{% if location.period %} ({{ location.period }}){% endif %}</li>
       {% endfor %}
     </ul>
   </div>
