@@ -4,6 +4,8 @@
   lon: -71.0589
   label: Northeastern University
   period: 2023 - Present
+  x: 303
+  y: 132
 
 - city: Waterloo
   country: Canada
@@ -11,6 +13,8 @@
   lon: -80.5204
   label: University of Waterloo
   period: 2015 - 2020
+  x: 276
+  y: 129
 
 - city: Edinburgh
   country: UK
@@ -18,3 +22,5 @@
   lon: -3.1883
   label: University of Edinburgh
   period: 2021 - 2022
+  x: 491
+  y: 95
