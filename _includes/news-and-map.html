@@ -1,0 +1,90 @@
+<section class="home-section">
+  <div class="section-heading">
+    <div>
+      <h2>News</h2>
+      <p>Short updates, milestones, and announcements.</p>
+    </div>
+    <a href="{{ '/blog/' | relative_url }}" class="section-link">All posts</a>
+  </div>
+
+  <div class="news-grid">
+    {% for item in site.data.news limit: 3 %}
+      <article class="news-card">
+        <p class="news-date">{{ item.date | date: site.date_format }}</p>
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.summary }}</p>
+        {% if item.link %}
+          <a href="{{ item.link | relative_url }}">{{ item.link_text | default: "Read more" }}</a>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="home-section visitor-section">
+  <div class="section-heading">
+    <div>
+      <h2>Visitors Around the World</h2>
+      <p>A live-ready map for showing where site visitors come from.</p>
+    </div>
+    <p class="map-note">If no backend is configured, markers fall back to <code>_data/visitor_locations.yml</code>.</p>
+  </div>
+
+  {% assign country_total = site.data.visitor_locations | map: "country" | uniq | size %}
+  {% assign city_total = site.data.visitor_locations | size %}
+
+  <div
+    class="visitor-map-shell"
+    data-visitor-map
+    data-locations='{{ site.data.visitor_locations | jsonify | escape }}'
+    data-read-url='{{ site.visitor_map.read_url | default: "" | escape }}'
+    data-submit-url='{{ site.visitor_map.submit_url | default: "" | escape }}'>
+    <div class="visitor-map-stats">
+      <div>
+        <strong>{{ city_total }}</strong>
+        <span>seed locations shown</span>
+      </div>
+      <div>
+        <strong>{{ country_total }}</strong>
+        <span>seed countries represented</span>
+      </div>
+    </div>
+
+    <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing visitor locations">
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
+          <feMerge>
+            <feMergeNode in="coloredBlur"></feMergeNode>
+            <feMergeNode in="SourceGraphic"></feMergeNode>
+          </feMerge>
+        </filter>
+      </defs>
+      <rect x="0" y="0" width="1000" height="500" rx="26" class="visitor-map-ocean"></rect>
+      <g class="visitor-map-land">
+        <path d="M105 122 138 94 212 86 253 102 275 132 264 160 236 175 212 196 177 215 165 251 148 286 119 275 110 242 86 223 74 184 88 147Z"></path>
+        <path d="M250 270 275 281 292 314 309 363 300 416 281 454 253 441 235 403 221 357 225 319Z"></path>
+        <path d="M430 118 460 103 503 106 517 127 497 145 468 143 446 134Z"></path>
+        <path d="M454 155 494 168 523 198 534 245 517 303 488 347 457 321 448 277 420 237 423 188Z"></path>
+        <path d="M520 104 579 87 663 95 736 126 786 158 804 197 786 221 736 214 690 227 670 256 642 257 625 223 587 197 541 183 516 155Z"></path>
+        <path d="M760 318 804 329 840 358 848 387 821 406 772 393 749 362Z"></path>
+        <path d="M834 240 862 228 894 237 915 259 904 277 874 281 844 268Z"></path>
+      </g>
+      <g class="visitor-map-grid">
+        <path d="M0 250H1000"></path>
+        <path d="M250 0V500"></path>
+        <path d="M500 0V500"></path>
+        <path d="M750 0V500"></path>
+      </g>
+      <g class="visitor-map-pins" data-pin-layer></g>
+    </svg>
+
+    <ul class="visitor-list" data-location-list>
+      {% for location in site.data.visitor_locations %}
+        <li>{{ location.city }}, {{ location.country }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<script src="{{ '/assets/js/visitor-map.js' | relative_url }}" defer></script>

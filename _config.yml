@@ -16,6 +16,7 @@ minimal: false             # use a dark header
 # Menu
 
 navigation:                # accepts {file, title, url, icon, sidebaricon}
+  - {url: "/blog/", title: "Blog"}
   - {url: "https://leafstar.github.io/MuxingWang.pdf", title: "CV"}
   - {url: "https://leafstar.github.io/MyThesis.pdf", title: "MSc Thesis"}
 
@@ -29,3 +30,7 @@ comments:
 
 plugins:
  - jekyll-feed
+
+visitor_map:
+#  read_url: "https://your-worker-domain/visitors"
+#  submit_url: "https://your-worker-domain/visitors"

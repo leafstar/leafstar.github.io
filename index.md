@@ -22,4 +22,6 @@ Before joining this group, I completed my Bachelor's degree in CS at the Univers
 ### 2015 - 2020
 **Bachelor's in Computer Science**
 - University of Waterloo
+
+{% include news-and-map.html %}
  

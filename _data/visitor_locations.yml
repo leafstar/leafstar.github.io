@@ -1,0 +1,24 @@
+- city: Boston
+  country: USA
+  lat: 42.3601
+  lon: -71.0589
+
+- city: Waterloo
+  country: Canada
+  lat: 43.4643
+  lon: -80.5204
+
+- city: Edinburgh
+  country: UK
+  lat: 55.9533
+  lon: -3.1883
+
+- city: Seoul
+  country: South Korea
+  lat: 37.5665
+  lon: 126.978
+
+- city: Sydney
+  country: Australia
+  lat: -33.8688
+  lon: 151.2093

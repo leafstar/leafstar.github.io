@@ -26,3 +26,147 @@ body > footer
   box-shadow: 0 0 .6em rgba($dark, 0.04) inset
   border-top: 1px solid reduce(14)
   opacity: .9
+
+.home-section
+  margin-top: 3rem
+
+.section-heading
+  display: flex
+  flex-wrap: wrap
+  align-items: end
+  justify-content: space-between
+  gap: 1rem
+  margin-bottom: 1.25rem
+
+.section-heading h2
+  margin: 0
+
+.section-heading p
+  margin: .25rem 0 0
+
+.section-link, .map-note
+  font-size: .95rem
+
+.news-grid
+  display: grid
+  gap: 1rem
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr))
+
+.news-card
+  background: linear-gradient(180deg, rgba(104, 136, 255, 0.09), rgba(104, 136, 255, 0.02))
+  border: 1px solid rgba(104, 136, 255, 0.14)
+  border-radius: 18px
+  padding: 1.1rem 1.2rem
+  box-shadow: 0 12px 30px rgba($dark, 0.06)
+
+.news-card h3
+  margin: 0 0 .55rem
+  font-size: 1.1rem
+
+.news-card p
+  margin: 0 0 .7rem
+
+.news-date
+  color: reduce(75)
+  font-size: .9rem
+  letter-spacing: .02em
+
+.visitor-map-shell
+  background: linear-gradient(160deg, #f6f8ff, #fbfcff 48%, #eef4ff)
+  border: 1px solid rgba(104, 136, 255, 0.14)
+  border-radius: 24px
+  overflow: hidden
+  box-shadow: 0 18px 42px rgba($dark, 0.08)
+
+.visitor-map-stats
+  display: flex
+  flex-wrap: wrap
+  gap: 1.5rem
+  padding: 1.2rem 1.2rem 0
+
+.visitor-map-stats strong
+  display: block
+  font-size: 1.4rem
+
+.visitor-map-stats span
+  color: rgba($dark, 0.7)
+  font-size: .95rem
+
+.visitor-map
+  display: block
+  width: 100%
+  height: auto
+  padding: .8rem
+  box-sizing: border-box
+
+.visitor-map-ocean
+  fill: #08243f
+
+.visitor-map-land path
+  fill: rgba(187, 222, 255, 0.82)
+  stroke: rgba(255, 255, 255, 0.24)
+  stroke-width: 2
+
+.visitor-map-grid path
+  stroke: rgba(255, 255, 255, 0.08)
+  stroke-width: 1
+
+.visitor-pin-pulse
+  fill: rgba(111, 246, 255, 0.18)
+  animation: visitor-pulse 3s ease-out infinite
+
+.visitor-pin-dot
+  fill: #7ff7ff
+  stroke: white
+  stroke-width: 1.5
+
+.visitor-pin-label
+  fill: white
+  font-size: 15px
+  paint-order: stroke
+  stroke: rgba(8, 36, 63, 0.65)
+  stroke-width: 3px
+  stroke-linejoin: round
+
+.visitor-list
+  display: flex
+  flex-wrap: wrap
+  gap: .65rem
+  list-style: none
+  margin: 0
+  padding: 0 1.2rem 1.2rem
+
+.visitor-list li
+  margin: 0
+  padding: .35rem .7rem
+  border-radius: 999px
+  background: rgba(8, 36, 63, 0.08)
+  font-size: .95rem
+
+@keyframes visitor-pulse
+  0%
+    transform: scale(0.7)
+    opacity: 0.75
+  70%
+    transform: scale(1.4)
+    opacity: 0
+  100%
+    transform: scale(1.4)
+    opacity: 0
+
+@media (prefers-color-scheme: dark)
+  .news-card
+    background: linear-gradient(180deg, rgba(104, 136, 255, 0.18), rgba(104, 136, 255, 0.08))
+    border-color: rgba(125, 162, 255, 0.18)
+    box-shadow: 0 12px 30px rgba(black, 0.2)
+
+  .visitor-map-shell
+    background: linear-gradient(160deg, #081524, #0b1e33 48%, #102b45)
+    border-color: rgba(125, 162, 255, 0.18)
+    box-shadow: 0 18px 42px rgba(black, 0.3)
+
+  .visitor-map-stats span
+    color: rgba($light, 0.75)
+
+  .visitor-list li
+    background: rgba($light, 0.1)
