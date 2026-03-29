@@ -1,8 +1,6 @@
-- title: "Website news section is live"
-  date: 2026-03-29
-  summary: "This new block on the homepage lets me post short updates, milestones, and announcements without changing the layout."
-  link: "/blog/"
-  link_text: "Visit the blog"
+- title: "2023.9 I started my PhD"
+  date: 2023-09-01
+  summary: "I started my PhD at Northeastern University."
 
 - title: "Federated RL paper draft in progress"
   date: 2026-03-18
