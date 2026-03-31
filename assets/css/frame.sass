@@ -4,7 +4,7 @@
 @import index, font, basic, layout, classes, homepage
 
 html
-  background: #202129
+  background: #5f6848
   padding: 0
   overflow-x: hidden
 
@@ -17,14 +17,17 @@ body
 
 body > header, body > footer
   position: relative
-  background: linear-gradient(180deg, #2f313a, #24262e)
+  background: linear-gradient(180deg, #5e6949, #697653 58%, #62704e)
   color: $light
   border: 0
-  box-shadow: inset 0 -4px 0 rgba(255, 255, 255, 0.04)
+  box-shadow: inset 0 -4px 0 rgba(43, 53, 31, 0.22), inset 0 4px 0 rgba(173, 190, 133, 0.15)
 
 body > header
-  padding-top: 1.1rem
-  padding-bottom: 1.1rem
+  padding-top: .95rem
+  padding-bottom: .95rem
+  border-bottom: 4px solid rgba(74, 86, 54, 0.9)
+  background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px), radial-gradient(circle at 15% 40%, rgba(110, 122, 81, 0.35), transparent 12%), radial-gradient(circle at 82% 30%, rgba(92, 104, 68, 0.32), transparent 14%)
+  background-size: 24px 24px, 24px 24px, auto, auto
 
 body > article
   margin: 0
@@ -41,7 +44,8 @@ body > header .title
   font-size: clamp(1.4rem, 2.2vw, 2rem)
   letter-spacing: .06em
   text-transform: uppercase
-  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.22)
+  color: #f4ecd4
+  text-shadow: 3px 3px 0 rgba(67, 48, 28, 0.32)
 
 body > header nav, body > footer nav
   margin: 0
@@ -75,6 +79,7 @@ body > footer > div
   font-family: "Courier New", "Lucida Console", monospace
   text-transform: uppercase
   letter-spacing: .08em
+  color: #efe6cd
 
 @media (min-width: 32em)
   body > header, body > article, body > footer
@@ -83,7 +88,7 @@ body > footer > div
 
 @media (prefers-color-scheme: dark)
   html
-    background: #202129
+    background: #5f6848
 
   body > header, body > footer
-    background: linear-gradient(180deg, #2f313a, #24262e)
+    background: linear-gradient(180deg, #5e6949, #697653 58%, #62704e)
