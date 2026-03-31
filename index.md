@@ -5,7 +5,7 @@ title: ""
 
 <section class="hero-panel">
   <div class="hero-copy">
-    <p class="hero-eyebrow">PhD Student at Northeastern University</p>
+    <p class="hero-eyebrow">PhD Candidate at Northeastern University</p>
     <h1>Muxing Wang</h1>
     <p class="hero-lead">
       I work on federated reinforcement learning, with a focus on distributed decision-making,
@@ -17,19 +17,6 @@ title: ""
       and operational research at the University of Edinburgh with
       <a href="https://sites.google.com/site/paulindani/">Prof. Daniel Paulin</a>.
     </p>
-
-    <div class="hero-tags">
-      <span>Federated RL</span>
-      <span>Multi-Agent Learning</span>
-      <span>Optimization</span>
-      <span>Theory</span>
-    </div>
-
-    <div class="hero-actions">
-      <a href="https://leafstar.github.io/MuxingWang.pdf" class="button-primary">Curriculum Vitae</a>
-      <a href="https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en" class="button-secondary">Google Scholar</a>
-      <a href="{{ '/blog/' | relative_url }}" class="button-secondary">Blog</a>
-    </div>
   </div>
 
   <div class="hero-portrait-panel">
