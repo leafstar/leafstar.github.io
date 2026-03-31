@@ -3,25 +3,77 @@ layout: page
 title: ""
 ---
 
-<img src="/assets/images/thumbnail_32FFF408@C7739343.328DC562.jpg" alt="Image description" style="zoom:67%; float: right; margin-left: 20px" />
+<section class="hero-panel">
+  <div class="hero-copy">
+    <p class="hero-eyebrow">PhD Student at Northeastern University</p>
+    <h1>Muxing Wang</h1>
+    <p class="hero-lead">
+      I work on federated reinforcement learning, with a focus on distributed decision-making,
+      learning under communication constraints, and the theory that makes collaborative systems reliable.
+    </p>
+    <p class="hero-support">
+      I am advised by <a href="https://lilisu3.sites.northeastern.edu/">Prof. Lili Su</a>.
+      Before Northeastern, I studied computer science at the University of Waterloo and statistics
+      and operational research at the University of Edinburgh with
+      <a href="https://sites.google.com/site/paulindani/">Prof. Daniel Paulin</a>.
+    </p>
 
-I am a PhD student at Northeastern University working with [Prof. Lili Su](https://lilisu3.sites.northeastern.edu/). Our research direction is Federated Reinforcement Learning.
-Before joining this group, I completed my Bachelor's degree in CS at the University of Waterloo, and my Master's degree in Statistics and Operational Research at the University of Edinburgh working with [Prof. Daniel Paulin](https://sites.google.com/site/paulindani/).
+    <div class="hero-tags">
+      <span>Federated RL</span>
+      <span>Multi-Agent Learning</span>
+      <span>Optimization</span>
+      <span>Theory</span>
+    </div>
 
-## Academic Timeline
+    <div class="hero-actions">
+      <a href="https://leafstar.github.io/MuxingWang.pdf" class="button-primary">Curriculum Vitae</a>
+      <a href="https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en" class="button-secondary">Google Scholar</a>
+      <a href="{{ '/blog/' | relative_url }}" class="button-secondary">Blog</a>
+    </div>
+  </div>
 
-### 2023 - Present
-**PhD Student at Northeastern University**
-- Working with Prof. Lili Su on Federated Reinforcement Learning
+  <div class="hero-portrait-panel">
+    <div class="hero-portrait-frame">
+      <img src="/assets/images/thumbnail_32FFF408@C7739343.328DC562.jpg" alt="Portrait of Muxing Wang" class="hero-portrait" />
+    </div>
+    <div class="hero-fact-card">
+      <p class="hero-fact-label">Current Focus</p>
+      <p class="hero-fact-text">Building principled approaches to federated reinforcement learning.</p>
+    </div>
+  </div>
+</section>
 
-### 2021 - 2022
-**Master's in Statistics and Operational Research**
-- University of Edinburgh
-- Working with Prof. Daniel Paulin
+<section class="home-section story-grid">
+  <article class="story-card story-card-accent">
+    <p class="story-kicker">Research Direction</p>
+    <h2>Learning to cooperate when data and decisions stay distributed.</h2>
+    <p>
+      My current work studies how agents can learn robust policies in federated settings where
+      communication is limited, data is decentralized, and coordination matters.
+    </p>
+  </article>
 
-### 2015 - 2020
-**Bachelor's in Computer Science**
-- University of Waterloo
+  <article class="story-card">
+    <p class="story-kicker">Academic Timeline</p>
+    <div class="timeline-list">
+      <div class="timeline-item">
+        <p class="timeline-period">2023 - Present</p>
+        <h3>PhD Student</h3>
+        <p>Northeastern University, working with Prof. Lili Su on federated reinforcement learning.</p>
+      </div>
+      <div class="timeline-item">
+        <p class="timeline-period">2021 - 2022</p>
+        <h3>MSc in Statistics and Operational Research</h3>
+        <p>University of Edinburgh, working with Prof. Daniel Paulin.</p>
+      </div>
+      <div class="timeline-item">
+        <p class="timeline-period">2015 - 2020</p>
+        <h3>Bachelor's in Computer Science</h3>
+        <p>University of Waterloo.</p>
+      </div>
+    </div>
+  </article>
+</section>
 
 {% include news-and-map.html %}
  

@@ -1,4 +1,4 @@
-<section class="home-section">
+<section class="home-section home-grid">
   <div class="section-heading">
     <div>
       <h2>News</h2>
@@ -18,72 +18,71 @@
       </article>
     {% endfor %}
   </div>
-</section>
-
-<section class="home-section visitor-section">
-  <div class="section-heading">
-    <div>
-      <h2>Education Journey</h2>
-      <p>A map of the places that shaped my academic path.</p>
-    </div>
-  </div>
-
-  {% assign country_total = site.data.visitor_locations | map: "country" | uniq | size %}
-  {% assign city_total = site.data.visitor_locations | size %}
-
-  <div class="visitor-map-shell" data-visitor-map data-locations='{{ site.data.visitor_locations | jsonify | escape }}'>
-    <div class="visitor-map-stats">
+  <section class="home-section visitor-section">
+    <div class="section-heading">
       <div>
-        <strong>{{ city_total }}</strong>
-        <span>academic locations</span>
-      </div>
-      <div>
-        <strong>{{ country_total }}</strong>
-        <span>countries represented</span>
+        <h2>Education Journey</h2>
+        <p>A map of the places that shaped my academic path.</p>
       </div>
     </div>
 
-    <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing education history locations">
-      <defs>
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
-          <feMerge>
-            <feMergeNode in="coloredBlur"></feMergeNode>
-            <feMergeNode in="SourceGraphic"></feMergeNode>
-          </feMerge>
-        </filter>
-      </defs>
-      <rect x="0" y="0" width="1000" height="500" rx="26" fill="#08243f"></rect>
-      <g>
-        <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M105 122 138 94 212 86 253 102 275 132 264 160 236 175 212 196 177 215 165 251 148 286 119 275 110 242 86 223 74 184 88 147Z"></path>
-        <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M250 270 275 281 292 314 309 363 300 416 281 454 253 441 235 403 221 357 225 319Z"></path>
-        <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M430 118 460 103 503 106 517 127 497 145 468 143 446 134Z"></path>
-        <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M454 155 494 168 523 198 534 245 517 303 488 347 457 321 448 277 420 237 423 188Z"></path>
-        <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M520 104 579 87 663 95 736 126 786 158 804 197 786 221 736 214 690 227 670 256 642 257 625 223 587 197 541 183 516 155Z"></path>
-        <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M760 318 804 329 840 358 848 387 821 406 772 393 749 362Z"></path>
-        <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M834 240 862 228 894 237 915 259 904 277 874 281 844 268Z"></path>
-      </g>
-      <g stroke="rgba(255, 255, 255, 0.08)" stroke-width="1">
-        <path d="M0 250H1000"></path>
-        <path d="M250 0V500"></path>
-        <path d="M500 0V500"></path>
-        <path d="M750 0V500"></path>
-      </g>
-      <g class="visitor-map-pins">
+    {% assign country_total = site.data.visitor_locations | map: "country" | uniq | size %}
+    {% assign city_total = site.data.visitor_locations | size %}
+
+    <div class="visitor-map-shell">
+      <div class="visitor-map-stats">
+        <div>
+          <strong>{{ city_total }}</strong>
+          <span>academic locations</span>
+        </div>
+        <div>
+          <strong>{{ country_total }}</strong>
+          <span>countries represented</span>
+        </div>
+      </div>
+
+      <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing education history locations">
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="coloredBlur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+        </defs>
+        <rect x="0" y="0" width="1000" height="500" rx="26" fill="#08243f"></rect>
+        <g>
+          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M105 122 138 94 212 86 253 102 275 132 264 160 236 175 212 196 177 215 165 251 148 286 119 275 110 242 86 223 74 184 88 147Z"></path>
+          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M250 270 275 281 292 314 309 363 300 416 281 454 253 441 235 403 221 357 225 319Z"></path>
+          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M430 118 460 103 503 106 517 127 497 145 468 143 446 134Z"></path>
+          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M454 155 494 168 523 198 534 245 517 303 488 347 457 321 448 277 420 237 423 188Z"></path>
+          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M520 104 579 87 663 95 736 126 786 158 804 197 786 221 736 214 690 227 670 256 642 257 625 223 587 197 541 183 516 155Z"></path>
+          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M760 318 804 329 840 358 848 387 821 406 772 393 749 362Z"></path>
+          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M834 240 862 228 894 237 915 259 904 277 874 281 844 268Z"></path>
+        </g>
+        <g stroke="rgba(255, 255, 255, 0.08)" stroke-width="1">
+          <path d="M0 250H1000"></path>
+          <path d="M250 0V500"></path>
+          <path d="M500 0V500"></path>
+          <path d="M750 0V500"></path>
+        </g>
+        <g class="visitor-map-pins">
+          {% for location in site.data.visitor_locations %}
+            <circle cx="{{ location.x }}" cy="{{ location.y }}" r="11" class="visitor-pin-pulse"></circle>
+            <circle cx="{{ location.x }}" cy="{{ location.y }}" r="4.5" class="visitor-pin-dot" filter="url(#glow)"></circle>
+            <text x="{{ location.label_x | default: location.x | plus: 10 }}" y="{{ location.label_y | default: location.y | minus: 10 }}" class="visitor-pin-label">
+              {{ location.label }}, {{ location.city }}
+            </text>
+          {% endfor %}
+        </g>
+      </svg>
+
+      <ul class="visitor-list">
         {% for location in site.data.visitor_locations %}
-          <circle cx="{{ location.x }}" cy="{{ location.y }}" r="11" class="visitor-pin-pulse"></circle>
-          <circle cx="{{ location.x }}" cy="{{ location.y }}" r="4.5" class="visitor-pin-dot" filter="url(#glow)"></circle>
-          <text x="{{ location.label_x | default: location.x | plus: 10 }}" y="{{ location.label_y | default: location.y | minus: 10 }}" class="visitor-pin-label">
-            {{ location.label }}, {{ location.city }}
-          </text>
+          <li>{{ location.label }}, {{ location.city }}{% if location.period %} ({{ location.period }}){% endif %}</li>
         {% endfor %}
-      </g>
-    </svg>
-
-    <ul class="visitor-list" data-location-list>
-      {% for location in site.data.visitor_locations %}
-        <li>{{ location.label }}, {{ location.city }}{% if location.period %} ({{ location.period }}){% endif %}</li>
-      {% endfor %}
-    </ul>
-  </div>
+      </ul>
+    </div>
+  </section>
 </section>

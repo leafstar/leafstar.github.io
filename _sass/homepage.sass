@@ -1,5 +1,144 @@
+.hero-panel
+  position: relative
+  display: grid
+  grid-template-columns: minmax(0, 1.55fr) minmax(15rem, .95fr)
+  gap: 2rem
+  margin-top: .4rem
+  padding: 2rem
+  border-radius: 30px
+  background: radial-gradient(circle at top left, rgba(213, 86, 55, 0.16), transparent 34%), linear-gradient(145deg, #fff6ef, #fff 42%, #f4f8ff 100%)
+  border: 1px solid rgba(213, 86, 55, 0.16)
+  box-shadow: 0 28px 60px rgba($dark, 0.12)
+  overflow: hidden
+
+.hero-panel::after
+  content: ""
+  position: absolute
+  inset: auto -3rem -5rem auto
+  width: 13rem
+  height: 13rem
+  border-radius: 50%
+  background: radial-gradient(circle, rgba(63, 104, 227, 0.16), transparent 68%)
+
+.hero-copy
+  position: relative
+  z-index: 1
+
+.hero-eyebrow
+  margin: 0 0 .8rem
+  color: #aa452d
+  font-size: .86rem
+  font-weight: 700
+  letter-spacing: .16em
+  text-transform: uppercase
+
+.hero-panel h1
+  margin: 0
+  font-size: clamp(2.4rem, 6vw, 4.5rem)
+  line-height: .94
+
+.hero-lead
+  margin: 1.2rem 0 .9rem
+  max-width: 34rem
+  font-size: 1.18rem
+  line-height: 1.7
+
+.hero-support
+  margin: 0
+  max-width: 36rem
+  color: rgba($dark, 0.78)
+
+.hero-tags
+  display: flex
+  flex-wrap: wrap
+  gap: .7rem
+  margin-top: 1.4rem
+
+.hero-tags span
+  padding: .5rem .85rem
+  border-radius: 999px
+  background: rgba(255, 255, 255, 0.75)
+  border: 1px solid rgba(63, 104, 227, 0.16)
+  font-size: .93rem
+
+.hero-actions
+  display: flex
+  flex-wrap: wrap
+  gap: .9rem
+  margin-top: 1.6rem
+
+.button-primary, .button-secondary
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  min-height: 2.9rem
+  padding: .65rem 1.05rem
+  border-radius: 999px
+  font-weight: 700
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease
+
+.button-primary
+  background: linear-gradient(135deg, #cf593a, #9f3821)
+  color: #fff
+  box-shadow: 0 14px 30px rgba(159, 56, 33, 0.28)
+
+.button-secondary
+  background: rgba(255, 255, 255, 0.82)
+  color: $dark
+  border: 1px solid rgba(63, 104, 227, 0.16)
+
+.button-primary:hover, .button-secondary:hover
+  transform: translateY(-1px)
+  text-decoration: none
+
+.hero-portrait-panel
+  position: relative
+  z-index: 1
+  display: flex
+  flex-direction: column
+  align-items: stretch
+  gap: 1rem
+
+.hero-portrait-frame
+  padding: .8rem
+  border-radius: 24px
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(224, 235, 252, 0.9))
+  box-shadow: inset 0 0 0 1px rgba(63, 104, 227, 0.12)
+
+.hero-portrait
+  display: block
+  width: 100%
+  aspect-ratio: 4 / 5
+  object-fit: cover
+  border-radius: 18px
+
+.hero-fact-card
+  padding: 1rem 1.1rem
+  border-radius: 22px
+  background: rgba(17, 37, 62, 0.92)
+  color: #fff
+  box-shadow: 0 16px 34px rgba(10, 22, 38, 0.2)
+
+.hero-fact-label
+  margin: 0 0 .35rem
+  color: rgba(255, 255, 255, 0.68)
+  font-size: .82rem
+  letter-spacing: .12em
+  text-transform: uppercase
+
+.hero-fact-text
+  margin: 0
+  font-size: 1rem
+  line-height: 1.55
+
 .home-section
   margin-top: 3rem
+
+.home-grid
+  display: grid
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.25fr)
+  gap: 1.5rem
+  align-items: start
 
 .section-heading
   display: flex
@@ -21,13 +160,14 @@
 .news-grid
   display: grid
   gap: 1rem
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr))
 
 .news-card
-  background: linear-gradient(180deg, rgba(104, 136, 255, 0.09), rgba(104, 136, 255, 0.02))
-  border: 1px solid rgba(104, 136, 255, 0.14)
-  border-radius: 18px
-  padding: 1.1rem 1.2rem
+  position: sticky
+  top: 1.25rem
+  background: linear-gradient(180deg, rgba(206, 89, 57, 0.1), rgba(104, 136, 255, 0.04))
+  border: 1px solid rgba(206, 89, 57, 0.14)
+  border-radius: 24px
+  padding: 1.35rem 1.35rem 1.2rem
   box-shadow: 0 12px 30px rgba($dark, 0.06)
 
 .news-card h3
@@ -38,9 +178,63 @@
   margin: 0 0 .7rem
 
 .news-date
-  color: reduce(75)
+  color: #aa452d
   font-size: .9rem
   letter-spacing: .02em
+
+.story-grid
+  display: grid
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr)
+  gap: 1.4rem
+
+.story-card
+  padding: 1.35rem 1.45rem
+  border-radius: 24px
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 247, 252, 0.92))
+  border: 1px solid rgba(72, 91, 138, 0.12)
+  box-shadow: 0 18px 38px rgba($dark, 0.08)
+
+.story-card-accent
+  background: linear-gradient(160deg, #10243c, #163b60 60%, #1f588f)
+  color: #fff
+
+.story-card-accent p
+  color: rgba(255, 255, 255, 0.82)
+
+.story-kicker
+  margin: 0 0 .65rem
+  font-size: .83rem
+  font-weight: 700
+  letter-spacing: .12em
+  text-transform: uppercase
+
+.story-card h2, .story-card h3
+  margin-top: 0
+
+.timeline-list
+  display: grid
+  gap: 1rem
+
+.timeline-item
+  position: relative
+  padding-left: 1rem
+
+.timeline-item::before
+  content: ""
+  position: absolute
+  left: 0
+  top: .45rem
+  width: .45rem
+  height: .45rem
+  border-radius: 50%
+  background: #c75637
+  box-shadow: 0 0 0 .28rem rgba(199, 86, 55, 0.12)
+
+.timeline-period
+  margin: 0 0 .2rem
+  color: #aa452d
+  font-size: .88rem
+  font-weight: 700
 
 .visitor-map-shell
   background: linear-gradient(160deg, #f6f8ff, #fbfcff 48%, #eef4ff)
@@ -127,9 +321,33 @@
 
 @media (prefers-color-scheme: dark)
   .news-card
-    background: linear-gradient(180deg, rgba(104, 136, 255, 0.18), rgba(104, 136, 255, 0.08))
-    border-color: rgba(125, 162, 255, 0.18)
+    background: linear-gradient(180deg, rgba(206, 89, 57, 0.16), rgba(104, 136, 255, 0.08))
+    border-color: rgba(206, 89, 57, 0.2)
     box-shadow: 0 12px 30px rgba(black, 0.2)
+
+  .hero-panel
+    background: radial-gradient(circle at top left, rgba(206, 89, 57, 0.18), transparent 34%), linear-gradient(145deg, #1a222d, #161d26 42%, #0f1720 100%)
+    border-color: rgba(206, 89, 57, 0.14)
+    box-shadow: 0 28px 60px rgba(black, 0.35)
+
+  .hero-eyebrow
+    color: #ffad94
+
+  .hero-support
+    color: rgba($light, 0.76)
+
+  .hero-tags span
+    background: rgba($light, 0.06)
+    border-color: rgba(255, 255, 255, 0.09)
+
+  .button-secondary
+    background: rgba($light, 0.08)
+    color: $light
+    border-color: rgba(255, 255, 255, 0.12)
+
+  .hero-portrait-frame
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(100, 137, 197, 0.18))
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08)
 
   .visitor-map-shell
     background: linear-gradient(160deg, #081524, #0b1e33 48%, #102b45)
@@ -141,3 +359,34 @@
 
   .visitor-list li
     background: rgba($light, 0.1)
+
+  .story-card
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03))
+    border-color: rgba(255, 255, 255, 0.08)
+    box-shadow: 0 18px 38px rgba(black, 0.22)
+
+  .story-card-accent
+    background: linear-gradient(160deg, #18334d, #1f466d 60%, #24588a)
+
+  .timeline-period
+    color: #ffad94
+
+@media (max-width: 62em)
+  .hero-panel, .story-grid, .home-grid
+    grid-template-columns: 1fr
+
+  .news-card
+    position: static
+
+@media (max-width: 42em)
+  .hero-panel
+    padding: 1.35rem
+
+  .hero-actions
+    flex-direction: column
+
+  .button-primary, .button-secondary
+    width: 100%
+
+  .visitor-pin-label
+    font-size: 12px

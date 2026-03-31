@@ -2,6 +2,8 @@
 layout: default
 ---
 <article>
-  <header><h1><a href="{{ page.url | relative_url }}">{{ page.title }}</a></h1></header>
+  {% if page.title and page.title != "" %}
+    <header><h1><a href="{{ page.url | relative_url }}">{{ page.title }}</a></h1></header>
+  {% endif %}
   {{ content }}
 </article>
