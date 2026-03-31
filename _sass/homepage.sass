@@ -1,404 +1,64 @@
-.pixel-stage
+// ─── World stage ────────────────────────────────────────────────────────────
+
+.world-stage
   position: relative
   width: auto
   margin: 0
   padding: 2.2rem clamp(.8rem, 2vw, 1.6rem) 3.2rem
-  border-radius: 0
-  background: linear-gradient(180deg, #6d7656 0%, #758662 18%, #7e8f65 18%, #79885e 64%, #6f7a51 64%, #6a7450 100%)
-  box-shadow: inset 0 0 0 5px #4e5639, inset 0 0 0 10px #8fa06b
   overflow: hidden
   min-height: calc(100vh - 8rem)
+  background-color: #4e5a34
 
 @media (min-width: 32em)
-  .pixel-stage
+  .world-stage
     margin-left: calc(-1 * clamp(1rem, 4vw, 2.6rem))
     margin-right: calc(-1 * clamp(1rem, 4vw, 2.6rem))
 
-.pixel-stage::before
-  content: ""
+.world-canvas
   position: absolute
-  inset: 0
-  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px), radial-gradient(circle at 18% 30%, rgba(94, 105, 66, 0.48), transparent 12%), radial-gradient(circle at 82% 24%, rgba(94, 105, 66, 0.48), transparent 12%), radial-gradient(circle at 50% 84%, rgba(116, 96, 63, 0.28), transparent 20%)
-  background-size: 24px 24px, 24px 24px, auto, auto, auto
-  opacity: .5
-  pointer-events: none
-
-.pixel-stage-lights
-  position: absolute
-  inset: 0
-  background: radial-gradient(circle at 18% 12%, rgba(255, 238, 196, 0.14), transparent 16%), radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.08), transparent 12%), linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%)
-  pointer-events: none
-
-.pixel-asset-layer
-  position: absolute
-  inset: 0
-  z-index: 0
-  pointer-events: none
-  overflow: hidden
-
-.stoneshard-layer
-  position: absolute
-  inset: 0
-  z-index: 1
-  pointer-events: none
-  overflow: hidden
-
-.stoneshard-sprite
-  position: absolute
-  image-rendering: pixelated
-  pointer-events: none
-  user-select: none
-  filter: saturate(.94) brightness(.92)
-
-.stoneshard-preview .asset-shack
-  opacity: .24
-
-.stoneshard-preview .asset-pine-left, .stoneshard-preview .asset-pine-right
-  opacity: .26
-
-.stoneshard-ground
-  left: 49%
-  bottom: 1rem
-  width: clamp(44rem, 58vw, 68rem)
-  transform: translateX(-50%)
-  opacity: .42
-
-.stoneshard-house
-  right: 6%
-  top: 11rem
-  width: clamp(15rem, 18vw, 18.5rem)
-  opacity: .92
-
-.stoneshard-tent
-  right: 18%
-  bottom: 9rem
-  width: clamp(7rem, 9vw, 9rem)
-  opacity: .92
-
-.stoneshard-cart
-  right: 7%
-  bottom: 5rem
-  width: clamp(14rem, 16vw, 18rem)
-  opacity: .92
-
-.stoneshard-firepit
-  right: 22%
-  bottom: 5.2rem
-  width: clamp(4rem, 5.2vw, 5.8rem)
-  opacity: .94
-
-.stoneshard-tree-left
-  left: 1.4rem
-  top: 10rem
-  width: clamp(8rem, 10vw, 10rem)
-  opacity: .86
-
-.stoneshard-tree-right
-  right: 1.4rem
-  top: 12rem
-  width: clamp(8rem, 10vw, 10rem)
-  opacity: .86
-
-.stoneshard-barrels
-  right: 13.6%
-  top: 24rem
-  width: clamp(1.8rem, 2.3vw, 2.4rem)
-  opacity: .96
-
-.stoneshard-trail
-  left: 18%
-  bottom: 8rem
-  width: clamp(10rem, 12vw, 13rem)
-  opacity: .56
-
-.stoneshard-horse-kit
-  right: 16%
-  bottom: 4.8rem
-  width: clamp(2.1rem, 2.6vw, 2.8rem)
-  opacity: .94
-
-.asset-bg, .asset-prop, .asset-animal
-  position: absolute
-  image-rendering: pixelated
-  user-select: none
-  pointer-events: none
-
-.asset-bg
-  opacity: .28
-  filter: saturate(.68) brightness(.82)
-
-.asset-bg-back
-  left: 50%
-  top: 2rem
-  width: 150vw
-  max-width: 2200px
-  transform: translateX(-50%)
-
-.asset-bg-middle
-  left: 50%
-  bottom: -3rem
-  width: 165vw
-  max-width: 2400px
-  transform: translateX(-50%)
-  opacity: .32
-
-.asset-prop
-  opacity: .82
-  filter: saturate(.82) brightness(.88)
-
-.asset-pine-left
-  left: -2rem
-  top: 8rem
-  width: clamp(16rem, 18vw, 22rem)
-
-.asset-pine-right
-  right: -1rem
-  top: 10rem
-  width: clamp(16rem, 19vw, 23rem)
-
-.asset-shack
-  right: 10%
-  top: 12rem
-  width: clamp(17rem, 19vw, 23rem)
-  opacity: .74
-
-.asset-log-a
-  left: 15%
-  bottom: 17rem
-  width: clamp(6rem, 8vw, 9rem)
-
-.asset-log-b
-  right: 18%
-  bottom: 15rem
-  width: clamp(6rem, 7vw, 8rem)
-
-.asset-rock-a
-  left: 47%
-  bottom: 8rem
-  width: clamp(4rem, 5vw, 6rem)
-  opacity: .62
-
-.asset-plant-a
-  right: 28%
-  bottom: 16rem
-  width: clamp(2.5rem, 3vw, 3.8rem)
-  opacity: .72
-
-.asset-plant-c
-  left: 24%
-  bottom: 11rem
-  width: clamp(2.5rem, 3vw, 3.6rem)
-  opacity: .72
-
-.asset-animal
-  z-index: 1
-  filter: saturate(.9) brightness(.9)
-  transform-origin: center bottom
-  animation: animal-idle 4.2s steps(2) infinite
-
-.asset-doe
-  left: 13%
-  bottom: 9rem
-  width: clamp(3.2rem, 4vw, 4.8rem)
-
-.asset-fox
-  right: 24%
-  bottom: 10rem
-  width: clamp(2.8rem, 3.4vw, 4rem)
-  animation-duration: 3.5s
-
-.asset-frog
-  left: 52%
-  bottom: 6.5rem
-  width: clamp(1.3rem, 1.8vw, 1.9rem)
-  animation-duration: 2.8s
-
-.asset-owl
-  right: 15%
-  top: 9.5rem
-  width: clamp(1.8rem, 2.2vw, 2.4rem)
-  animation-duration: 5.4s
-
-.asset-squirrel
-  left: 30%
-  top: 13rem
-  width: clamp(1.9rem, 2.3vw, 2.6rem)
-  animation-duration: 3.1s
-
-.pixel-world-bg
-  position: absolute
-  inset: 0
+  top: 0
+  left: 0
   width: 100%
   height: 100%
   z-index: 0
-  opacity: .48
   pointer-events: none
-  image-rendering: pixelated
+  display: block
 
-.pixel-content
+.world-sprite-layer
+  position: absolute
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  z-index: 1
+  pointer-events: none
+  overflow: hidden
+
+.world-flora
+  position: absolute
+  transform: translate(-50%, -90%)
+  pointer-events: none
+  user-select: none
+  image-rendering: auto
+  filter: saturate(.9) brightness(.88)
+
+.world-prop
+  position: absolute
+  transform: translateX(-50%)
+  pointer-events: none
+  user-select: none
+  image-rendering: auto
+  filter: saturate(.88) brightness(.9)
+  opacity: .92
+
+.world-content
   position: relative
   z-index: 2
   width: 100%
   max-width: 1320px
   margin: 0 auto
 
-.pixel-orchard
-  position: absolute
-  z-index: 1
-  display: grid
-  gap: 1.1rem
-  opacity: .32
-
-.pixel-orchard span
-  display: block
-  width: 4.4rem
-  height: 4.4rem
-  background: radial-gradient(circle at 30% 30%, #6f8750 0 28%, #526242 28% 100%)
-  box-shadow: 0 2.3rem 0 -1.2rem #4a311c, 0 0 0 4px rgba(63, 77, 49, 0.26)
-
-.pixel-orchard-left
-  left: 1.4rem
-  top: 9rem
-
-.pixel-orchard-right
-  right: 1.6rem
-  top: 8rem
-
-.pixel-fence
-  width: 13rem
-  height: auto
-  opacity: .46
-
-.pixel-fence-top
-  top: .8rem
-  left: 50%
-  transform: translateX(-50%)
-
-.pixel-fence-bottom
-  bottom: .7rem
-  left: 8%
-
-.pixel-rocks
-  width: 4.5rem
-  height: auto
-  opacity: .42
-
-.pixel-rocks-left
-  left: .8rem
-  top: 17rem
-
-.pixel-rocks-right
-  right: .8rem
-  bottom: 12rem
-
-.pixel-bird
-  width: 2.7rem
-  height: auto
-  top: 5.4rem
-  right: 12rem
-  animation: bird-float 4s steps(2) infinite
-  opacity: .72
-
-.pixel-cat
-  width: 3.7rem
-  height: auto
-  left: 1.2rem
-  bottom: 4.7rem
-  animation: cat-tail 2.8s steps(2) infinite
-  opacity: .76
-
-.pixel-butterfly
-  width: 2rem
-  height: auto
-  right: 8rem
-  top: 28rem
-  animation: butterfly-float 3.2s steps(2) infinite
-  opacity: .64
-
-.pixel-path
-  position: absolute
-  left: 50%
-  bottom: 1.2rem
-  z-index: 1
-  display: flex
-  gap: .55rem
-  transform: translateX(-50%)
-
-.pixel-path span
-  display: block
-  width: 1.45rem
-  height: .78rem
-  background: #b8a182
-  border: 2px solid #7c6b55
-  box-shadow: inset -2px -2px 0 rgba(255, 255, 255, 0.12)
-
-.pixel-path span:nth-child(2n)
-  transform: translateY(.5rem)
-
-.pixel-sprite
-  position: absolute
-  z-index: 1
-  image-rendering: pixelated
-
-@keyframes animal-idle
-  0%, 100%
-    transform: translateY(0)
-  50%
-    transform: translateY(-3px)
-  pointer-events: none
-
-.pixel-tree
-  width: 7rem
-  height: auto
-  animation: tree-sway 4.6s ease-in-out infinite
-  opacity: .58
-
-.pixel-tree-left
-  top: 2rem
-  left: -1rem
-
-.pixel-tree-right
-  top: 2rem
-  right: -.8rem
-  animation-delay: -1.2s
-
-.pixel-flower
-  width: 2rem
-  height: auto
-  animation: flower-bob 2.8s steps(2) infinite
-  opacity: .54
-
-.pixel-flower-left
-  left: 1rem
-  bottom: 7.2rem
-
-.pixel-flower-right
-  right: 3rem
-  top: 14rem
-  animation-delay: -.7s
-
-.pixel-bunny
-  width: 4rem
-  height: auto
-  right: 1.4rem
-  bottom: 2.2rem
-  animation: bunny-hop 3.2s steps(2) infinite
-  opacity: .72
-
-.pixel-grass
-  width: 4.2rem
-  height: auto
-  animation: grass-wiggle 3.4s steps(2) infinite
-  opacity: .42
-
-.pixel-grass-left
-  left: 1.2rem
-  bottom: 1.2rem
-
-.pixel-grass-right
-  right: 7rem
-  bottom: 1.3rem
-  animation-delay: -.8s
+// ─── Hero panel ─────────────────────────────────────────────────────────────
 
 .hero-panel
   position: relative
@@ -540,6 +200,8 @@
   font-size: 1rem
   line-height: 1.55
 
+// ─── Home sections ───────────────────────────────────────────────────────────
+
 .home-section
   margin-top: 3rem
 
@@ -566,33 +228,7 @@
   margin: .25rem 0 0
   color: #f3e8cf
 
-.news-grid
-  display: grid
-  gap: 1rem
-
-.news-card
-  position: sticky
-  top: 1.25rem
-  background: linear-gradient(180deg, rgba(208, 189, 146, 0.95), rgba(186, 162, 119, 0.96))
-  border: 4px solid #61452a
-  border-radius: 0
-  padding: 1.35rem 1.35rem 1.2rem
-  box-shadow: 0 0 0 4px #9f7a4f, 0 10px 0 rgba(79, 55, 29, 0.14)
-  font-family: "Courier New", "Lucida Console", monospace
-
-.news-card h3
-  margin: 0 0 .55rem
-  font-size: 1.1rem
-  text-transform: uppercase
-
-.news-card p
-  margin: 0 0 .7rem
-  color: #4c3827
-
-.news-date
-  color: #aa452d
-  font-size: .9rem
-  letter-spacing: .02em
+// ─── Story cards ─────────────────────────────────────────────────────────────
 
 .story-grid
   display: grid
@@ -655,6 +291,38 @@
 
 .timeline-item p
   color: #3b2f24
+
+// ─── News cards ──────────────────────────────────────────────────────────────
+
+.news-grid
+  display: grid
+  gap: 1rem
+
+.news-card
+  position: sticky
+  top: 1.25rem
+  background: linear-gradient(180deg, rgba(208, 189, 146, 0.95), rgba(186, 162, 119, 0.96))
+  border: 4px solid #61452a
+  border-radius: 0
+  padding: 1.35rem 1.35rem 1.2rem
+  box-shadow: 0 0 0 4px #9f7a4f, 0 10px 0 rgba(79, 55, 29, 0.14)
+  font-family: "Courier New", "Lucida Console", monospace
+
+.news-card h3
+  margin: 0 0 .55rem
+  font-size: 1.1rem
+  text-transform: uppercase
+
+.news-card p
+  margin: 0 0 .7rem
+  color: #4c3827
+
+.news-date
+  color: #aa452d
+  font-size: .9rem
+  letter-spacing: .02em
+
+// ─── Visitor map ─────────────────────────────────────────────────────────────
 
 .visitor-map-shell
   background: linear-gradient(180deg, rgba(90, 80, 63, 0.97), rgba(67, 57, 45, 0.98))
@@ -724,54 +392,7 @@
   border: 3px solid rgba(245, 230, 205, 0.08)
   font-size: .95rem
 
-@media (max-width: 62em)
-  .pixel-orchard
-    display: none
-
-  .pixel-world-bg
-    opacity: .72
-
-@keyframes tree-sway
-  0%, 100%
-    transform: translateY(0) scale(1)
-  50%
-    transform: translateY(-3px) scale(1.01)
-
-@keyframes flower-bob
-  0%, 100%
-    transform: translateY(0)
-  50%
-    transform: translateY(-4px)
-
-@keyframes bunny-hop
-  0%, 100%
-    transform: translate(0, 0)
-  50%
-    transform: translate(-6px, -6px)
-
-@keyframes grass-wiggle
-  0%, 100%
-    transform: translateY(0)
-  50%
-    transform: translateY(-2px)
-
-@keyframes bird-float
-  0%, 100%
-    transform: translate(0, 0)
-  50%
-    transform: translate(-6px, -4px)
-
-@keyframes butterfly-float
-  0%, 100%
-    transform: translate(0, 0)
-  50%
-    transform: translate(-8px, 4px)
-
-@keyframes cat-tail
-  0%, 100%
-    transform: translateY(0)
-  50%
-    transform: translateY(-2px)
+// ─── Animations ──────────────────────────────────────────────────────────────
 
 @keyframes visitor-pulse
   0%
@@ -784,15 +405,7 @@
     transform: scale(1.4)
     opacity: 0
 
-@media (prefers-color-scheme: dark)
-  .hero-panel
-    background: #f4e8aa
-
-  .hero-support
-    color: rgba($dark, 0.8)
-
-  .story-card
-    color: $dark
+// ─── Responsive ──────────────────────────────────────────────────────────────
 
 @media (max-width: 62em)
   .hero-panel, .story-grid, .home-grid
@@ -801,17 +414,8 @@
   .news-card
     position: static
 
-  .pixel-tree
-    width: 6rem
-
-  .pixel-bunny
-    width: 3.4rem
-
-  .pixel-fence
-    width: 10rem
-
 @media (max-width: 42em)
-  .pixel-stage
+  .world-stage
     padding: 1.2rem .6rem 2.4rem
 
   .hero-panel
@@ -826,22 +430,15 @@
   .visitor-pin-label
     font-size: 12px
 
-  .pixel-tree-left
-    left: -2rem
-    top: 4rem
+  .world-flora, .world-prop
+    display: none
 
-  .pixel-tree-right
-    right: -2rem
-    top: 12rem
+@media (prefers-color-scheme: dark)
+  .hero-panel
+    background: #f4e8aa
 
-  .pixel-flower-right
-    right: 1rem
-    top: 22rem
+  .hero-support
+    color: rgba($dark, 0.8)
 
-  .pixel-bird
-    right: 4rem
-    top: 8rem
-
-  .pixel-butterfly
-    right: 2rem
-    top: 30rem
+  .story-card
+    color: $dark
