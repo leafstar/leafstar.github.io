@@ -3,7 +3,7 @@ layout: page
 title: ""
 ---
 
-<div class="pixel-stage">
+<div class="pixel-stage stoneshard-preview">
   <div class="pixel-stage-lights"></div>
   <div class="pixel-asset-layer" aria-hidden="true">
     <img class="asset-bg asset-bg-back" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/Background-Layers/back.png" alt="">
@@ -23,6 +23,18 @@ title: ""
     <img class="asset-animal asset-frog" src="/assets/images/pixelworld/animals/frog/idle_front_frame_0.png" alt="">
     <img class="asset-animal asset-owl" src="/assets/images/pixelworld/animals/owl/idle_front_frame_0.png" alt="">
     <img class="asset-animal asset-squirrel" src="/assets/images/pixelworld/animals/squirle/idle_front_frame_0.png" alt="">
+  </div>
+  <div class="stoneshard-layer" aria-hidden="true">
+    <img class="stoneshard-sprite stoneshard-ground" src="/assets/images/stoneshard-preview/s_AbbeydirtBG_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-house" src="/assets/images/stoneshard-preview/s_AldaHouse_House_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-tent" src="/assets/images/stoneshard-preview/s_CaravanTent01_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-cart" src="/assets/images/stoneshard-preview/s_CaravanHunterCart_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-firepit" src="/assets/images/stoneshard-preview/s_CaravanFirepit_I_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-tree-left" src="/assets/images/stoneshard-preview/s_AppleTree_03_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-tree-right" src="/assets/images/stoneshard-preview/s_AppleTree_04_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-barrels" src="/assets/images/stoneshard-preview/s_Abbeybarrels01_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-trail" src="/assets/images/stoneshard-preview/s_AnimalTrails_Small_0.png" alt="">
+    <img class="stoneshard-sprite stoneshard-horse-kit" src="/assets/images/stoneshard-preview/s_Caravanhorsestuff01_0.png" alt="">
   </div>
   <svg class="pixel-world-bg" viewBox="0 0 1600 1200" aria-hidden="true" shape-rendering="crispEdges">
     <defs>

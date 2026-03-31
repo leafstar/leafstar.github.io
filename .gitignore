@@ -5,3 +5,5 @@
 Gemfile.lock
 _site
 *.gem
+temp_assets/
+/*.zip
