@@ -4,22 +4,84 @@
 @import index, font, basic, layout, classes, homepage
 
 html
-  background: lighten($dark, 70%)
-  padding: 0 calc(38% - 22em)
+  background: #202129
+  padding: 0
 
 body
-  box-shadow: 0 0 .3em lighten($dark, 65%)
+  width: 100%
+  max-width: none
+  margin: 0
+  box-shadow: none
 
 body > header, body > footer
-  background: lighten($dark, 5%)
+  position: relative
+  background: linear-gradient(180deg, #2f313a, #24262e)
   color: $light
+  border: 0
+  box-shadow: inset 0 -4px 0 rgba(255, 255, 255, 0.04)
+
+body > header
+  padding-top: 1.1rem
+  padding-bottom: 1.1rem
+
+body > article
+  margin: 0 auto
+  width: 100%
+  max-width: 1400px
+  padding: 1.2rem clamp(.9rem, 2vw, 2rem) 3rem
+
+body > footer
+  padding-top: .9rem
+  padding-bottom: .9rem
+
+body > header .title
+  font-family: "Courier New", "Lucida Console", monospace
+  font-size: clamp(1.4rem, 2.2vw, 2rem)
+  letter-spacing: .06em
+  text-transform: uppercase
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.22)
+
+body > header nav, body > footer nav
+  margin: 0
+  display: flex
+  flex-wrap: wrap
+  gap: .8rem
+
+body > header nav a, body > footer nav a
+  margin: 0
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  min-height: 2.7rem
+  padding: .5rem .95rem
+  background: #d8efb7
+  color: #213217
+  border: 4px solid #547834
+  border-radius: 0
+  box-shadow: inset -4px -4px 0 rgba(255, 255, 255, 0.22), 0 5px 0 rgba(84, 120, 52, 0.28)
+  font-family: "Courier New", "Lucida Console", monospace
+  font-weight: 700
+  text-transform: uppercase
+  text-decoration: none
+  transition: transform .15s steps(2), box-shadow .15s steps(2)
+
+body > header nav a:hover, body > footer nav a:hover
+  transform: translateY(-2px)
+  text-decoration: none
+
+body > footer > div
+  font-family: "Courier New", "Lucida Console", monospace
+  text-transform: uppercase
+  letter-spacing: .08em
 
 @media (min-width: 32em)
   body > header, body > article, body > footer
-    padding: 1.75em calc(22% - 6em)
+    padding-left: clamp(1rem, 4vw, 2.6rem)
+    padding-right: clamp(1rem, 4vw, 2.6rem)
 
 @media (prefers-color-scheme: dark)
-  body, body > header, body > footer
-    box-shadow: 0 0 0 1px lighten($dark, 8%)
-  html, body > header, body > footer
-    background: $dark
+  html
+    background: #202129
+
+  body > header, body > footer
+    background: linear-gradient(180deg, #2f313a, #24262e)

@@ -41,7 +41,7 @@
         </div>
       </div>
 
-      <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing education history locations">
+      <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing education history locations" shape-rendering="crispEdges">
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
@@ -51,21 +51,41 @@
             </feMerge>
           </filter>
         </defs>
-        <rect x="0" y="0" width="1000" height="500" rx="26" fill="#08243f"></rect>
-        <g>
-          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M105 122 138 94 212 86 253 102 275 132 264 160 236 175 212 196 177 215 165 251 148 286 119 275 110 242 86 223 74 184 88 147Z"></path>
-          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M250 270 275 281 292 314 309 363 300 416 281 454 253 441 235 403 221 357 225 319Z"></path>
-          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M430 118 460 103 503 106 517 127 497 145 468 143 446 134Z"></path>
-          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M454 155 494 168 523 198 534 245 517 303 488 347 457 321 448 277 420 237 423 188Z"></path>
-          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M520 104 579 87 663 95 736 126 786 158 804 197 786 221 736 214 690 227 670 256 642 257 625 223 587 197 541 183 516 155Z"></path>
-          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M760 318 804 329 840 358 848 387 821 406 772 393 749 362Z"></path>
-          <path fill="rgba(187, 222, 255, 0.82)" stroke="rgba(255, 255, 255, 0.24)" stroke-width="2" d="M834 240 862 228 894 237 915 259 904 277 874 281 844 268Z"></path>
-        </g>
-        <g stroke="rgba(255, 255, 255, 0.08)" stroke-width="1">
+        <rect x="0" y="0" width="1000" height="500" fill="#133450"></rect>
+        <g fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1">
           <path d="M0 250H1000"></path>
           <path d="M250 0V500"></path>
           <path d="M500 0V500"></path>
           <path d="M750 0V500"></path>
+        </g>
+        <g class="pixel-map-land">
+          <rect x="95" y="112" width="56" height="28"></rect>
+          <rect x="151" y="98" width="84" height="42"></rect>
+          <rect x="123" y="140" width="126" height="42"></rect>
+          <rect x="137" y="182" width="98" height="28"></rect>
+          <rect x="179" y="210" width="42" height="42"></rect>
+
+          <rect x="201" y="270" width="42" height="56"></rect>
+          <rect x="243" y="298" width="28" height="56"></rect>
+
+          <rect x="471" y="98" width="56" height="28"></rect>
+          <rect x="513" y="98" width="196" height="56"></rect>
+          <rect x="485" y="154" width="224" height="42"></rect>
+          <rect x="541" y="196" width="84" height="28"></rect>
+          <rect x="611" y="224" width="56" height="42"></rect>
+          <rect x="667" y="196" width="126" height="42"></rect>
+          <rect x="793" y="210" width="42" height="28"></rect>
+
+          <rect x="429" y="182" width="56" height="42"></rect>
+          <rect x="485" y="196" width="42" height="56"></rect>
+          <rect x="443" y="224" width="70" height="56"></rect>
+          <rect x="457" y="280" width="56" height="42"></rect>
+
+          <rect x="779" y="336" width="56" height="28"></rect>
+          <rect x="807" y="364" width="56" height="42"></rect>
+
+          <rect x="863" y="252" width="42" height="28"></rect>
+          <rect x="891" y="266" width="42" height="28"></rect>
         </g>
         <g class="visitor-map-pins">
           {% for location in site.data.visitor_locations %}

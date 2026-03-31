@@ -26,6 +26,72 @@
   position: relative
   z-index: 2
 
+.pixel-fence
+  width: 16rem
+  height: auto
+
+.pixel-fence-top
+  top: .8rem
+  left: 50%
+  transform: translateX(-50%)
+
+.pixel-fence-bottom
+  bottom: .7rem
+  left: 8%
+
+.pixel-rocks
+  width: 5.4rem
+  height: auto
+
+.pixel-rocks-left
+  left: .8rem
+  top: 17rem
+
+.pixel-rocks-right
+  right: .8rem
+  bottom: 12rem
+
+.pixel-bird
+  width: 3.8rem
+  height: auto
+  top: 5.4rem
+  right: 14rem
+  animation: bird-float 4s steps(2) infinite
+
+.pixel-cat
+  width: 4.6rem
+  height: auto
+  left: 1.2rem
+  bottom: 5.2rem
+  animation: cat-tail 2.8s steps(2) infinite
+
+.pixel-butterfly
+  width: 2.8rem
+  height: auto
+  right: 8rem
+  top: 28rem
+  animation: butterfly-float 3.2s steps(2) infinite
+
+.pixel-path
+  position: absolute
+  left: 50%
+  bottom: .9rem
+  z-index: 1
+  display: flex
+  gap: .55rem
+  transform: translateX(-50%)
+
+.pixel-path span
+  display: block
+  width: 1.7rem
+  height: .9rem
+  background: #d2c0a0
+  border: 3px solid #94816a
+  box-shadow: inset -3px -3px 0 rgba(255, 255, 255, 0.16)
+
+.pixel-path span:nth-child(2n)
+  transform: translateY(.5rem)
+
 .pixel-sprite
   position: absolute
   z-index: 1
@@ -346,6 +412,11 @@
   padding: .8rem
   box-sizing: border-box
 
+.pixel-map-land rect
+  fill: #bcd7ee
+  stroke: #d8ebff
+  stroke-width: 3
+
 .visitor-pin-pulse
   fill: rgba(111, 246, 255, 0.18)
   animation: visitor-pulse 3s ease-out infinite
@@ -403,6 +474,24 @@
   50%
     transform: translateY(-2px)
 
+@keyframes bird-float
+  0%, 100%
+    transform: translate(0, 0)
+  50%
+    transform: translate(-6px, -4px)
+
+@keyframes butterfly-float
+  0%, 100%
+    transform: translate(0, 0)
+  50%
+    transform: translate(-8px, 4px)
+
+@keyframes cat-tail
+  0%, 100%
+    transform: translateY(0)
+  50%
+    transform: translateY(-2px)
+
 @keyframes visitor-pulse
   0%
     transform: scale(0.7)
@@ -437,6 +526,9 @@
   .pixel-bunny
     width: 4.2rem
 
+  .pixel-fence
+    width: 12rem
+
 @media (max-width: 42em)
   .pixel-stage
     padding: 1.2rem .6rem 2.4rem
@@ -464,3 +556,11 @@
   .pixel-flower-right
     right: 1rem
     top: 22rem
+
+  .pixel-bird
+    right: 4rem
+    top: 8rem
+
+  .pixel-butterfly
+    right: 2rem
+    top: 30rem
