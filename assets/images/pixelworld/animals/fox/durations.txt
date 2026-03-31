@@ -1,0 +1,8 @@
+idle_front : 300ms per frame
+idle_left : 300ms per frame
+idle_right : 300ms per frame
+idle_back : 300ms per frame
+run_front : 150ms per frame
+run_left : 150ms per frame
+run_right : 150ms per frame
+run_back : 150ms per frame

@@ -5,6 +5,25 @@ title: ""
 
 <div class="pixel-stage">
   <div class="pixel-stage-lights"></div>
+  <div class="pixel-asset-layer" aria-hidden="true">
+    <img class="asset-bg asset-bg-back" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/Background-Layers/back.png" alt="">
+    <img class="asset-bg asset-bg-middle" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/Background-Layers/middle.png" alt="">
+
+    <img class="asset-prop asset-pine-left" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/props/Pine.png" alt="">
+    <img class="asset-prop asset-pine-right" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/props/PineB.png" alt="">
+    <img class="asset-prop asset-shack" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/props/ShackA.png" alt="">
+    <img class="asset-prop asset-log-a" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/props/LogA.png" alt="">
+    <img class="asset-prop asset-log-b" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/props/LogB.png" alt="">
+    <img class="asset-prop asset-rock-a" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/props/rockA.png" alt="">
+    <img class="asset-prop asset-plant-a" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/props/PlantA.png" alt="">
+    <img class="asset-prop asset-plant-c" src="/assets/images/pixelworld/stranger/Stranger%20Forest%20Files/props/PlantC.png" alt="">
+
+    <img class="asset-animal asset-doe" src="/assets/images/pixelworld/animals/doe/idle_left_frame_0.png" alt="">
+    <img class="asset-animal asset-fox" src="/assets/images/pixelworld/animals/fox/idle_left_frame_0.png" alt="">
+    <img class="asset-animal asset-frog" src="/assets/images/pixelworld/animals/frog/idle_front_frame_0.png" alt="">
+    <img class="asset-animal asset-owl" src="/assets/images/pixelworld/animals/owl/idle_front_frame_0.png" alt="">
+    <img class="asset-animal asset-squirrel" src="/assets/images/pixelworld/animals/squirle/idle_front_frame_0.png" alt="">
+  </div>
   <svg class="pixel-world-bg" viewBox="0 0 1600 1200" aria-hidden="true" shape-rendering="crispEdges">
     <defs>
       <radialGradient id="campGlow" cx="50%" cy="50%" r="50%">

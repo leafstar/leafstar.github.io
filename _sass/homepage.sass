@@ -24,13 +24,128 @@
   background: radial-gradient(circle at 18% 12%, rgba(255, 238, 196, 0.14), transparent 16%), radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.08), transparent 12%), linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%)
   pointer-events: none
 
+.pixel-asset-layer
+  position: absolute
+  inset: 0
+  z-index: 0
+  pointer-events: none
+  overflow: hidden
+
+.asset-bg, .asset-prop, .asset-animal
+  position: absolute
+  image-rendering: pixelated
+  user-select: none
+  pointer-events: none
+
+.asset-bg
+  opacity: .28
+  filter: saturate(.68) brightness(.82)
+
+.asset-bg-back
+  left: 50%
+  top: 2rem
+  width: 150vw
+  max-width: 2200px
+  transform: translateX(-50%)
+
+.asset-bg-middle
+  left: 50%
+  bottom: -3rem
+  width: 165vw
+  max-width: 2400px
+  transform: translateX(-50%)
+  opacity: .32
+
+.asset-prop
+  opacity: .82
+  filter: saturate(.82) brightness(.88)
+
+.asset-pine-left
+  left: -2rem
+  top: 8rem
+  width: clamp(16rem, 18vw, 22rem)
+
+.asset-pine-right
+  right: -1rem
+  top: 10rem
+  width: clamp(16rem, 19vw, 23rem)
+
+.asset-shack
+  right: 10%
+  top: 12rem
+  width: clamp(17rem, 19vw, 23rem)
+  opacity: .74
+
+.asset-log-a
+  left: 15%
+  bottom: 17rem
+  width: clamp(6rem, 8vw, 9rem)
+
+.asset-log-b
+  right: 18%
+  bottom: 15rem
+  width: clamp(6rem, 7vw, 8rem)
+
+.asset-rock-a
+  left: 47%
+  bottom: 8rem
+  width: clamp(4rem, 5vw, 6rem)
+  opacity: .62
+
+.asset-plant-a
+  right: 28%
+  bottom: 16rem
+  width: clamp(2.5rem, 3vw, 3.8rem)
+  opacity: .72
+
+.asset-plant-c
+  left: 24%
+  bottom: 11rem
+  width: clamp(2.5rem, 3vw, 3.6rem)
+  opacity: .72
+
+.asset-animal
+  z-index: 1
+  filter: saturate(.9) brightness(.9)
+  transform-origin: center bottom
+  animation: animal-idle 4.2s steps(2) infinite
+
+.asset-doe
+  left: 13%
+  bottom: 9rem
+  width: clamp(3.2rem, 4vw, 4.8rem)
+
+.asset-fox
+  right: 24%
+  bottom: 10rem
+  width: clamp(2.8rem, 3.4vw, 4rem)
+  animation-duration: 3.5s
+
+.asset-frog
+  left: 52%
+  bottom: 6.5rem
+  width: clamp(1.3rem, 1.8vw, 1.9rem)
+  animation-duration: 2.8s
+
+.asset-owl
+  right: 15%
+  top: 9.5rem
+  width: clamp(1.8rem, 2.2vw, 2.4rem)
+  animation-duration: 5.4s
+
+.asset-squirrel
+  left: 30%
+  top: 13rem
+  width: clamp(1.9rem, 2.3vw, 2.6rem)
+  animation-duration: 3.1s
+
 .pixel-world-bg
   position: absolute
   inset: 0
   width: 100%
   height: 100%
   z-index: 0
-  opacity: .9
+  opacity: .48
   pointer-events: none
   image-rendering: pixelated
 
@@ -138,6 +253,12 @@
   position: absolute
   z-index: 1
   image-rendering: pixelated
+
+@keyframes animal-idle
+  0%, 100%
+    transform: translateY(0)
+  50%
+    transform: translateY(-3px)
   pointer-events: none
 
 .pixel-tree
