@@ -24,6 +24,16 @@
   background: radial-gradient(circle at 18% 12%, rgba(255, 238, 196, 0.14), transparent 16%), radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.08), transparent 12%), linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%)
   pointer-events: none
 
+.pixel-world-bg
+  position: absolute
+  inset: 0
+  width: 100%
+  height: 100%
+  z-index: 0
+  opacity: .9
+  pointer-events: none
+  image-rendering: pixelated
+
 .pixel-content
   position: relative
   z-index: 2
@@ -31,10 +41,32 @@
   max-width: 1320px
   margin: 0 auto
 
+.pixel-orchard
+  position: absolute
+  z-index: 1
+  display: grid
+  gap: 1.1rem
+  opacity: .32
+
+.pixel-orchard span
+  display: block
+  width: 4.4rem
+  height: 4.4rem
+  background: radial-gradient(circle at 30% 30%, #6f8750 0 28%, #526242 28% 100%)
+  box-shadow: 0 2.3rem 0 -1.2rem #4a311c, 0 0 0 4px rgba(63, 77, 49, 0.26)
+
+.pixel-orchard-left
+  left: 1.4rem
+  top: 9rem
+
+.pixel-orchard-right
+  right: 1.6rem
+  top: 8rem
+
 .pixel-fence
   width: 13rem
   height: auto
-  opacity: .78
+  opacity: .46
 
 .pixel-fence-top
   top: .8rem
@@ -48,7 +80,7 @@
 .pixel-rocks
   width: 4.5rem
   height: auto
-  opacity: .78
+  opacity: .42
 
 .pixel-rocks-left
   left: .8rem
@@ -64,7 +96,7 @@
   top: 5.4rem
   right: 12rem
   animation: bird-float 4s steps(2) infinite
-  opacity: .84
+  opacity: .72
 
 .pixel-cat
   width: 3.7rem
@@ -72,7 +104,7 @@
   left: 1.2rem
   bottom: 4.7rem
   animation: cat-tail 2.8s steps(2) infinite
-  opacity: .88
+  opacity: .76
 
 .pixel-butterfly
   width: 2rem
@@ -80,7 +112,7 @@
   right: 8rem
   top: 28rem
   animation: butterfly-float 3.2s steps(2) infinite
-  opacity: .82
+  opacity: .64
 
 .pixel-path
   position: absolute
@@ -112,7 +144,7 @@
   width: 7rem
   height: auto
   animation: tree-sway 4.6s ease-in-out infinite
-  opacity: .92
+  opacity: .58
 
 .pixel-tree-left
   top: 2rem
@@ -127,7 +159,7 @@
   width: 2rem
   height: auto
   animation: flower-bob 2.8s steps(2) infinite
-  opacity: .86
+  opacity: .54
 
 .pixel-flower-left
   left: 1rem
@@ -144,13 +176,13 @@
   right: 1.4rem
   bottom: 2.2rem
   animation: bunny-hop 3.2s steps(2) infinite
-  opacity: .9
+  opacity: .72
 
 .pixel-grass
   width: 4.2rem
   height: auto
   animation: grass-wiggle 3.4s steps(2) infinite
-  opacity: .72
+  opacity: .42
 
 .pixel-grass-left
   left: 1.2rem
@@ -169,7 +201,7 @@
   margin-top: .4rem
   padding: 1.6rem
   border-radius: 0
-  background: linear-gradient(180deg, #e6d8b0, #dac79d)
+  background: linear-gradient(180deg, rgba(200, 180, 141, 0.94), rgba(183, 158, 115, 0.95))
   border: 4px solid #5b4128
   box-shadow: 0 0 0 4px #926946, 0 12px 0 rgba(79, 55, 29, 0.14)
   overflow: hidden
@@ -179,8 +211,15 @@
   content: ""
   position: absolute
   inset: 0
-  background-image: linear-gradient(rgba(117, 88, 51, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(117, 88, 51, 0.06) 1px, transparent 1px)
-  background-size: 16px 16px
+  background-image: linear-gradient(rgba(88, 61, 33, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(88, 61, 33, 0.05) 1px, transparent 1px)
+  background-size: 14px 14px
+  pointer-events: none
+
+.hero-panel::before
+  content: ""
+  position: absolute
+  inset: 0
+  background: linear-gradient(180deg, rgba(255, 236, 201, 0.08), transparent 24%, transparent 76%, rgba(71, 48, 28, 0.08))
   pointer-events: none
 
 .hero-copy
@@ -190,7 +229,7 @@
 
 .hero-eyebrow
   margin: 0 0 .8rem
-  color: #8a4f20
+  color: #6d4020
   font-size: .86rem
   font-weight: 700
   letter-spacing: .16em
@@ -201,7 +240,7 @@
   font-size: clamp(2rem, 4.4vw, 3.3rem)
   line-height: 1
   text-transform: uppercase
-  text-shadow: 3px 3px 0 rgba(120, 71, 26, 0.16)
+  text-shadow: 3px 3px 0 rgba(88, 55, 24, 0.16)
 
 .hero-lead
   margin: 1.2rem 0 .9rem
@@ -212,7 +251,7 @@
 .hero-support
   margin: 0
   max-width: 40rem
-  color: rgba($dark, 0.8)
+  color: rgba(#3e3021, 0.92)
 
 .hero-actions
   display: flex
@@ -258,9 +297,9 @@
 .hero-portrait-frame
   padding: .8rem
   border-radius: 0
-  background: linear-gradient(180deg, #9db37b, #7e9362)
-  border: 4px solid #52663d
-  box-shadow: inset -4px -4px 0 rgba(231, 242, 205, 0.16)
+  background: linear-gradient(180deg, #7c6243, #614a33)
+  border: 4px solid #463322
+  box-shadow: inset -4px -4px 0 rgba(199, 168, 129, 0.12)
 
 .hero-portrait
   display: block
@@ -268,15 +307,15 @@
   aspect-ratio: 4 / 5
   object-fit: cover
   border-radius: 0
-  border: 4px solid #38472b
+  border: 4px solid #253120
 
 .hero-fact-card
   padding: 1rem 1.1rem
   border-radius: 0
-  background: linear-gradient(180deg, #5d4a74, #433458)
-  border: 4px solid #2c2138
+  background: linear-gradient(180deg, #67553d, #51402d)
+  border: 4px solid #32261a
   color: #fff
-  box-shadow: inset -4px -4px 0 rgba(196, 172, 226, 0.14)
+  box-shadow: inset -4px -4px 0 rgba(198, 170, 132, 0.12)
 
 .hero-fact-label
   margin: 0 0 .35rem
@@ -322,7 +361,7 @@
 .news-card
   position: sticky
   top: 1.25rem
-  background: linear-gradient(180deg, #e2d3aa, #cfbd8e)
+  background: linear-gradient(180deg, rgba(208, 189, 146, 0.95), rgba(186, 162, 119, 0.96))
   border: 4px solid #61452a
   border-radius: 0
   padding: 1.35rem 1.35rem 1.2rem
@@ -350,13 +389,13 @@
 .story-card
   padding: 1.35rem 1.45rem
   border-radius: 0
-  background: linear-gradient(180deg, #c9c39b, #b0aa84)
+  background: linear-gradient(180deg, rgba(183, 170, 135, 0.95), rgba(157, 145, 109, 0.96))
   border: 4px solid #5f5a3e
   box-shadow: 0 0 0 4px #8a845f, 0 10px 0 rgba(76, 72, 48, 0.14)
   font-family: "Courier New", "Lucida Console", monospace
 
 .story-card-accent
-  background: linear-gradient(180deg, #5a5848, #434132)
+  background: linear-gradient(180deg, rgba(90, 80, 63, 0.96), rgba(71, 62, 48, 0.98))
   border-color: #2f2c20
   box-shadow: 0 0 0 4px #7a775d, 0 10px 0 rgba(15, 45, 67, 0.12)
   color: #fff
@@ -399,7 +438,7 @@
   font-weight: 700
 
 .visitor-map-shell
-  background: linear-gradient(180deg, #514a3e, #41392f)
+  background: linear-gradient(180deg, rgba(90, 80, 63, 0.97), rgba(67, 57, 45, 0.98))
   border: 4px solid #2f291f
   border-radius: 0
   overflow: hidden
@@ -426,23 +465,24 @@
   height: auto
   padding: .8rem
   box-sizing: border-box
+  background: linear-gradient(180deg, #7b725c, #695f49)
 
 .pixel-map-land rect
-  fill: #8fa06f
-  stroke: #adbc89
+  fill: #6f7e57
+  stroke: #8e9b74
   stroke-width: 3
 
 .visitor-pin-pulse
-  fill: rgba(111, 246, 255, 0.18)
+  fill: rgba(234, 205, 123, 0.15)
   animation: visitor-pulse 3s ease-out infinite
 
 .visitor-pin-dot
-  fill: #f5d98a
+  fill: #eacb75
   stroke: #fff0c7
   stroke-width: 1.5
 
 .visitor-pin-label
-  fill: #f7eedf
+  fill: #f3e5cf
   font-size: 14px
   paint-order: stroke
   stroke: rgba(54, 40, 28, 0.72)
@@ -464,6 +504,13 @@
   background: rgba(245, 230, 205, 0.08)
   border: 3px solid rgba(245, 230, 205, 0.08)
   font-size: .95rem
+
+@media (max-width: 62em)
+  .pixel-orchard
+    display: none
+
+  .pixel-world-bg
+    opacity: .72
 
 @keyframes tree-sway
   0%, 100%
