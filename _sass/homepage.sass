@@ -1,24 +1,107 @@
+.pixel-stage
+  position: relative
+  margin-top: .5rem
+  padding: 2rem 1.2rem 2.8rem
+  border-radius: 36px
+  background: linear-gradient(180deg, #7cc663 0%, #7cc663 22%, #76bc5d 22%, #76bc5d 100%)
+  box-shadow: inset 0 0 0 6px #4e7c34, inset 0 0 0 12px #90d878, 0 28px 60px rgba($dark, 0.22)
+  overflow: hidden
+
+.pixel-stage::before
+  content: ""
+  position: absolute
+  inset: 0
+  background-image: linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+  background-size: 28px 28px
+  opacity: .22
+  pointer-events: none
+
+.pixel-stage-lights
+  position: absolute
+  inset: 0
+  background: radial-gradient(circle at 18% 18%, rgba(255, 244, 181, 0.28), transparent 18%), radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.16), transparent 16%), radial-gradient(circle at 50% 0%, rgba(255, 234, 167, 0.12), transparent 28%)
+  pointer-events: none
+
+.pixel-content
+  position: relative
+  z-index: 2
+
+.pixel-sprite
+  position: absolute
+  z-index: 1
+  image-rendering: pixelated
+  pointer-events: none
+
+.pixel-tree
+  width: 10rem
+  height: auto
+  animation: tree-sway 4.6s ease-in-out infinite
+
+.pixel-tree-left
+  top: 1.4rem
+  left: -1.4rem
+
+.pixel-tree-right
+  top: 1.7rem
+  right: -1.1rem
+  animation-delay: -1.2s
+
+.pixel-flower
+  width: 3.4rem
+  height: auto
+  animation: flower-bob 2.8s steps(2) infinite
+
+.pixel-flower-left
+  left: 1rem
+  bottom: 8.4rem
+
+.pixel-flower-right
+  right: 4rem
+  top: 16rem
+  animation-delay: -.7s
+
+.pixel-bunny
+  width: 5.2rem
+  height: auto
+  right: 1.2rem
+  bottom: 2.2rem
+  animation: bunny-hop 3.2s steps(2) infinite
+
+.pixel-grass
+  width: 6rem
+  height: auto
+  animation: grass-wiggle 3.4s steps(2) infinite
+
+.pixel-grass-left
+  left: 1.2rem
+  bottom: 1.2rem
+
+.pixel-grass-right
+  right: 7rem
+  bottom: 1.3rem
+  animation-delay: -.8s
+
 .hero-panel
   position: relative
   display: grid
-  grid-template-columns: minmax(0, 1.55fr) minmax(15rem, .95fr)
+  grid-template-columns: minmax(0, 1.5fr) minmax(15rem, .9fr)
   gap: 2rem
   margin-top: .4rem
   padding: 2rem
-  border-radius: 30px
-  background: radial-gradient(circle at top left, rgba(213, 86, 55, 0.16), transparent 34%), linear-gradient(145deg, #fff6ef, #fff 42%, #f4f8ff 100%)
-  border: 1px solid rgba(213, 86, 55, 0.16)
-  box-shadow: 0 28px 60px rgba($dark, 0.12)
+  border-radius: 0
+  background: linear-gradient(180deg, #fff8d6, #f7efc0)
+  border: 4px solid #5b3d22
+  box-shadow: 0 0 0 4px #d19d57, 0 18px 0 rgba(79, 55, 29, 0.18)
   overflow: hidden
+  font-family: "Courier New", "Lucida Console", monospace
 
 .hero-panel::after
   content: ""
   position: absolute
-  inset: auto -3rem -5rem auto
-  width: 13rem
-  height: 13rem
-  border-radius: 50%
-  background: radial-gradient(circle, rgba(63, 104, 227, 0.16), transparent 68%)
+  inset: 0
+  background-image: linear-gradient(rgba(150, 112, 58, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(150, 112, 58, 0.08) 1px, transparent 1px)
+  background-size: 18px 18px
+  pointer-events: none
 
 .hero-copy
   position: relative
@@ -26,7 +109,7 @@
 
 .hero-eyebrow
   margin: 0 0 .8rem
-  color: #aa452d
+  color: #8a4f20
   font-size: .86rem
   font-weight: 700
   letter-spacing: .16em
@@ -34,32 +117,21 @@
 
 .hero-panel h1
   margin: 0
-  font-size: clamp(2.4rem, 6vw, 4.5rem)
-  line-height: .94
+  font-size: clamp(2.2rem, 5.6vw, 4.1rem)
+  line-height: 1
+  text-transform: uppercase
+  text-shadow: 4px 4px 0 rgba(120, 71, 26, 0.18)
 
 .hero-lead
   margin: 1.2rem 0 .9rem
   max-width: 34rem
-  font-size: 1.18rem
+  font-size: 1.05rem
   line-height: 1.7
 
 .hero-support
   margin: 0
   max-width: 36rem
-  color: rgba($dark, 0.78)
-
-.hero-tags
-  display: flex
-  flex-wrap: wrap
-  gap: .7rem
-  margin-top: 1.4rem
-
-.hero-tags span
-  padding: .5rem .85rem
-  border-radius: 999px
-  background: rgba(255, 255, 255, 0.75)
-  border: 1px solid rgba(63, 104, 227, 0.16)
-  font-size: .93rem
+  color: rgba($dark, 0.8)
 
 .hero-actions
   display: flex
@@ -73,22 +145,25 @@
   justify-content: center
   min-height: 2.9rem
   padding: .65rem 1.05rem
-  border-radius: 999px
+  border-radius: 0
   font-weight: 700
-  transition: transform .2s ease, box-shadow .2s ease, background .2s ease
+  font-family: "Courier New", "Lucida Console", monospace
+  transition: transform .15s steps(2), box-shadow .15s steps(2), background .15s steps(2)
 
 .button-primary
-  background: linear-gradient(135deg, #cf593a, #9f3821)
+  background: #d46d44
   color: #fff
-  box-shadow: 0 14px 30px rgba(159, 56, 33, 0.28)
+  border: 4px solid #6a2e14
+  box-shadow: inset -4px -4px 0 rgba(255, 199, 164, 0.28), 0 5px 0 rgba(106, 46, 20, 0.3)
 
 .button-secondary
-  background: rgba(255, 255, 255, 0.82)
+  background: #d4efb0
   color: $dark
-  border: 1px solid rgba(63, 104, 227, 0.16)
+  border: 4px solid #4e722b
+  box-shadow: inset -4px -4px 0 rgba(255, 255, 255, 0.26), 0 5px 0 rgba(78, 114, 43, 0.26)
 
 .button-primary:hover, .button-secondary:hover
-  transform: translateY(-1px)
+  transform: translateY(-2px)
   text-decoration: none
 
 .hero-portrait-panel
@@ -101,23 +176,26 @@
 
 .hero-portrait-frame
   padding: .8rem
-  border-radius: 24px
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(224, 235, 252, 0.9))
-  box-shadow: inset 0 0 0 1px rgba(63, 104, 227, 0.12)
+  border-radius: 0
+  background: #b6dd8a
+  border: 4px solid #50782f
+  box-shadow: inset -5px -5px 0 rgba(255, 255, 255, 0.2)
 
 .hero-portrait
   display: block
   width: 100%
   aspect-ratio: 4 / 5
   object-fit: cover
-  border-radius: 18px
+  border-radius: 0
+  border: 4px solid #38531e
 
 .hero-fact-card
   padding: 1rem 1.1rem
-  border-radius: 22px
-  background: rgba(17, 37, 62, 0.92)
+  border-radius: 0
+  background: #11395a
+  border: 4px solid #081d32
   color: #fff
-  box-shadow: 0 16px 34px rgba(10, 22, 38, 0.2)
+  box-shadow: inset -5px -5px 0 rgba(132, 202, 255, 0.16)
 
 .hero-fact-label
   margin: 0 0 .35rem
@@ -147,15 +225,14 @@
   justify-content: space-between
   gap: 1rem
   margin-bottom: 1.25rem
+  font-family: "Courier New", "Lucida Console", monospace
 
 .section-heading h2
   margin: 0
+  text-transform: uppercase
 
 .section-heading p
   margin: .25rem 0 0
-
-.section-link, .map-note
-  font-size: .95rem
 
 .news-grid
   display: grid
@@ -164,15 +241,17 @@
 .news-card
   position: sticky
   top: 1.25rem
-  background: linear-gradient(180deg, rgba(206, 89, 57, 0.1), rgba(104, 136, 255, 0.04))
-  border: 1px solid rgba(206, 89, 57, 0.14)
-  border-radius: 24px
+  background: #f8f0bc
+  border: 4px solid #5b3d22
+  border-radius: 0
   padding: 1.35rem 1.35rem 1.2rem
-  box-shadow: 0 12px 30px rgba($dark, 0.06)
+  box-shadow: 0 0 0 4px #d19d57, 0 14px 0 rgba(79, 55, 29, 0.16)
+  font-family: "Courier New", "Lucida Console", monospace
 
 .news-card h3
   margin: 0 0 .55rem
   font-size: 1.1rem
+  text-transform: uppercase
 
 .news-card p
   margin: 0 0 .7rem
@@ -189,13 +268,16 @@
 
 .story-card
   padding: 1.35rem 1.45rem
-  border-radius: 24px
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 247, 252, 0.92))
-  border: 1px solid rgba(72, 91, 138, 0.12)
-  box-shadow: 0 18px 38px rgba($dark, 0.08)
+  border-radius: 0
+  background: #eef7cf
+  border: 4px solid #4f7331
+  box-shadow: 0 0 0 4px #a7d572, 0 14px 0 rgba(76, 112, 48, 0.16)
+  font-family: "Courier New", "Lucida Console", monospace
 
 .story-card-accent
-  background: linear-gradient(160deg, #10243c, #163b60 60%, #1f588f)
+  background: #244f76
+  border-color: #0f2d43
+  box-shadow: 0 0 0 4px #66a9d2, 0 14px 0 rgba(15, 45, 67, 0.18)
   color: #fff
 
 .story-card-accent p
@@ -224,24 +306,24 @@
   position: absolute
   left: 0
   top: .45rem
-  width: .45rem
-  height: .45rem
-  border-radius: 50%
+  width: .7rem
+  height: .7rem
   background: #c75637
-  box-shadow: 0 0 0 .28rem rgba(199, 86, 55, 0.12)
+  box-shadow: 0 0 0 .2rem rgba(199, 86, 55, 0.12)
 
 .timeline-period
   margin: 0 0 .2rem
-  color: #aa452d
+  color: #915224
   font-size: .88rem
   font-weight: 700
 
 .visitor-map-shell
-  background: linear-gradient(160deg, #f6f8ff, #fbfcff 48%, #eef4ff)
-  border: 1px solid rgba(104, 136, 255, 0.14)
-  border-radius: 24px
+  background: #133450
+  border: 4px solid #091e30
+  border-radius: 0
   overflow: hidden
-  box-shadow: 0 18px 42px rgba($dark, 0.08)
+  box-shadow: 0 0 0 4px #4d88ad, 0 14px 0 rgba(9, 30, 48, 0.16)
+  font-family: "Courier New", "Lucida Console", monospace
 
 .visitor-map-stats
   display: flex
@@ -254,7 +336,7 @@
   font-size: 1.4rem
 
 .visitor-map-stats span
-  color: rgba($dark, 0.7)
+  color: rgba($light, 0.8)
   font-size: .95rem
 
 .visitor-map
@@ -263,18 +345,6 @@
   height: auto
   padding: .8rem
   box-sizing: border-box
-
-.visitor-map-ocean
-  fill: #08243f
-
-.visitor-map-land path
-  fill: rgba(187, 222, 255, 0.82)
-  stroke: rgba(255, 255, 255, 0.24)
-  stroke-width: 2
-
-.visitor-map-grid path
-  stroke: rgba(255, 255, 255, 0.08)
-  stroke-width: 1
 
 .visitor-pin-pulse
   fill: rgba(111, 246, 255, 0.18)
@@ -304,9 +374,34 @@
 .visitor-list li
   margin: 0
   padding: .35rem .7rem
-  border-radius: 999px
-  background: rgba(8, 36, 63, 0.08)
+  border-radius: 0
+  background: rgba(255, 255, 255, 0.12)
+  border: 3px solid rgba(255, 255, 255, 0.08)
   font-size: .95rem
+
+@keyframes tree-sway
+  0%, 100%
+    transform: translateY(0) scale(1)
+  50%
+    transform: translateY(-3px) scale(1.01)
+
+@keyframes flower-bob
+  0%, 100%
+    transform: translateY(0)
+  50%
+    transform: translateY(-4px)
+
+@keyframes bunny-hop
+  0%, 100%
+    transform: translate(0, 0)
+  50%
+    transform: translate(-6px, -6px)
+
+@keyframes grass-wiggle
+  0%, 100%
+    transform: translateY(0)
+  50%
+    transform: translateY(-2px)
 
 @keyframes visitor-pulse
   0%
@@ -320,56 +415,14 @@
     opacity: 0
 
 @media (prefers-color-scheme: dark)
-  .news-card
-    background: linear-gradient(180deg, rgba(206, 89, 57, 0.16), rgba(104, 136, 255, 0.08))
-    border-color: rgba(206, 89, 57, 0.2)
-    box-shadow: 0 12px 30px rgba(black, 0.2)
-
   .hero-panel
-    background: radial-gradient(circle at top left, rgba(206, 89, 57, 0.18), transparent 34%), linear-gradient(145deg, #1a222d, #161d26 42%, #0f1720 100%)
-    border-color: rgba(206, 89, 57, 0.14)
-    box-shadow: 0 28px 60px rgba(black, 0.35)
-
-  .hero-eyebrow
-    color: #ffad94
+    background: #f4e8aa
 
   .hero-support
-    color: rgba($light, 0.76)
-
-  .hero-tags span
-    background: rgba($light, 0.06)
-    border-color: rgba(255, 255, 255, 0.09)
-
-  .button-secondary
-    background: rgba($light, 0.08)
-    color: $light
-    border-color: rgba(255, 255, 255, 0.12)
-
-  .hero-portrait-frame
-    background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(100, 137, 197, 0.18))
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08)
-
-  .visitor-map-shell
-    background: linear-gradient(160deg, #081524, #0b1e33 48%, #102b45)
-    border-color: rgba(125, 162, 255, 0.18)
-    box-shadow: 0 18px 42px rgba(black, 0.3)
-
-  .visitor-map-stats span
-    color: rgba($light, 0.75)
-
-  .visitor-list li
-    background: rgba($light, 0.1)
+    color: rgba($dark, 0.8)
 
   .story-card
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03))
-    border-color: rgba(255, 255, 255, 0.08)
-    box-shadow: 0 18px 38px rgba(black, 0.22)
-
-  .story-card-accent
-    background: linear-gradient(160deg, #18334d, #1f466d 60%, #24588a)
-
-  .timeline-period
-    color: #ffad94
+    color: $dark
 
 @media (max-width: 62em)
   .hero-panel, .story-grid, .home-grid
@@ -378,7 +431,16 @@
   .news-card
     position: static
 
+  .pixel-tree
+    width: 8rem
+
+  .pixel-bunny
+    width: 4.2rem
+
 @media (max-width: 42em)
+  .pixel-stage
+    padding: 1.2rem .6rem 2.4rem
+
   .hero-panel
     padding: 1.35rem
 
@@ -390,3 +452,15 @@
 
   .visitor-pin-label
     font-size: 12px
+
+  .pixel-tree-left
+    left: -2rem
+    top: 4rem
+
+  .pixel-tree-right
+    right: -2rem
+    top: 12rem
+
+  .pixel-flower-right
+    right: 1rem
+    top: 22rem
