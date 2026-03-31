@@ -1,11 +1,15 @@
 .pixel-stage
   position: relative
-  margin-top: .5rem
+  width: 100vw
+  margin-top: 0
+  margin-left: calc(50% - 50vw)
+  margin-right: calc(50% - 50vw)
   padding: 2rem 1.2rem 2.8rem
-  border-radius: 36px
+  border-radius: 0
   background: linear-gradient(180deg, #7cc663 0%, #7cc663 22%, #76bc5d 22%, #76bc5d 100%)
-  box-shadow: inset 0 0 0 6px #4e7c34, inset 0 0 0 12px #90d878, 0 28px 60px rgba($dark, 0.22)
+  box-shadow: inset 0 0 0 6px #4e7c34, inset 0 0 0 12px #90d878
   overflow: hidden
+  min-height: calc(100vh - 8rem)
 
 .pixel-stage::before
   content: ""
@@ -25,6 +29,9 @@
 .pixel-content
   position: relative
   z-index: 2
+  width: 100%
+  max-width: 1500px
+  margin: 0 auto
 
 .pixel-fence
   width: 16rem
