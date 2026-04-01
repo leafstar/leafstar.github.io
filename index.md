@@ -23,11 +23,6 @@ title: ""
           <a href="https://sites.google.com/site/paulindani/">Prof. Daniel Paulin</a>.
         </p>
 
-        <div class="hero-actions">
-          <a href="https://leafstar.github.io/MuxingWang.pdf" class="button-primary">Curriculum Vitae</a>
-          <a href="https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en" class="button-secondary">Google Scholar</a>
-          <a href="{{ '/blog/' | relative_url }}" class="button-secondary">Blog</a>
-        </div>
       </div>
 
       <div class="hero-portrait-panel">
@@ -55,9 +50,9 @@ title: ""
         <p class="story-kicker">Academic Timeline</p>
         <div class="timeline-list">
           <div class="timeline-item">
-            <p class="timeline-period">2023 - Present</p>
-            <h3>PhD Student</h3>
-            <p>Northeastern University, working with Prof. Lili Su on federated reinforcement learning.</p>
+            <p class="timeline-period">2015 - 2020</p>
+            <h3>Bachelor's in Computer Science</h3>
+            <p>University of Waterloo.</p>
           </div>
           <div class="timeline-item">
             <p class="timeline-period">2021 - 2022</p>
@@ -65,15 +60,47 @@ title: ""
             <p>University of Edinburgh, working with Prof. Daniel Paulin.</p>
           </div>
           <div class="timeline-item">
-            <p class="timeline-period">2015 - 2020</p>
-            <h3>Bachelor's in Computer Science</h3>
-            <p>University of Waterloo.</p>
+            <p class="timeline-period">2023 - Present</p>
+            <h3>PhD Student</h3>
+            <p>Northeastern University, working with Prof. Lili Su on federated reinforcement learning.</p>
           </div>
         </div>
       </article>
     </section>
 
     {% include news-and-map.html %}
+  </div>
+</div>
+
+<div class="hud" id="game-bar">
+  <div class="hud-inner">
+    <div class="hud-portrait">
+      <img src="/assets/images/thumbnail_32FFF408@C7739343.328DC562.jpg" alt="Muxing Wang" />
+    </div>
+    <div class="hud-info">
+      <div class="hud-name">Muxing Wang</div>
+      <div class="hud-bars">
+        <div class="hud-bar hud-bar-hp"><span style="width:100%"></span><em>Northeastern University</em></div>
+        <div class="hud-bar hud-bar-mp"><span style="width:72%"></span><em>Federated RL</em></div>
+      </div>
+    </div>
+    <div class="hud-abilities">
+      <a href="https://leafstar.github.io/MuxingWang.pdf" class="hud-skill" title="Curriculum Vitae">
+        <kbd>Q</kbd><span class="skill-icon">📜</span><span class="skill-name">CV</span>
+      </a>
+      <a href="{{ '/blog/' | relative_url }}" class="hud-skill" title="Blog">
+        <kbd>W</kbd><span class="skill-icon">📖</span><span class="skill-name">Blog</span>
+      </a>
+      <a href="https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en" class="hud-skill" title="Google Scholar">
+        <kbd>E</kbd><span class="skill-icon">🎓</span><span class="skill-name">Scholar</span>
+      </a>
+      <a href="https://github.com/leafstar" class="hud-skill" title="GitHub">
+        <kbd>R</kbd><span class="skill-icon">⚔️</span><span class="skill-name">GitHub</span>
+      </a>
+      <a href="mailto:wang.muxin@northeastern.edu" class="hud-skill" title="Email">
+        <kbd>D</kbd><span class="skill-icon">✉️</span><span class="skill-name">Mail</span>
+      </a>
+    </div>
   </div>
 </div>
 

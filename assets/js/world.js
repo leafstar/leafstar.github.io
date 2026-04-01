@@ -202,10 +202,13 @@
     }
 
     // Pass 4: sparse ground details everywhere (roots, stones, logs)
+    // Avoid camp structure areas
+    const exclusions = buildExclusions();
     const detailImgs = [terrainImgs.logs, terrainImgs.stonePile, terrainImgs.roots, terrainImgs.rockGrass, terrainImgs.rootsGreen];
     const detailCount = Math.floor((W * H) / 22000);
     for (let i = 0; i < detailCount; i++) {
       const x = srng() * W, y = srng() * H;
+      if (nearStructure(x / W * 100, y / H * 100, exclusions)) continue;
       const img = detailImgs[Math.floor(srng() * detailImgs.length)];
       drawPatch(img, x, y, 80 + srng() * 70, 0.60 + srng() * 0.30);
     }
@@ -281,9 +284,29 @@
   }
 
   // ─── Layer 4: flora placement ─────────────────────────────────────────────
+
+  // Exclusion zones around camp structures (percentage coords + radius)
+  function buildExclusions() {
+    return CAMP_ANCHORS.map(a => ({
+      xp: a.xp, yp: a.yp,
+      // Larger props get bigger exclusion radius
+      r: a.size >= 180 ? 13 : a.size >= 130 ? 10 : 8,
+    }));
+  }
+
+  function nearStructure(xPct, yPct, exclusions) {
+    for (let i = 0; i < exclusions.length; i++) {
+      const e = exclusions[i];
+      const dx = xPct - e.xp, dy = yPct - e.yp;
+      if (dx * dx + dy * dy < e.r * e.r) return true;
+    }
+    return false;
+  }
+
   function placeFlora(layer, floraImgs, W, H) {
     if (!floraImgs) return;
     const attempts = Math.floor(W / 10);
+    const exclusions = buildExclusions();
 
     for (let i = 0; i < attempts; i++) {
       const side = srng() < 0.5 ? 'left' : 'right';
@@ -291,6 +314,9 @@
       const yFrac = 0.02 + srng() * 0.96;
       const n = fbm(xFrac * 5, yFrac * 4);
       if (n < 0.30) continue;
+
+      // Skip if too close to a camp structure
+      if (nearStructure(xFrac * 100, yFrac * 100, exclusions)) continue;
 
       const edgeFrac = side === 'left' ? (0.30 - xFrac) / 0.30 : (xFrac - 0.70) / 0.30;
       let img, baseSize;
@@ -408,15 +434,19 @@
     if (!stage || !content) return;
     var btn = document.createElement('div');
     btn.id = 'toggle-content';
-    btn.style.cssText = 'position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px;font-family:sans-serif;backdrop-filter:blur(4px);user-select:none;transition:opacity .2s';
-    btn.textContent = 'Hide UI';
+    btn.style.cssText = 'position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:18px;line-height:38px;text-align:center;font-family:sans-serif;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
     document.body.appendChild(btn);
+    var bar = document.getElementById('game-bar');
     var hidden = false;
     btn.addEventListener('click', function() {
       hidden = !hidden;
       content.style.opacity = hidden ? '0' : '';
       content.style.pointerEvents = hidden ? 'none' : '';
-      btn.textContent = hidden ? 'Show UI' : 'Hide UI';
+      if (bar) bar.style.opacity = hidden ? '0' : '';
+      btn.innerHTML = hidden
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
     });
   }
 

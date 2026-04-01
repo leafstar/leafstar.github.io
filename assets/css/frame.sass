@@ -17,83 +17,17 @@ body
   overflow-x: hidden
 
 body > header, body > footer
-  position: relative
-  background: linear-gradient(180deg, #5e6949, #697653 58%, #62704e)
-  color: $light
-  border: 0
-  box-shadow: inset 0 -4px 0 rgba(43, 53, 31, 0.22), inset 0 4px 0 rgba(173, 190, 133, 0.15)
-
-body > header
-  padding-top: .95rem
-  padding-bottom: .95rem
-  border-bottom: 4px solid rgba(74, 86, 54, 0.9)
-  background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px), radial-gradient(circle at 15% 40%, rgba(110, 122, 81, 0.35), transparent 12%), radial-gradient(circle at 82% 30%, rgba(92, 104, 68, 0.32), transparent 14%)
-  background-size: 24px 24px, 24px 24px, auto, auto
+  display: none
 
 body > article
   margin: 0
   width: 100%
   max-width: none
   padding: 0 0 3rem
+  padding-bottom: 5rem
   background: linear-gradient(180deg, #667250 0%, #6f7b57 28%, #6a7650 100%)
 
-body > footer
-  padding-top: .9rem
-  padding-bottom: .9rem
-
-body > header .title
-  font-family: "Courier New", "Lucida Console", monospace
-  font-size: clamp(1.4rem, 2.2vw, 2rem)
-  letter-spacing: .06em
-  text-transform: uppercase
-  color: #f4ecd4
-  text-shadow: 3px 3px 0 rgba(67, 48, 28, 0.32)
-
-body > header nav, body > footer nav
-  margin: 0
-  display: flex
-  flex-wrap: wrap
-  gap: .8rem
-
-body > header nav a, body > footer nav a
-  margin: 0
-  display: inline-flex
-  align-items: center
-  justify-content: center
-  min-height: 2.7rem
-  padding: .5rem .95rem
-  background: linear-gradient(180deg, #d7c19a, #b98a59)
-  color: #2d1f14
-  border: 4px solid #684528
-  border-radius: 0
-  box-shadow: inset -4px -4px 0 rgba(255, 234, 206, 0.18), 0 5px 0 rgba(73, 45, 23, 0.28)
-  font-family: "Courier New", "Lucida Console", monospace
-  font-weight: 700
-  text-transform: uppercase
-  text-decoration: none
-  transition: transform .15s steps(2), box-shadow .15s steps(2)
-
-body > header nav a:hover, body > footer nav a:hover
-  transform: translateY(-2px)
-  text-decoration: none
-
-body > footer > div
-  font-family: "Courier New", "Lucida Console", monospace
-  text-transform: uppercase
-  letter-spacing: .08em
-  color: #efe6cd
-
 @media (min-width: 32em)
-  body > header, body > article, body > footer
+  body > article
     padding-left: clamp(1rem, 4vw, 2.6rem)
     padding-right: clamp(1rem, 4vw, 2.6rem)
-
-@media (prefers-color-scheme: dark)
-  html
-    background: #5f6848
-
-  body
-    background: linear-gradient(180deg, #667250 0%, #6f7b57 28%, #6a7650 100%)
-
-  body > header, body > footer
-    background: linear-gradient(180deg, #5e6949, #697653 58%, #62704e)
