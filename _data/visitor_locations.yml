@@ -3,21 +3,21 @@
   label: Northeastern University
   period: 2023 - Present
   color: "#8b2500"
-  mx: 600
-  my: 268
+  mx: 550
+  my: 368
 
 - city: Edinburgh
   country: UK
   label: University of Edinburgh
   period: 2021 - 2022
   color: "#1a3a6a"
-  mx: 790
-  my: 175
+  mx: 740
+  my: 275
 
 - city: Waterloo
   country: Canada
   label: University of Waterloo
   period: 2015 - 2020
   color: "#2a6a1a"
-  mx: 555
-  my: 250
+  mx: 505
+  my: 350
