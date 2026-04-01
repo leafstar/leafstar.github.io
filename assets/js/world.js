@@ -113,30 +113,60 @@
       });
   }
 
-  // ─── Layer 1 + 2: terrain canvas ─────────────────────────────────────────
-  // ─── Biome & terrain helpers ───────────────────────────────────────────
-  // Second independent noise channel (offset seed) for biome variation
+  // ─── Double-grid terrain system ────────────────────────────────────────────
+
+  // Second noise channel for biome variation
   function perlin2(x, y) { return perlin(x + 137.7, y + 251.3); }
   function fbm2(x, y) {
     return perlin2(x, y) * 0.65 + perlin2(x * 2.1, y * 2.1) * 0.35;
   }
 
-  // Biome types driven by two noise channels
-  // Returns: 'lushGrass' | 'dryGrass' | 'mossy' | 'rocky' | 'dirt'
-  function getBiome(xFrac, yFrac) {
-    const n1 = fbm(xFrac * 4.5, yFrac * 3.5);   // moisture
-    const n2 = fbm2(xFrac * 5.0, yFrac * 4.0);   // rockiness
-    if (n2 > 0.62) return 'rocky';
-    if (n1 > 0.58) return 'mossy';
-    if (n1 < 0.35) return 'dryGrass';
-    if (n2 < 0.35) return 'dirt';
-    return 'lushGrass';
+  // Biome enum:  0=lushGrass  1=dryGrass  2=mossy  3=rocky  4=dirt  5=path
+  const BIOME_LUSH = 0, BIOME_DRY = 1, BIOME_MOSS = 2,
+        BIOME_ROCK = 3, BIOME_DIRT = 4, BIOME_PATH = 5;
+
+  // Base fill colors per biome (painted under texture patches)
+  const BIOME_COLORS = ['#3a5e1c', '#4a5a2a', '#2e4a1a', '#4a4a36', '#6a5a3a', '#7a6a45'];
+
+  function getBiomeId(xFrac, yFrac) {
+    const n1 = fbm(xFrac * 4.5, yFrac * 3.5);
+    const n2 = fbm2(xFrac * 5.0, yFrac * 4.0);
+    if (n2 > 0.62) return BIOME_ROCK;
+    if (n1 > 0.58) return BIOME_MOSS;
+    if (n1 < 0.35) return BIOME_DRY;
+    if (n2 < 0.35) return BIOME_DIRT;
+    return BIOME_LUSH;
+  }
+
+  // ── Data grid: assign biome to each cell ──
+  function buildDataGrid(W, H, cellSz, pathStrength) {
+    const cols = Math.ceil(W / cellSz) + 2;
+    const rows = Math.ceil(H / cellSz) + 2;
+    const grid = [];
+    for (let r = 0; r < rows; r++) {
+      const row = [];
+      for (let c = 0; c < cols; c++) {
+        const cx = c * cellSz, cy = r * cellSz;
+        const ps = pathStrength(cx, cy);
+        if (ps > 0.6) {
+          row.push(BIOME_PATH);
+        } else if (ps > 0.3) {
+          // Transition zone — bias toward path or biome
+          row.push(ps > 0.45 ? BIOME_DIRT : getBiomeId(cx / W, cy / H));
+        } else {
+          row.push(getBiomeId(cx / W, cy / H));
+        }
+      }
+      grid.push(row);
+    }
+    return grid;
   }
 
   function drawTerrain(canvas, terrainImgs, W, H) {
     const ctx = canvas.getContext('2d');
+    const CELL = 120; // data grid cell size
 
-    // ── Path geometry (winding dirt road right of center) ──
+    // ── Path geometry ──
     const PATH_CX = W * 0.56;
     const PATH_HW = W * 0.075;
     function pathDist(x, y) {
@@ -145,19 +175,17 @@
     }
     function pathStrength(x, y) {
       const d = pathDist(x, y);
-      if (d < PATH_HW * 0.7) return 1.0;               // hard core
-      if (d < PATH_HW * 1.3) return smoothstep(PATH_HW * 1.3, PATH_HW * 0.7, d); // transition
+      if (d < PATH_HW * 0.7) return 1.0;
+      if (d < PATH_HW * 1.3) return smoothstep(PATH_HW * 1.3, PATH_HW * 0.7, d);
       return 0;
     }
-    function onPath(x, y) { return pathDist(x, y) < PATH_HW * 1.3; }
 
-    // ── Pass 0: solid dark base ──
+    // ── Pass 0: solid base ──
     ctx.fillStyle = '#2c4a14';
     ctx.fillRect(0, 0, W, H);
-
     if (!terrainImgs) { applyVignette(ctx, W, H); return; }
 
-    // Helper: draw patch with optional rotation
+    // Patch drawing helper
     function drawPatch(img, x, y, sz, alpha, rot) {
       if (!img) return;
       ctx.globalAlpha = alpha;
@@ -174,92 +202,151 @@
       }
     }
 
-    // ── Biome tile pools ──
-    const biomeTiles = {
-      lushGrass: [terrainImgs.grass1, terrainImgs.grass2],
-      dryGrass:  [terrainImgs.grassPath, terrainImgs.grassRocky],
-      mossy:     [terrainImgs.mossy, terrainImgs.rootsGreen, terrainImgs.grass2],
-      rocky:     [terrainImgs.rockGrass, terrainImgs.grassRocky, terrainImgs.stonePile],
-      dirt:      [terrainImgs.dirtDry, terrainImgs.dirtCracked],
-    };
-    const pathTiles = [terrainImgs.dirtDry, terrainImgs.dirtCracked, terrainImgs.dirtRuts];
-    const pathEdgeTiles = [terrainImgs.grassRocky, terrainImgs.rockGrass, terrainImgs.dirtDry];
-    const detailTiles = [terrainImgs.logs, terrainImgs.stonePile, terrainImgs.roots,
-                         terrainImgs.rockGrass, terrainImgs.rootsGreen];
+    // ── Biome texture pools ──
+    const biomePatch = [
+      /* 0 lush  */ [terrainImgs.grass1, terrainImgs.grass2],
+      /* 1 dry   */ [terrainImgs.grassPath, terrainImgs.grassRocky],
+      /* 2 moss  */ [terrainImgs.mossy, terrainImgs.rootsGreen, terrainImgs.grass2],
+      /* 3 rock  */ [terrainImgs.rockGrass, terrainImgs.grassRocky, terrainImgs.stonePile],
+      /* 4 dirt  */ [terrainImgs.dirtDry, terrainImgs.dirtCracked],
+      /* 5 path  */ [terrainImgs.dirtDry, terrainImgs.dirtCracked, terrainImgs.dirtRuts],
+    ];
+    const detailImgs = [terrainImgs.logs, terrainImgs.stonePile, terrainImgs.roots,
+                        terrainImgs.rockGrass, terrainImgs.rootsGreen];
 
-    // ── LAYER 1: Dense base — large overlapping tiles, full coverage ──
-    // Grid-based placement with jitter to eliminate gaps
-    const TILE_SZ = 180;
-    const STEP = Math.floor(TILE_SZ * 0.55); // heavy overlap
-    for (let gy = -TILE_SZ; gy < H + TILE_SZ; gy += STEP) {
-      for (let gx = -TILE_SZ; gx < W + TILE_SZ; gx += STEP) {
-        const jx = gx + (srng() - 0.5) * STEP * 0.7;
-        const jy = gy + (srng() - 0.5) * STEP * 0.7;
-        const xf = jx / W, yf = jy / H;
-        const ps = pathStrength(jx, jy);
+    // ── Build data grid ──
+    const grid = buildDataGrid(W, H, CELL, pathStrength);
+    const rows = grid.length, cols = grid[0].length;
 
-        let pool;
-        if (ps > 0.8) {
-          pool = pathTiles;
-        } else if (ps > 0.3) {
-          // Path edge: mix path and grass
-          pool = pathEdgeTiles;
-        } else {
-          pool = biomeTiles[getBiome(xf, yf)];
-        }
-        const img = pool[Math.floor(srng() * pool.length)];
-        const sz = TILE_SZ + (srng() - 0.5) * 60;
-        const rot = (srng() - 0.5) * 0.4; // ±0.2 rad
-        drawPatch(img, jx, jy, sz, 0.70 + srng() * 0.25, rot);
+    // ── PASS 1: Base color fill per data cell ──
+    // Solid color rectangles — guarantees zero gaps
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        ctx.fillStyle = BIOME_COLORS[grid[r][c]];
+        ctx.globalAlpha = 1;
+        ctx.fillRect(c * CELL, r * CELL, CELL + 1, CELL + 1);
       }
     }
 
-    // ── LAYER 2: Biome accent — medium patches reinforce zoning ──
-    const accentCount = Math.floor((W * H) / 8000);
-    for (let i = 0; i < accentCount; i++) {
+    // ── PASS 2: Data-grid texture — one patch per cell ──
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const biome = grid[r][c];
+        const pool = biomePatch[biome];
+        // Deterministic pick from pool based on position
+        const idx = ((c * 7 + r * 13) & 0x7fffffff) % pool.length;
+        const img = pool[idx];
+        const cx = c * CELL + CELL / 2;
+        const cy = r * CELL + CELL / 2;
+        // Slight rotation for variety
+        const rot = ((c * 3 + r * 5) % 7 - 3) * 0.15;
+        drawPatch(img, cx, cy, CELL * 1.35, 0.80, rot);
+      }
+    }
+
+    // ── PASS 3: Render grid (offset half-cell) — transition blending ──
+    // Each render cell sits at the junction of 4 data cells
+    const halfCell = CELL / 2;
+    // Offscreen canvas for compositing transitions
+    const offW = CELL, offH = CELL;
+    const off = document.createElement('canvas');
+    off.width = offW; off.height = offH;
+    const offCtx = off.getContext('2d');
+
+    for (let r = 0; r < rows - 1; r++) {
+      for (let c = 0; c < cols - 1; c++) {
+        const tl = grid[r][c], tr = grid[r][c + 1];
+        const bl = grid[r + 1][c], br = grid[r + 1][c + 1];
+        // Skip if all same biome (no transition needed)
+        if (tl === tr && tr === bl && bl === br) continue;
+
+        // Render cell position (offset by half)
+        const rx = c * CELL + halfCell;
+        const ry = r * CELL + halfCell;
+
+        // For each quadrant, draw the biome of that corner with radial fade
+        offCtx.clearRect(0, 0, offW, offH);
+        const corners = [
+          { biome: tl, cx: 0,    cy: 0    },  // top-left quadrant
+          { biome: tr, cx: offW, cy: 0    },  // top-right
+          { biome: bl, cx: 0,    cy: offH },  // bottom-left
+          { biome: br, cx: offW, cy: offH },  // bottom-right
+        ];
+
+        corners.forEach(function(corner) {
+          const pool = biomePatch[corner.biome];
+          const img = pool[((c + r + corner.cx + corner.cy) & 0x7fffffff) % pool.length];
+          if (!img) return;
+
+          offCtx.save();
+          // Radial gradient mask from this corner
+          const grad = offCtx.createRadialGradient(
+            corner.cx, corner.cy, 0,
+            corner.cx, corner.cy, CELL * 0.9
+          );
+          grad.addColorStop(0, 'rgba(0,0,0,1)');
+          grad.addColorStop(0.5, 'rgba(0,0,0,0.5)');
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+          // Draw biome color base into quadrant
+          offCtx.globalCompositeOperation = 'source-over';
+          offCtx.fillStyle = BIOME_COLORS[corner.biome];
+          offCtx.globalAlpha = 1;
+          offCtx.fillRect(0, 0, offW, offH);
+
+          // Draw texture patch
+          const aspect = img.naturalHeight / img.naturalWidth;
+          offCtx.globalAlpha = 0.75;
+          offCtx.drawImage(img, -offW * 0.15, -offH * 0.15, offW * 1.3, offW * 1.3 * aspect);
+
+          // Apply radial mask
+          offCtx.globalCompositeOperation = 'destination-in';
+          offCtx.globalAlpha = 1;
+          offCtx.fillStyle = grad;
+          offCtx.fillRect(0, 0, offW, offH);
+          offCtx.restore();
+        });
+
+        // Stamp transition cell onto main canvas
+        ctx.globalAlpha = 0.85;
+        ctx.drawImage(off, rx, ry, CELL, CELL);
+      }
+    }
+
+    // ── PASS 4: Organic scatter overlay — breaks grid regularity ──
+    ctx.globalAlpha = 1;
+    const scatterCount = Math.floor((W * H) / 12000);
+    for (let i = 0; i < scatterCount; i++) {
       const x = srng() * W, y = srng() * H;
       const xf = x / W, yf = y / H;
       const ps = pathStrength(x, y);
-      if (ps > 0.5) continue; // skip path core
-
-      const biome = getBiome(xf, yf);
-      const pool = biomeTiles[biome];
+      // Look up biome at this point
+      const gc = Math.min(Math.floor(x / CELL), cols - 1);
+      const gr = Math.min(Math.floor(y / CELL), rows - 1);
+      const biome = grid[gr][gc];
+      const pool = biomePatch[biome];
       const img = pool[Math.floor(srng() * pool.length)];
-      const sz = 100 + srng() * 120;
+      const sz = 100 + srng() * 140;
       const rot = srng() * Math.PI * 2;
-      const alpha = biome === 'mossy' ? 0.55 + srng() * 0.3
-                  : biome === 'rocky' ? 0.50 + srng() * 0.3
-                  : 0.40 + srng() * 0.30;
+      const alpha = ps > 0.5 ? 0.25 + srng() * 0.2  // subtle on path
+                              : 0.30 + srng() * 0.30; // normal elsewhere
       drawPatch(img, x, y, sz, alpha, rot);
     }
 
-    // ── LAYER 3: Path — dense fill for the road ──
-    const pathCount = Math.floor((W * H) / 6000);
-    for (let i = 0; i < pathCount; i++) {
-      const x = (0.25 + srng() * 0.60) * W;
-      const y = srng() * H;
-      const ps = pathStrength(x, y);
-      if (ps < 0.15) continue;
-      const img = pathTiles[Math.floor(srng() * pathTiles.length)];
-      const sz = 70 + srng() * 80;
-      const rot = (srng() - 0.5) * 0.3;
-      drawPatch(img, x, y, sz, (0.55 + srng() * 0.35) * ps, rot);
-    }
-
-    // Path mud accents
-    const mudCount = Math.floor((W * H) / 25000);
+    // ── PASS 5: Path mud accents ──
+    const mudCount = Math.floor((W * H) / 22000);
     for (let i = 0; i < mudCount; i++) {
-      const x = (0.30 + srng() * 0.50) * W;
+      const x = (0.28 + srng() * 0.55) * W;
       const y = srng() * H;
       const ps = pathStrength(x, y);
       if (ps < 0.4) continue;
-      drawPatch(terrainImgs.mudpool, x, y, 130 + srng() * 100,
-        (0.45 + srng() * 0.30) * ps, (srng() - 0.5) * 0.2);
+      drawPatch(terrainImgs.mudpool, x, y, 120 + srng() * 90,
+        (0.40 + srng() * 0.30) * ps, (srng() - 0.5) * 0.25);
     }
 
-    // ── LAYER 4: Edge darkening — mossy/root patches near screen edges ──
+    // ── PASS 6: Edge darkening ──
     const edgeImgs = [terrainImgs.mossy, terrainImgs.rootsGreen, terrainImgs.roots];
-    const edgeCount = Math.floor((W * H) / 7000);
+    const edgeCount = Math.floor((W * H) / 8000);
     for (let i = 0; i < edgeCount; i++) {
       const xFrac = srng(), y = srng() * H;
       const edgeDist = Math.min(xFrac, 1 - xFrac);
@@ -267,21 +354,19 @@
       const x = xFrac * W;
       const img = edgeImgs[Math.floor(srng() * edgeImgs.length)];
       const ew = smoothstep(0.28, 0.0, edgeDist);
-      const rot = srng() * Math.PI * 2;
       drawPatch(img, x, y, 120 + srng() * 100,
-        (0.45 + srng() * 0.30) * ew, rot);
+        (0.45 + srng() * 0.30) * ew, srng() * Math.PI * 2);
     }
 
-    // ── LAYER 5: Scattered ground detail (roots, stones, logs) ──
+    // ── PASS 7: Scattered ground details ──
     const exclusions = buildExclusions();
-    const detailCount = Math.floor((W * H) / 18000);
+    const detailCount = Math.floor((W * H) / 20000);
     for (let i = 0; i < detailCount; i++) {
       const x = srng() * W, y = srng() * H;
       if (nearStructure(x / W * 100, y / H * 100, exclusions)) continue;
-      if (pathStrength(x, y) > 0.6 && srng() < 0.7) continue; // fewer details on path
-      const img = detailTiles[Math.floor(srng() * detailTiles.length)];
-      const sz = 60 + srng() * 80;
-      drawPatch(img, x, y, sz, 0.55 + srng() * 0.35, srng() * Math.PI * 2);
+      if (pathStrength(x, y) > 0.6 && srng() < 0.7) continue;
+      const img = detailImgs[Math.floor(srng() * detailImgs.length)];
+      drawPatch(img, x, y, 60 + srng() * 80, 0.50 + srng() * 0.35, srng() * Math.PI * 2);
     }
 
     ctx.globalAlpha = 1;
