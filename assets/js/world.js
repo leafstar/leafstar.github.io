@@ -434,7 +434,7 @@
     if (!stage || !content) return;
     var btn = document.createElement('div');
     btn.id = 'toggle-content';
-    btn.style.cssText = 'position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:18px;line-height:38px;text-align:center;font-family:sans-serif;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
+    btn.style.cssText = 'position:fixed;top:1.2rem;right:1.2rem;z-index:9999;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:18px;line-height:38px;text-align:center;font-family:sans-serif;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
     btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
     document.body.appendChild(btn);
     var bar = document.getElementById('game-bar');
