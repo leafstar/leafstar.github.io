@@ -86,28 +86,13 @@
   grid-template-columns: minmax(0, 1.5fr) minmax(15rem, .9fr)
   gap: 2rem
   margin-top: .4rem
-  padding: 1.6rem
+  padding: 2.2rem 2.4rem
   border-radius: 0
-  background: linear-gradient(180deg, rgba(200, 180, 141, 0.94), rgba(183, 158, 115, 0.95))
-  border: 4px solid #5b4128
-  box-shadow: 0 0 0 4px #926946, 0 12px 0 rgba(79, 55, 29, 0.14)
+  border: none
+  box-shadow: none
+  background: url('/assets/images/procedural-world/frame-parchment-clean.png') center / 100% 100% no-repeat
   overflow: hidden
   font-family: "Courier New", "Lucida Console", monospace
-
-.hero-panel::after
-  content: ""
-  position: absolute
-  inset: 0
-  background-image: linear-gradient(rgba(88, 61, 33, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(88, 61, 33, 0.05) 1px, transparent 1px)
-  background-size: 14px 14px
-  pointer-events: none
-
-.hero-panel::before
-  content: ""
-  position: absolute
-  inset: 0
-  background: linear-gradient(180deg, rgba(255, 236, 201, 0.08), transparent 24%, transparent 76%, rgba(71, 48, 28, 0.08))
-  pointer-events: none
 
 .hero-copy
   position: relative
@@ -186,11 +171,11 @@
   gap: 1rem
 
 .hero-portrait-frame
-  padding: .8rem
+  padding: 1rem
   border-radius: 0
-  background: linear-gradient(180deg, #7c6243, #614a33)
-  border: 4px solid #463322
-  box-shadow: inset -4px -4px 0 rgba(199, 168, 129, 0.12)
+  border: none
+  box-shadow: none
+  background: url('/assets/images/procedural-world/frame-dark-clean.png') center / 100% 100% no-repeat
 
 .hero-portrait
   display: block
@@ -201,12 +186,12 @@
   border: 4px solid #253120
 
 .hero-fact-card
-  padding: 1rem 1.1rem
+  padding: 1.2rem 1.4rem
   border-radius: 0
-  background: linear-gradient(180deg, #67553d, #51402d)
-  border: 4px solid #32261a
+  border: none
+  box-shadow: none
+  background: url('/assets/images/procedural-world/frame-dark-clean.png') center / 100% 100% no-repeat
   color: #fff
-  box-shadow: inset -4px -4px 0 rgba(198, 170, 132, 0.12)
 
 .hero-fact-label
   margin: 0 0 .35rem
@@ -233,18 +218,16 @@
   gap: 1.4rem
 
 .story-card
-  padding: 1.35rem 1.45rem
+  padding: 2.2rem 2.4rem
   border-radius: 0
-  background: linear-gradient(180deg, rgba(183, 170, 135, 0.95), rgba(157, 145, 109, 0.96))
-  border: 4px solid #5f5a3e
-  box-shadow: 0 0 0 4px #8a845f, 0 10px 0 rgba(76, 72, 48, 0.14)
+  border: none
+  box-shadow: none
+  background: url('/assets/images/procedural-world/frame-parchment-clean.png') center / 100% 100% no-repeat
   font-family: "Courier New", "Lucida Console", monospace
   color: #30261e
 
 .story-card-accent
-  background: linear-gradient(180deg, rgba(90, 80, 63, 0.96), rgba(71, 62, 48, 0.98))
-  border-color: #2f2c20
-  box-shadow: 0 0 0 4px #7a775d, 0 10px 0 rgba(15, 45, 67, 0.12)
+  background: url('/assets/images/procedural-world/frame-dark-clean.png') center / 100% 100% no-repeat
   color: #fff
 
 .story-card-accent p
@@ -300,9 +283,7 @@
 // ─── Notice board (RPG bulletin board) ───────────────────────────────────────
 
 .story-card-board
-  background: linear-gradient(180deg, rgba(110, 88, 58, 0.97), rgba(82, 64, 40, 0.98))
-  border-color: #3a3020
-  box-shadow: 0 0 0 4px #7a6848, 0 10px 0 rgba(40, 30, 18, 0.18)
+  background: url('/assets/images/procedural-world/frame-dark-clean.png') center / 100% 100% no-repeat
   color: #f3e8cf
 
 .board-header
@@ -330,9 +311,9 @@
 .board-note
   position: relative
   padding: .9rem 1rem
-  background: rgba(243, 232, 207, 0.08)
-  border: 2px solid rgba(243, 232, 207, 0.12)
-  border-left: 4px solid #c75637
+  background: rgba(243, 232, 207, 0.06)
+  border: none
+  border-left: 3px solid #c75637
 
 .board-note h3
   margin: 0 0 .35rem
@@ -365,7 +346,7 @@
 
 .journey-map-wrap
   overflow: hidden
-  border: 2px solid rgba(90, 74, 58, 0.4)
+  border: none
   margin-bottom: .8rem
 
 .visitor-map
