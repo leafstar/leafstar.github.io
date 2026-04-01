@@ -434,8 +434,8 @@
     if (!layer) return;
 
     var npcs = [
-      { sprite: '/assets/images/npcs/soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.3, y: 55, x0: 55, x1: 90, scale: 0.7 },
-      { sprite: '/assets/images/npcs/orc-walk.png', frames: 8, w: 100, h: 100, speed: 0.2, y: 75, x0: 60, x1: 85, scale: 0.65 },
+      { sprite: '/assets/images/npcs/soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.15, y: 50, x0: 52, x1: 88, scale: 1.8 },
+      { sprite: '/assets/images/npcs/orc-walk.png', frames: 8, w: 100, h: 100, speed: 0.1, y: 70, x0: 58, x1: 82, scale: 1.6 },
     ];
 
     npcs.forEach(function(npc) {
@@ -448,72 +448,89 @@
 
       var frame = 0;
       var xPct = npc.x0;
-      var dir = 1; // 1=right, -1=left
+      var dir = 1;
       var fps = 8;
-      var lastTime = 0;
+      var lastFrame = 0;
+      var lastMove = 0;
 
       function animate(time) {
-        if (!lastTime) lastTime = time;
-        var dt = time - lastTime;
-        if (dt > 1000 / fps) {
-          lastTime = time;
+        // Frame animation
+        if (time - lastFrame > 1000 / fps) {
+          lastFrame = time;
           frame = (frame + 1) % npc.frames;
           el.style.backgroundPositionX = -(frame * sz) + 'px';
         }
-        // Move
-        xPct += dir * npc.speed * (dt / 100);
-        if (xPct > npc.x1) { dir = -1; el.style.transform = 'scaleX(-1)'; }
-        if (xPct < npc.x0) { dir = 1; el.style.transform = 'scaleX(1)'; }
-        el.style.left = xPct + '%';
+        // Movement (fixed step per frame, no dt multiplication)
+        if (time - lastMove > 16) {
+          lastMove = time;
+          xPct += dir * npc.speed;
+          if (xPct > npc.x1) { dir = -1; el.style.transform = 'scaleX(-1)'; }
+          if (xPct < npc.x0) { dir = 1; el.style.transform = 'scaleX(1)'; }
+          el.style.left = xPct + '%';
+        }
         requestAnimationFrame(animate);
       }
       requestAnimationFrame(animate);
     });
   }
 
+  // ─── UI: Toggle visibility ──────────────────────────────────────────────
   function initToggle() {
-    const stage = document.getElementById('world-stage');
-    const content = document.querySelector('.world-content');
+    var stage = document.getElementById('world-stage');
+    var content = document.querySelector('.world-content');
     if (!stage || !content) return;
+
     var btn = document.createElement('div');
     btn.id = 'toggle-content';
-    btn.style.cssText = 'position:fixed;top:1.2rem;right:1.2rem;z-index:9999;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:18px;line-height:38px;text-align:center;font-family:sans-serif;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    btn.style.cssText = 'position:fixed;top:1.2rem;right:1.2rem;z-index:10000;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;font-size:18px;line-height:38px;text-align:center;font-family:sans-serif;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
+    var eyeOpen = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    var eyeClosed = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+    btn.innerHTML = eyeOpen;
     document.body.appendChild(btn);
+
     var bar = document.getElementById('game-bar');
     var hidden = false;
-    btn.addEventListener('click', function() {
+    btn.onclick = function(e) {
+      e.stopPropagation();
       hidden = !hidden;
       content.style.opacity = hidden ? '0' : '';
       content.style.pointerEvents = hidden ? 'none' : '';
       if (bar) bar.style.opacity = hidden ? '0' : '';
-      btn.innerHTML = hidden
-        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
-        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-    });
+      btn.innerHTML = hidden ? eyeClosed : eyeOpen;
+    };
   }
 
+  // ─── UI: Wand cursor selector ───────────────────────────────────────────
   function initWandSelector() {
     var WAND_COUNT = 50;
     var BASE = '/assets/images/wands/Icons_13_';
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
     function wandUrl(n) { return BASE + pad(n) + '.png'; }
 
+    function applyCursor(id) {
+      var url = wandUrl(parseInt(id));
+      var rule = "url('" + url + "') 2 2, auto";
+      var style = document.getElementById('wand-cursor-style');
+      if (!style) { style = document.createElement('style'); style.id = 'wand-cursor-style'; document.head.appendChild(style); }
+      style.textContent = 'html, *, *::before, *::after { cursor: ' + rule + ' !important; }';
+    }
+
     // Load saved wand
     var saved = localStorage.getItem('cursor-wand') || '01';
     applyCursor(saved);
 
-    // Wand button (below eye toggle)
+    // Wand button
     var btn = document.createElement('div');
     btn.id = 'wand-selector-btn';
-    btn.style.cssText = 'position:fixed;top:4.2rem;right:1.2rem;z-index:9999;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;cursor:pointer;text-align:center;line-height:38px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
+    btn.style.cssText = 'position:fixed;top:4.2rem;right:1.2rem;z-index:10000;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;text-align:center;line-height:38px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
     btn.innerHTML = '<img src="' + wandUrl(parseInt(saved)) + '" style="width:24px;height:24px;image-rendering:pixelated;vertical-align:middle" />';
     document.body.appendChild(btn);
 
     // Panel
     var panel = document.createElement('div');
     panel.id = 'wand-panel';
-    panel.style.cssText = 'position:fixed;top:4.2rem;right:3.8rem;z-index:9998;background:rgba(20,18,30,.92);border:2px solid rgba(200,180,255,.25);border-radius:4px;padding:8px;display:none;max-width:280px;backdrop-filter:blur(6px)';
+    panel.style.cssText = 'position:fixed;top:4.2rem;right:3.8rem;z-index:10001;background:rgba(20,18,30,.92);border:2px solid rgba(200,180,255,.25);border-radius:4px;padding:8px;display:none;max-width:280px;backdrop-filter:blur(6px)';
+
     var title = document.createElement('div');
     title.style.cssText = 'color:#c8b4ff;font-size:11px;font-family:Cinzel,serif;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;text-align:center';
     title.textContent = 'Choose your wand';
@@ -524,39 +541,29 @@
     for (var i = 1; i <= WAND_COUNT; i++) {
       (function(idx) {
         var cell = document.createElement('div');
-        cell.style.cssText = 'width:28px;height:28px;cursor:pointer;border:1px solid transparent;border-radius:2px;display:flex;align-items:center;justify-content:center;transition:border-color .15s';
+        cell.style.cssText = 'width:28px;height:28px;border:1px solid transparent;border-radius:2px;display:flex;align-items:center;justify-content:center;transition:border-color .15s';
         cell.innerHTML = '<img src="' + wandUrl(idx) + '" style="width:24px;height:24px;image-rendering:pixelated" />';
-        cell.addEventListener('mouseenter', function() { cell.style.borderColor = 'rgba(200,180,255,.5)'; });
-        cell.addEventListener('mouseleave', function() { cell.style.borderColor = 'transparent'; });
-        cell.addEventListener('click', function() {
+        cell.onmouseenter = function() { cell.style.borderColor = 'rgba(200,180,255,.5)'; };
+        cell.onmouseleave = function() { cell.style.borderColor = 'transparent'; };
+        cell.onclick = function(e) {
+          e.stopPropagation();
           var id = pad(idx);
           localStorage.setItem('cursor-wand', id);
           applyCursor(id);
           btn.querySelector('img').src = wandUrl(idx);
           panel.style.display = 'none';
-        });
+        };
         grid.appendChild(cell);
       })(i);
     }
     panel.appendChild(grid);
     document.body.appendChild(panel);
 
-    btn.addEventListener('click', function(e) {
+    btn.onclick = function(e) {
       e.stopPropagation();
       panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    });
+    };
     document.addEventListener('click', function() { panel.style.display = 'none'; });
-    panel.addEventListener('click', function(e) { e.stopPropagation(); });
-
-    function applyCursor(id) {
-      var url = wandUrl(parseInt(id));
-      var rule = "url('" + url + "') 2 2, auto";
-      var rulePtr = "url('" + url + "') 2 2, pointer";
-      // Update or create style tag
-      var style = document.getElementById('wand-cursor-style');
-      if (!style) { style = document.createElement('style'); style.id = 'wand-cursor-style'; document.head.appendChild(style); }
-      style.textContent = '*, *::before, *::after { cursor: ' + rule + ' !important; } a, button, [role="button"], input[type="submit"], [onclick], .hud-skill, #toggle-content, #wand-selector-btn, [style*="cursor"], a *, button *, .hud-skill *, #toggle-content *, #wand-selector-btn *, #wand-panel * { cursor: ' + rulePtr + ' !important; }';
-    }
   }
 
   if (document.readyState === 'loading') {
