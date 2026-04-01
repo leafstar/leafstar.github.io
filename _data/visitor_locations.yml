@@ -1,44 +1,23 @@
 - city: Boston
   country: USA
-  lat: 42.3601
-  lon: -71.0589
   label: Northeastern University
   period: 2023 - Present
-  x: 303
-  y: 132
-  label_x: 334
-  label_y: 126
-  mx: 430
-  my: 310
-  mlx: 450
-  mly: 292
+  color: "#8b2500"
+  mx: 458
+  my: 330
 
 - city: Edinburgh
   country: UK
-  lat: 55.9533
-  lon: -3.1883
   label: University of Edinburgh
   period: 2021 - 2022
-  x: 491
-  y: 95
-  label_x: 501
-  label_y: 86
-  mx: 710
-  my: 250
-  mlx: 730
-  mly: 232
+  color: "#1a3a6a"
+  mx: 705
+  my: 245
 
 - city: Waterloo
   country: Canada
-  lat: 43.4643
-  lon: -80.5204
   label: University of Waterloo
   period: 2015 - 2020
-  x: 276
-  y: 129
-  label_x: 286
-  label_y: 118
-  mx: 395
-  my: 300
-  mlx: 280
-  mly: 275
+  color: "#2a6a1a"
+  mx: 400
+  my: 310

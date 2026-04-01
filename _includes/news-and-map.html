@@ -26,7 +26,7 @@
         <svg class="parchment-map-overlay" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid meet">
           <defs>
             <filter id="pin-glow" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+              <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
               <feMerge>
                 <feMergeNode in="blur"></feMergeNode>
                 <feMergeNode in="SourceGraphic"></feMergeNode>
@@ -34,27 +34,29 @@
             </filter>
           </defs>
           <!-- Dashed travel routes -->
-          <g class="map-routes" fill="none" stroke="#5a3018" stroke-width="2.5" stroke-dasharray="10 6" opacity="0.55">
-            <path d="M {{ site.data.visitor_locations[2].mx }} {{ site.data.visitor_locations[2].my }} Q 500 220, {{ site.data.visitor_locations[0].mx }} {{ site.data.visitor_locations[0].my }}" />
-            <path d="M {{ site.data.visitor_locations[0].mx }} {{ site.data.visitor_locations[0].my }} Q 580 180, {{ site.data.visitor_locations[1].mx }} {{ site.data.visitor_locations[1].my }}" />
+          <g class="map-routes" fill="none" stroke="#5a3018" stroke-width="3" stroke-dasharray="12 7" opacity="0.5">
+            <path d="M {{ site.data.visitor_locations[2].mx }} {{ site.data.visitor_locations[2].my }} C 420 250, 460 250, {{ site.data.visitor_locations[0].mx }} {{ site.data.visitor_locations[0].my }}" />
+            <path d="M {{ site.data.visitor_locations[0].mx }} {{ site.data.visitor_locations[0].my }} C 560 200, 640 190, {{ site.data.visitor_locations[1].mx }} {{ site.data.visitor_locations[1].my }}" />
           </g>
-          <!-- Location pins -->
+          <!-- Numbered pins -->
           {% for location in site.data.visitor_locations %}
             <g class="map-pin-group">
-              <circle cx="{{ location.mx }}" cy="{{ location.my }}" r="18" class="map-pin-pulse"></circle>
-              <circle cx="{{ location.mx }}" cy="{{ location.my }}" r="8" class="map-pin-dot" filter="url(#pin-glow)"></circle>
-              <text x="{{ location.mlx | default: location.mx | plus: 16 }}" y="{{ location.mly | default: location.my | minus: 16 }}" class="map-pin-label">{{ location.label }}</text>
-              <text x="{{ location.mlx | default: location.mx | plus: 16 }}" y="{{ location.mly | default: location.my | plus: 2 }}" class="map-pin-sublabel">{{ location.city }} · {{ location.period }}</text>
+              <circle cx="{{ location.mx }}" cy="{{ location.my }}" r="20" class="map-pin-pulse" style="fill:{{ location.color }}20"></circle>
+              <circle cx="{{ location.mx }}" cy="{{ location.my }}" r="12" fill="{{ location.color }}" stroke="#d4a050" stroke-width="2.5" filter="url(#pin-glow)"></circle>
+              <text x="{{ location.mx }}" y="{{ location.my }}" dy="5" text-anchor="middle" class="map-pin-number">{{ forloop.index }}</text>
             </g>
           {% endfor %}
         </svg>
       </div>
     </div>
-    <ul class="journey-locations">
+    <ul class="journey-legend">
       {% for location in site.data.visitor_locations %}
         <li>
-          <strong>{{ location.label }}</strong>
-          <span>{{ location.city }} &middot; {{ location.period }}</span>
+          <span class="legend-dot" style="background:{{ location.color }}">{{ forloop.index }}</span>
+          <div class="legend-info">
+            <strong>{{ location.label }}</strong>
+            <span>{{ location.city }} &middot; {{ location.period }}</span>
+          </div>
         </li>
       {% endfor %}
     </ul>
