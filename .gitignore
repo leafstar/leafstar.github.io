@@ -7,3 +7,5 @@ _site
 *.gem
 temp_assets/
 /*.zip
+_unzipped/
+*.zip

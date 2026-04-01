@@ -428,6 +428,49 @@
     });
   }
 
+  // ─── NPC walking animations ──────────────────────────────────────────────
+  function initNPCs() {
+    var layer = document.getElementById('world-sprite-layer');
+    if (!layer) return;
+
+    var npcs = [
+      { sprite: '/assets/images/npcs/soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.3, y: 55, x0: 55, x1: 90, scale: 0.7 },
+      { sprite: '/assets/images/npcs/orc-walk.png', frames: 8, w: 100, h: 100, speed: 0.2, y: 75, x0: 60, x1: 85, scale: 0.65 },
+    ];
+
+    npcs.forEach(function(npc) {
+      var el = document.createElement('div');
+      var sz = Math.round(npc.w * npc.scale);
+      el.style.cssText = 'position:absolute;width:' + sz + 'px;height:' + sz + 'px;background:url(' + npc.sprite + ') 0 0 / ' + (npc.frames * 100) + '% 100%;image-rendering:pixelated;z-index:5;pointer-events:none';
+      el.style.top = npc.y + '%';
+      el.style.left = npc.x0 + '%';
+      layer.appendChild(el);
+
+      var frame = 0;
+      var xPct = npc.x0;
+      var dir = 1; // 1=right, -1=left
+      var fps = 8;
+      var lastTime = 0;
+
+      function animate(time) {
+        if (!lastTime) lastTime = time;
+        var dt = time - lastTime;
+        if (dt > 1000 / fps) {
+          lastTime = time;
+          frame = (frame + 1) % npc.frames;
+          el.style.backgroundPositionX = -(frame * sz) + 'px';
+        }
+        // Move
+        xPct += dir * npc.speed * (dt / 100);
+        if (xPct > npc.x1) { dir = -1; el.style.transform = 'scaleX(-1)'; }
+        if (xPct < npc.x0) { dir = 1; el.style.transform = 'scaleX(1)'; }
+        el.style.left = xPct + '%';
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    });
+  }
+
   function initToggle() {
     const stage = document.getElementById('world-stage');
     const content = document.querySelector('.world-content');
@@ -450,9 +493,75 @@
     });
   }
 
+  function initWandSelector() {
+    var WAND_COUNT = 50;
+    var BASE = '/assets/images/wands/Icons_13_';
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    function wandUrl(n) { return BASE + pad(n) + '.png'; }
+
+    // Load saved wand
+    var saved = localStorage.getItem('cursor-wand') || '01';
+    applyCursor(saved);
+
+    // Wand button (below eye toggle)
+    var btn = document.createElement('div');
+    btn.id = 'wand-selector-btn';
+    btn.style.cssText = 'position:fixed;top:4.2rem;right:1.2rem;z-index:9999;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;cursor:pointer;text-align:center;line-height:38px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
+    btn.innerHTML = '<img src="' + wandUrl(parseInt(saved)) + '" style="width:24px;height:24px;image-rendering:pixelated;vertical-align:middle" />';
+    document.body.appendChild(btn);
+
+    // Panel
+    var panel = document.createElement('div');
+    panel.id = 'wand-panel';
+    panel.style.cssText = 'position:fixed;top:4.2rem;right:3.8rem;z-index:9998;background:rgba(20,18,30,.92);border:2px solid rgba(200,180,255,.25);border-radius:4px;padding:8px;display:none;max-width:280px;backdrop-filter:blur(6px)';
+    var title = document.createElement('div');
+    title.style.cssText = 'color:#c8b4ff;font-size:11px;font-family:Cinzel,serif;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;text-align:center';
+    title.textContent = 'Choose your wand';
+    panel.appendChild(title);
+
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(10,1fr);gap:2px';
+    for (var i = 1; i <= WAND_COUNT; i++) {
+      (function(idx) {
+        var cell = document.createElement('div');
+        cell.style.cssText = 'width:28px;height:28px;cursor:pointer;border:1px solid transparent;border-radius:2px;display:flex;align-items:center;justify-content:center;transition:border-color .15s';
+        cell.innerHTML = '<img src="' + wandUrl(idx) + '" style="width:24px;height:24px;image-rendering:pixelated" />';
+        cell.addEventListener('mouseenter', function() { cell.style.borderColor = 'rgba(200,180,255,.5)'; });
+        cell.addEventListener('mouseleave', function() { cell.style.borderColor = 'transparent'; });
+        cell.addEventListener('click', function() {
+          var id = pad(idx);
+          localStorage.setItem('cursor-wand', id);
+          applyCursor(id);
+          btn.querySelector('img').src = wandUrl(idx);
+          panel.style.display = 'none';
+        });
+        grid.appendChild(cell);
+      })(i);
+    }
+    panel.appendChild(grid);
+    document.body.appendChild(panel);
+
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', function() { panel.style.display = 'none'; });
+    panel.addEventListener('click', function(e) { e.stopPropagation(); });
+
+    function applyCursor(id) {
+      var url = wandUrl(parseInt(id));
+      var rule = "url('" + url + "') 2 2, auto";
+      var rulePtr = "url('" + url + "') 2 2, pointer";
+      // Update or create style tag
+      var style = document.getElementById('wand-cursor-style');
+      if (!style) { style = document.createElement('style'); style.id = 'wand-cursor-style'; document.head.appendChild(style); }
+      style.textContent = '*, *::before, *::after { cursor: ' + rule + ' !important; } a, button, [role="button"], input[type="submit"], [onclick], .hud-skill, #toggle-content, #wand-selector-btn, [style*="cursor"], a *, button *, .hud-skill *, #toggle-content *, #wand-selector-btn *, #wand-panel * { cursor: ' + rulePtr + ' !important; }';
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { init(); initToggle(); });
+    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initWandSelector(); });
   } else {
-    init(); initToggle();
+    init(); initNPCs(); initToggle(); initWandSelector();
   }
 })();
