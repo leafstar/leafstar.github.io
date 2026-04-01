@@ -1,11 +1,10 @@
 (function () {
   'use strict';
 
-  // ─── Perlin noise ────────────────────────────────────────────────────────────
+  // ─── Perlin noise (seed 42) ──────────────────────────────────────────────
   const perm = new Uint8Array(512);
   const gradX = new Float32Array(256);
   const gradY = new Float32Array(256);
-
   (function seed(s) {
     const p = new Uint8Array(256);
     for (let i = 0; i < 256; i++) p[i] = i;
@@ -17,8 +16,7 @@
     for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
     for (let i = 0; i < 256; i++) {
       const a = (perm[i] / 256) * Math.PI * 2;
-      gradX[i] = Math.cos(a);
-      gradY[i] = Math.sin(a);
+      gradX[i] = Math.cos(a); gradY[i] = Math.sin(a);
     }
   })(42);
 
@@ -28,286 +26,403 @@
     return gradX[i] * (x - ix) + gradY[i] * (y - iy);
   }
   function lerp(a, b, t) { return a + t * (b - a); }
-
   function perlin(x, y) {
     const xi = Math.floor(x), yi = Math.floor(y);
     const xf = x - xi, yf = y - yi;
-    const u = fade(xf), v = fade(yf);
     return (lerp(
-      lerp(dot(xi, yi, x, y), dot(xi + 1, yi, x, y), u),
-      lerp(dot(xi, yi + 1, x, y), dot(xi + 1, yi + 1, x, y), u),
-      v
+      lerp(dot(xi,yi,x,y), dot(xi+1,yi,x,y), fade(xf)),
+      lerp(dot(xi,yi+1,x,y), dot(xi+1,yi+1,x,y), fade(xf)),
+      fade(yf)
     ) * 0.5 + 0.5);
   }
-
-  // Fractal noise (2 octaves) for more natural terrain variation
   function fbm(x, y) {
     return perlin(x, y) * 0.65 + perlin(x * 2.1, y * 2.1) * 0.35;
   }
+  function smoothstep(lo, hi, t) {
+    t = Math.max(0, Math.min(1, (t - lo) / (hi - lo)));
+    return t * t * (3 - 2 * t);
+  }
 
-  // ─── Seeded random (deterministic scatter) ───────────────────────────────────
+  // ─── Seeded RNG ──────────────────────────────────────────────────────────
   let rngState = 0x9e3779b9;
   function srng() {
     rngState ^= rngState << 13;
     rngState ^= rngState >> 17;
     rngState ^= rngState << 5;
-    return ((rngState >>> 0) / 0xffffffff);
+    return (rngState >>> 0) / 0xffffffff;
   }
+  function resetRng() { rngState = 0x9e3779b9; }
 
-  // ─── Asset paths ─────────────────────────────────────────────────────────────
+  // ─── Asset paths (individual PNGs cut from sprite sheets) ────────────────
   const BASE = '/assets/images/procedural-world';
 
-  // terrain_01-04: grass  terrain_05-09: dirt/mud  terrain_10-14: rocks/roots
-  const TERRAIN = Array.from({ length: 14 }, (_, i) =>
-    BASE + '/terrain/terrain_' + String(i + 1).padStart(2, '0') + '.png');
+  // terrain/terrain_01..14.png — ground patches
+  //   Row 0: 01=grass1, 02=grass2, 03=grassPath, 04=grassRocky, 05=dirtDry
+  //   Row 1: 06=dirtCracked, 07=mudpool, 08=dirtRuts, 09=mossy
+  //   Row 2: 10=rootsGreen, 11=stonePile, 12=rockGrass, 13=roots, 14=logs
+  const T_IDX = {
+    grass1: 1, grass2: 2, grassPath: 3, grassRocky: 4, dirtDry: 5,
+    dirtCracked: 6, mudpool: 7, dirtRuts: 8, mossy: 9,
+    rootsGreen: 10, stonePile: 11, rockGrass: 12, roots: 13, logs: 14,
+  };
 
-  // flora_21 and flora_23 are bad cuts — skip them
-  const FLORA_IDS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22];
-  const FLORA = FLORA_IDS.map(i =>
-    BASE + '/flora/flora_' + String(i).padStart(2, '0') + '.png');
+  // flora/flora_01..22.png — trees, bushes, stumps, rocks, moss
+  //   Row 0: 01=tree1, 02=tree2, 03=tree3, 04=bush1, 05=bush2, 06=bush3
+  //   Row 1: 07=grass1, 08=flowers, 09=flowerSmall, 10=stump1, 11=stump2, 12=stump3
+  //   Row 2: 13=fallenLog1, 14=rockLg, 15=rockSm, 16=moss1, 17=moss2
+  //   Row 3: 18=fallenLog2, 19=rockLg2, 20=rockSm2, 21=moss3, 22=moss4
+  const FL_IDX = {
+    tree1: 1, tree2: 2, tree3: 3, bush1: 4, bush2: 5, bush3: 6,
+    grass1: 7, flowers: 8, flowerSmall: 9, stump1: 10, stump2: 11, stump3: 12,
+    fallenLog1: 13, rockLg: 14, rockSm: 15, moss1: 16, moss2: 17,
+    fallenLog2: 18, rockLg2: 19, rockSm2: 20, moss3: 21, moss4: 22,
+  };
 
-  const PROPS = Array.from({ length: 12 }, (_, i) =>
-    BASE + '/props/prop_' + String(i + 1).padStart(2, '0') + '.png');
+  // props/prop_01..12.png — camp structures
+  //   Row 0: 01=house, 02=tentSmall, 03=tentLarge, 04=cart
+  //   Row 1: 05=barrels, 06=sign, 07=fenceA, 08=fenceB, 09=logPile
+  //   Row 2: 10=campfire, 11=sacks, 12=chopBlock
+  const PR_IDX = {
+    house: 1, tentSmall: 2, tentLarge: 3, cart: 4,
+    barrels: 5, sign: 6, fenceA: 7, fenceB: 8, logPile: 9,
+    campfire: 10, sacks: 11, chopBlock: 12,
+  };
 
-  // ─── Image preloader ─────────────────────────────────────────────────────────
-  function loadImages(srcs) {
-    return Promise.all(srcs.map(src => new Promise(resolve => {
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function terrainPath(name) { return BASE + '/terrain/terrain_' + pad2(T_IDX[name]) + '.png'; }
+  function floraPath(name)   { return BASE + '/flora/flora_' + pad2(FL_IDX[name]) + '.png'; }
+  function propPath(name)    { return BASE + '/props/prop_' + pad2(PR_IDX[name]) + '.png'; }
+
+  // ─── Image loader ────────────────────────────────────────────────────────
+  function loadImg(src) {
+    return new Promise(r => {
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
+      img.onload  = () => r(img);
+      img.onerror = () => r(null);
       img.src = src;
-    })));
+    });
   }
 
+  function loadAll(pathFn, indexMap) {
+    const entries = Object.entries(indexMap);
+    return Promise.all(entries.map(([name]) => loadImg(pathFn(name))))
+      .then(imgs => {
+        const map = {};
+        entries.forEach(([name], i) => { map[name] = imgs[i]; });
+        return map;
+      });
+  }
 
-  // ─── Terrain canvas ──────────────────────────────────────────────────────────
-  function drawTerrain(canvas, imgs, cssW, cssH) {
+  // ─── Layer 1 + 2: terrain canvas ─────────────────────────────────────────
+  function drawTerrain(canvas, terrainImgs, W, H) {
     const ctx = canvas.getContext('2d');
-    // canvas.width/height are already in physical pixels; draw in CSS pixels via scale
-    const W = cssW, H = cssH;
+    const FREQ = 0.0028;
 
-    // Base fill
-    ctx.fillStyle = '#4e5a34';
+    // Path geometry (winding dirt road right of center)
+    const PATH_CX = W * 0.56;
+    const PATH_HW = W * 0.082;
+    function pathDist(x, y) {
+      const wander = (fbm(y * 0.0022, x * 0.0007) - 0.5) * W * 0.10;
+      return Math.abs(x - PATH_CX - wander);
+    }
+    function pathAlpha(x, y) {
+      return smoothstep(PATH_HW * 1.4, PATH_HW * 0.25, pathDist(x, y));
+    }
+    function onPath(x, y) { return pathDist(x, y) < PATH_HW * 1.2; }
+
+    // Pass 0: solid base fill
+    ctx.fillStyle = '#2c4a14';
     ctx.fillRect(0, 0, W, H);
 
-    const FREQ = 0.003;
-    // Small tile with generous overlap so no gap is ever bare
-    const TILE = 95;
+    if (!terrainImgs) { applyVignette(ctx, W, H); return; }
 
-    // Pass 1 — dense base coverage (grass only, no jitter, tight grid)
-    for (let row = 0; row * TILE < H + TILE; row++) {
-      for (let col = 0; col * TILE < W + TILE; col++) {
-        const cx = col * TILE + TILE / 2;
-        const cy = row * TILE + TILE / 2;
-        const n = fbm(cx * FREQ, cy * FREQ);
-        const imgIdx = Math.min(Math.floor(n * 4), 3); // grass 0-3
-        const img = imgs[imgIdx];
-        if (!img || !img.naturalWidth) continue;
-        const scale = TILE * (1.25 + srng() * 0.3);
-        const aspect = img.naturalHeight / img.naturalWidth;
-        ctx.globalAlpha = 0.78 + srng() * 0.16;
-        ctx.drawImage(img, cx - scale / 2, cy - (scale * aspect) / 2, scale, scale * aspect);
-      }
+    function drawPatch(img, x, y, sz, alpha) {
+      if (!img) return;
+      ctx.globalAlpha = alpha;
+      const aspect = img.naturalHeight / img.naturalWidth;
+      ctx.drawImage(img, x - sz/2, y - (sz*aspect)/2, sz, sz*aspect);
     }
 
-    // Pass 2 — scattered detail patches (dirt/mud/rocks) in non-center zones
-    const DTILE = 130;
-    for (let row = 0; row * DTILE < H + DTILE; row++) {
-      for (let col = 0; col * DTILE < W + DTILE; col++) {
-        const jx = (srng() - 0.5) * DTILE * 0.6;
-        const jy = (srng() - 0.5) * DTILE * 0.6;
-        const cx = col * DTILE + DTILE / 2 + jx;
-        const cy = row * DTILE + DTILE / 2 + jy;
-        const xFrac = cx / W;
-        const inCenter = xFrac > 0.32 && xFrac < 0.68;
-        if (inCenter) continue; // keep center clean
-
-        const n = fbm(cx * FREQ, cy * FREQ);
-        if (n < 0.38) continue; // only place detail in higher-noise areas
-
-        let imgIdx;
-        if (n < 0.62) imgIdx = 4 + Math.floor((n - 0.38) / 0.24 * 5); // dirt 4-8
-        else           imgIdx = 9 + Math.floor((n - 0.62) / 0.38 * 5); // rocks 9-13
-        imgIdx = Math.min(imgIdx, 13);
-
-        const img = imgs[imgIdx];
-        if (!img || !img.naturalWidth) continue;
-        const scale = DTILE * (1.1 + srng() * 0.35);
-        const aspect = img.naturalHeight / img.naturalWidth;
-        ctx.globalAlpha = 0.68 + srng() * 0.22;
-        ctx.drawImage(img, cx - scale / 2, cy - (scale * aspect) / 2, scale, scale * aspect);
-      }
+    // Pass 1a: dense fine-grain grass base (small, many, low alpha)
+    const grassImgs = [terrainImgs.grass1, terrainImgs.grass2, terrainImgs.grassPath, terrainImgs.grassRocky];
+    const baseCount = Math.floor((W * H) / 5000);
+    for (let i = 0; i < baseCount; i++) {
+      const x = srng() * W, y = srng() * H;
+      if (onPath(x, y) && srng() < 0.80) continue;
+      const img = grassImgs[Math.floor(srng() * grassImgs.length)];
+      drawPatch(img, x, y, 90 + srng() * 80, 0.50 + srng() * 0.30);
     }
+
+    // Pass 1b: larger accent grass patches (sparser, more visible)
+    const accentCount = Math.floor((W * H) / 14000);
+    for (let i = 0; i < accentCount; i++) {
+      const x = srng() * W, y = srng() * H;
+      if (onPath(x, y) && srng() < 0.75) continue;
+      const img = grassImgs[Math.floor(srng() * grassImgs.length)];
+      drawPatch(img, x, y, 160 + srng() * 120, 0.45 + srng() * 0.35);
+    }
+
+    // Pass 2: edge patches (mossy, rocky, roots) — sides only
+    const edgeImgs = [terrainImgs.mossy, terrainImgs.grassRocky, terrainImgs.rockGrass, terrainImgs.rootsGreen];
+    const edgeCount = Math.floor((W * H) / 9000);
+    for (let i = 0; i < edgeCount; i++) {
+      const xFrac = srng(), y = srng() * H;
+      const edgeDist = Math.min(xFrac, 1 - xFrac);
+      if (edgeDist > 0.32) continue;
+      const x = xFrac * W;
+      const n = fbm(x * FREQ, y * FREQ);
+      if (n < 0.30) continue;
+      const img = edgeImgs[Math.floor(srng() * edgeImgs.length)];
+      const ew = smoothstep(0.32, 0.02, edgeDist);
+      drawPatch(img, x, y, 130 + srng() * 100,
+        (0.55 + srng() * 0.30) * ew * smoothstep(0.30, 0.58, n));
+    }
+
+    // Pass 3a: dirt path base — dense small patches
+    const dirtImgs = [terrainImgs.dirtDry, terrainImgs.dirtCracked, terrainImgs.dirtRuts];
+    const pathBaseCount = Math.floor((W * H) / 7000);
+    for (let i = 0; i < pathBaseCount; i++) {
+      const x = (0.25 + srng() * 0.60) * W;
+      const y = srng() * H;
+      const pa = pathAlpha(x, y);
+      if (pa < 0.05) continue;
+      drawPatch(dirtImgs[Math.floor(srng() * dirtImgs.length)],
+        x, y, 80 + srng() * 70, (0.60 + srng() * 0.30) * pa);
+    }
+
+    // Pass 3b: dirt path accent (larger patches, mud pools)
+    const pathAccentCount = Math.floor((W * H) / 18000);
+    for (let i = 0; i < pathAccentCount; i++) {
+      const x = (0.30 + srng() * 0.50) * W;
+      const y = srng() * H;
+      const pa = pathAlpha(x, y);
+      if (pa < 0.08) continue;
+      const img = srng() < 0.25 ? terrainImgs.mudpool : terrainImgs.dirtCracked;
+      drawPatch(img, x, y, 150 + srng() * 130, (0.55 + srng() * 0.35) * pa);
+    }
+
+    // Pass 4: sparse ground details everywhere (roots, stones, logs)
+    const detailImgs = [terrainImgs.logs, terrainImgs.stonePile, terrainImgs.roots, terrainImgs.rockGrass, terrainImgs.rootsGreen];
+    const detailCount = Math.floor((W * H) / 22000);
+    for (let i = 0; i < detailCount; i++) {
+      const x = srng() * W, y = srng() * H;
+      const img = detailImgs[Math.floor(srng() * detailImgs.length)];
+      drawPatch(img, x, y, 80 + srng() * 70, 0.60 + srng() * 0.30);
+    }
+
     ctx.globalAlpha = 1;
-
-    // Vignette: darker sides + top/bottom
-    const vLeft = ctx.createLinearGradient(0, 0, W * 0.26, 0);
-    vLeft.addColorStop(0, 'rgba(22,30,12,0.60)');
-    vLeft.addColorStop(1, 'rgba(22,30,12,0)');
-    ctx.fillStyle = vLeft; ctx.fillRect(0, 0, W, H);
-
-    const vRight = ctx.createLinearGradient(W, 0, W * 0.74, 0);
-    vRight.addColorStop(0, 'rgba(22,30,12,0.60)');
-    vRight.addColorStop(1, 'rgba(22,30,12,0)');
-    ctx.fillStyle = vRight; ctx.fillRect(0, 0, W, H);
-
-    const vTop = ctx.createLinearGradient(0, 0, 0, H * 0.12);
-    vTop.addColorStop(0, 'rgba(22,30,12,0.40)');
-    vTop.addColorStop(1, 'rgba(22,30,12,0)');
-    ctx.fillStyle = vTop; ctx.fillRect(0, 0, W, H);
+    applyVignette(ctx, W, H);
   }
 
-  // ─── Flora placement (DOM) ───────────────────────────────────────────────────
-  function placeFlora(layer, floraImgs, W, H) {
-    // Trees are flora indices 0-3 (flora_01-04: round canopies)
-    // Stumps are ~indices 8-9
-    // Grasses/flowers: 4-7
-    // Rocks/branches: 10+
-
-    const attempts = Math.floor(W / 12); // scale with viewport width
-
-    for (let i = 0; i < attempts; i++) {
-      const side = srng() < 0.5 ? 'left' : 'right';
-      let xFrac = side === 'left'
-        ? srng() * 0.28
-        : 0.72 + srng() * 0.28;
-      const yFrac = 0.02 + srng() * 0.96;
-
-      // Noise-driven density: sparse in some areas
-      const n = fbm(xFrac * 5, yFrac * 4);
-      if (n < 0.28) continue;
-
-      // Pick flora type: edge gets trees, mid-side gets mix
-      const edgeFrac = side === 'left' ? (0.28 - xFrac) / 0.28 : (xFrac - 0.72) / 0.28;
-      let floraIdx;
-      if (edgeFrac > 0.6 && srng() < 0.45) {
-        floraIdx = Math.floor(srng() * 4); // trees near edge
-      } else if (srng() < 0.3) {
-        floraIdx = 8 + Math.floor(srng() * 4); // stumps/rocks
-      } else {
-        floraIdx = 4 + Math.floor(srng() * 17); // grasses/flowers/rocks
-        floraIdx = Math.min(floraIdx, floraImgs.length - 1);
-      }
-
-      const img = floraImgs[floraIdx];
-      if (!img) continue;
-
-      const isTree = floraIdx < 4;
-      const baseSize = isTree
-        ? 100 + srng() * 70
-        : 55 + srng() * 55;
-
-      const el = document.createElement('img');
-      el.src = img.src;
-      el.className = 'world-flora';
-      el.setAttribute('aria-hidden', 'true');
-      el.style.cssText = [
-        'left:' + (xFrac * 100).toFixed(1) + '%',
-        'top:' + (yFrac * 100).toFixed(1) + '%',
-        'width:' + Math.round(baseSize) + 'px',
-        'z-index:' + Math.floor(yFrac * 100),
-        'opacity:' + (0.78 + srng() * 0.18).toFixed(2)
-      ].join(';');
-      layer.appendChild(el);
-    }
+  function applyVignette(ctx, W, H) {
+    // Left (content area dark)
+    const vL = ctx.createLinearGradient(0, 0, W * 0.38, 0);
+    vL.addColorStop(0,    'rgba(12,20,6,0.78)');
+    vL.addColorStop(0.50, 'rgba(12,20,6,0.22)');
+    vL.addColorStop(1,    'rgba(12,20,6,0)');
+    ctx.fillStyle = vL; ctx.fillRect(0, 0, W, H);
+    // Right edge
+    const vR = ctx.createLinearGradient(W, 0, W * 0.82, 0);
+    vR.addColorStop(0, 'rgba(12,20,6,0.60)');
+    vR.addColorStop(1, 'rgba(12,20,6,0)');
+    ctx.fillStyle = vR; ctx.fillRect(0, 0, W, H);
+    // Top
+    const vT = ctx.createLinearGradient(0, 0, 0, H * 0.15);
+    vT.addColorStop(0, 'rgba(12,20,6,0.45)');
+    vT.addColorStop(1, 'rgba(12,20,6,0)');
+    ctx.fillStyle = vT; ctx.fillRect(0, 0, W, H);
   }
 
-  // ─── Prop placement (fixed anchors) ─────────────────────────────────────────
-  // prop_01=cabin  02=small tent  03=large tent  04=cart
-  // prop_05=barrels  06=crates  07=signpost  08=fence
-  // prop_09=log pile  10=campfire  11=sacks  12=bucket+axe
-  const PROP_ANCHORS = [
-    // Left side
-    { idx: 0,  xp: 3.5, yp: 16,  size: 165, z: 30 },  // cabin
-    { idx: 8,  xp: 9,   yp: 42,  size: 110, z: 55 },  // log pile
-    { idx: 4,  xp: 6,   yp: 56,  size:  90, z: 65 },  // barrels
-    { idx: 7,  xp: 13,  yp: 30,  size:  85, z: 42 },  // fence
-    // Right side
-    { idx: 2,  xp: 78,  yp: 18,  size: 145, z: 32 },  // large tent
-    { idx: 3,  xp: 86,  yp: 36,  size: 135, z: 50 },  // cart
-    { idx: 5,  xp: 80,  yp: 50,  size:  95, z: 62 },  // crates
-    { idx: 7,  xp: 74,  yp: 28,  size:  85, z: 40 },  // fence
-    // Lower (below content, sides)
-    { idx: 9,  xp: 8,   yp: 74,  size:  95, z: 78 },  // campfire left
-    { idx: 1,  xp: 82,  yp: 72,  size: 110, z: 76 },  // small tent right
-    { idx: 6,  xp: 14,  yp: 84,  size:  75, z: 86 },  // signpost
-    { idx: 11, xp: 85,  yp: 86,  size:  80, z: 88 },  // bucket+axe
+  // ─── Layer 3: camp structures (fixed anchors) ─────────────────────────────
+  const CAMP_ANCHORS = [
+    // Left side (peek from behind content card)
+    { spec: 'house',     xp:  1, yp: 10, size: 200, z: 20 },
+    { spec: 'fenceA',   xp:  8, yp: 30, size: 130, z: 38 },
+    { spec: 'barrels',  xp:  6, yp: 52, size: 110, z: 58 },
+    // Right side (main visible area)
+    { spec: 'tentLarge',xp: 72, yp:  8, size: 200, z: 18 },
+    { spec: 'tentSmall',xp: 82, yp: 18, size: 150, z: 26 },
+    { spec: 'cart',     xp: 78, yp: 32, size: 180, z: 40 },
+    { spec: 'sign',     xp: 60, yp: 22, size:  90, z: 30 },
+    { spec: 'fenceB',   xp: 68, yp: 42, size: 130, z: 48 },
+    { spec: 'campfire', xp: 74, yp: 55, size: 130, z: 60 },
+    { spec: 'barrels',  xp: 84, yp: 48, size: 110, z: 54 },
+    { spec: 'sacks',    xp: 65, yp: 62, size: 100, z: 66 },
+    { spec: 'chopBlock',xp: 80, yp: 68, size: 100, z: 72 },
+    { spec: 'logPile',  xp: 90, yp: 35, size: 130, z: 42 },
+    // Lower scattered
+    { spec: 'tentSmall',xp:  4, yp: 72, size: 150, z: 76 },
+    { spec: 'fenceA',   xp: 70, yp: 78, size: 110, z: 80 },
+    { spec: 'barrels',  xp: 88, yp: 80, size: 100, z: 82 },
   ];
 
-  function placeProps(layer, propImgs) {
-    PROP_ANCHORS.forEach(a => {
-      const img = propImgs[a.idx];
+  // ─── Layer 3 placement ───────────────────────────────────────────────────
+  function placeStructures(layer, propImgs, W, H) {
+    if (!propImgs) return;
+    CAMP_ANCHORS.forEach(a => {
+      const img = propImgs[a.spec];
       if (!img) return;
+      const aspect = img.naturalHeight / img.naturalWidth;
+      const h = Math.round(a.size * aspect);
       const el = document.createElement('img');
       el.src = img.src;
-      el.className = 'world-prop';
       el.setAttribute('aria-hidden', 'true');
       el.style.cssText = [
-        'left:' + a.xp + '%',
-        'top:' + a.yp + '%',
-        'width:' + a.size + 'px',
-        'z-index:' + a.z
+        'position:absolute',
+        'left:'    + a.xp + '%',
+        'top:'     + a.yp + '%',
+        'width:'   + a.size + 'px',
+        'z-index:' + a.z,
+        'pointer-events:none',
+        'image-rendering:auto',
       ].join(';');
       layer.appendChild(el);
     });
   }
 
-  // ─── Init ─────────────────────────────────────────────────────────────────────
-  function setupCanvas(canvas, cssW, cssH) {
+  // ─── Layer 4: flora placement ─────────────────────────────────────────────
+  function placeFlora(layer, floraImgs, W, H) {
+    if (!floraImgs) return;
+    const attempts = Math.floor(W / 10);
+
+    for (let i = 0; i < attempts; i++) {
+      const side = srng() < 0.5 ? 'left' : 'right';
+      const xFrac = side === 'left' ? srng() * 0.30 : 0.70 + srng() * 0.30;
+      const yFrac = 0.02 + srng() * 0.96;
+      const n = fbm(xFrac * 5, yFrac * 4);
+      if (n < 0.30) continue;
+
+      const edgeFrac = side === 'left' ? (0.30 - xFrac) / 0.30 : (xFrac - 0.70) / 0.30;
+      let img, baseSize;
+
+      if (edgeFrac > 0.55 && srng() < 0.55) {
+        // Large trees near outer edge
+        const trees = [floraImgs.tree1, floraImgs.tree2, floraImgs.tree3];
+        img = trees[Math.floor(srng() * trees.length)];
+        baseSize = 130 + srng() * 80;
+      } else if (srng() < 0.30) {
+        // Bushes
+        const bushes = [floraImgs.bush1, floraImgs.bush2, floraImgs.bush3];
+        img = bushes[Math.floor(srng() * bushes.length)];
+        baseSize = 80 + srng() * 50;
+      } else if (srng() < 0.25) {
+        // Stumps
+        const stumps = [floraImgs.stump1, floraImgs.stump2, floraImgs.stump3];
+        img = stumps[Math.floor(srng() * stumps.length)];
+        baseSize = 70 + srng() * 40;
+      } else if (srng() < 0.35) {
+        // Rocks
+        const rocks = [floraImgs.rockLg, floraImgs.rockSm, floraImgs.rockLg2, floraImgs.rockSm2];
+        img = rocks[Math.floor(srng() * rocks.length)];
+        baseSize = 65 + srng() * 35;
+      } else if (srng() < 0.35) {
+        // Grass / flower clumps
+        const flowers = [floraImgs.grass1, floraImgs.flowers, floraImgs.flowerSmall];
+        img = flowers[Math.floor(srng() * flowers.length)];
+        baseSize = 70 + srng() * 40;
+      } else if (srng() < 0.25) {
+        // Fallen logs
+        img = srng() < 0.5 ? floraImgs.fallenLog1 : floraImgs.fallenLog2;
+        baseSize = 80 + srng() * 40;
+      } else {
+        // Moss mounds
+        const mosses = [floraImgs.moss1, floraImgs.moss2, floraImgs.moss3, floraImgs.moss4];
+        img = mosses[Math.floor(srng() * mosses.length)];
+        baseSize = 70 + srng() * 50;
+      }
+
+      if (!img) continue;
+
+      const el = document.createElement('img');
+      el.src = img.src;
+      el.setAttribute('aria-hidden', 'true');
+      el.style.cssText = [
+        'position:absolute',
+        'left:'    + (xFrac * 100).toFixed(1) + '%',
+        'top:'     + (yFrac * 100).toFixed(1) + '%',
+        'width:'   + Math.round(baseSize) + 'px',
+        'z-index:' + Math.floor(yFrac * 100),
+        'opacity:' + (0.82 + srng() * 0.15).toFixed(2),
+        'pointer-events:none',
+        'image-rendering:auto',
+      ].join(';');
+      layer.appendChild(el);
+    }
+  }
+
+  // ─── Canvas setup ────────────────────────────────────────────────────────
+  function setupCanvas(canvas, W, H) {
     const dpr = window.devicePixelRatio || 1;
-    canvas.width  = Math.round(cssW * dpr);
-    canvas.height = Math.round(cssH * dpr);
+    canvas.width  = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
     const ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Fill base color synchronously
-    ctx.fillStyle = '#4e5a34';
-    ctx.fillRect(0, 0, cssW, cssH);
+    ctx.fillStyle = '#2c4a14';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // ─── Init ────────────────────────────────────────────────────────────────
+  function render(canvas, spriteLayer, terrainImgs, floraImgs, propImgs, W, H) {
+    resetRng();
+    drawTerrain(canvas, terrainImgs, W, H);
+    placeStructures(spriteLayer, propImgs, W, H);
+    placeFlora(spriteLayer, floraImgs, W, H);
+  }
+
+  function loadAssets() {
+    return Promise.all([
+      loadAll(terrainPath, T_IDX),
+      loadAll(floraPath, FL_IDX),
+      loadAll(propPath, PR_IDX),
+    ]);
   }
 
   function init() {
     const stage = document.getElementById('world-stage');
     if (!stage) return;
-
-    const canvas = document.getElementById('world-canvas');
+    const canvas      = document.getElementById('world-canvas');
     const spriteLayer = document.getElementById('world-sprite-layer');
+    const W = stage.offsetWidth  || window.innerWidth;
+    const H = stage.offsetHeight || window.innerHeight;
+    setupCanvas(canvas, W, H);
 
-    const cssW = stage.offsetWidth  || window.innerWidth;
-    const cssH = stage.offsetHeight || window.innerHeight;
-    setupCanvas(canvas, cssW, cssH);
-
-    Promise.all([
-      loadImages(TERRAIN),
-      loadImages(FLORA),
-      loadImages(PROPS)
-    ]).then(([terrainImgs, floraImgs, propImgs]) => {
-      drawTerrain(canvas, terrainImgs, cssW, cssH);
-      placeFlora(spriteLayer, floraImgs, cssW, cssH);
-      placeProps(spriteLayer, propImgs);
+    loadAssets().then(([terrainImgs, floraImgs, propImgs]) => {
+      render(canvas, spriteLayer, terrainImgs, floraImgs, propImgs, W, H);
     });
 
-    // Redraw on resize (debounced)
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        const nW = stage.offsetWidth;
-        const nH = stage.offsetHeight;
+        const nW = stage.offsetWidth, nH = stage.offsetHeight;
         setupCanvas(canvas, nW, nH);
         spriteLayer.innerHTML = '';
-        rngState = 0x9e3779b9;
-        Promise.all([loadImages(TERRAIN), loadImages(FLORA), loadImages(PROPS)])
-          .then(([t, f, p]) => {
-            drawTerrain(canvas, t, nW, nH);
-            placeFlora(spriteLayer, f, nW, nH);
-            placeProps(spriteLayer, p);
-          });
+        loadAssets().then(([t, f, p]) => render(canvas, spriteLayer, t, f, p, nW, nH));
       }, 300);
     });
   }
 
+  function initToggle() {
+    const stage = document.getElementById('world-stage');
+    const content = document.querySelector('.world-content');
+    if (!stage || !content) return;
+    var btn = document.createElement('div');
+    btn.id = 'toggle-content';
+    btn.style.cssText = 'position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px;font-family:sans-serif;backdrop-filter:blur(4px);user-select:none;transition:opacity .2s';
+    btn.textContent = 'Hide UI';
+    document.body.appendChild(btn);
+    var hidden = false;
+    btn.addEventListener('click', function() {
+      hidden = !hidden;
+      content.style.opacity = hidden ? '0' : '';
+      content.style.pointerEvents = hidden ? 'none' : '';
+      btn.textContent = hidden ? 'Show UI' : 'Hide UI';
+    });
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => { init(); initToggle(); });
   } else {
-    init();
+    init(); initToggle();
   }
 })();
