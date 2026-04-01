@@ -9,17 +9,6 @@
   label_x: 334
   label_y: 126
 
-- city: Waterloo
-  country: Canada
-  lat: 43.4643
-  lon: -80.5204
-  label: University of Waterloo
-  period: 2015 - 2020
-  x: 276
-  y: 129
-  label_x: 286
-  label_y: 118
-
 - city: Edinburgh
   country: UK
   lat: 55.9533
@@ -30,3 +19,14 @@
   y: 95
   label_x: 501
   label_y: 86
+
+- city: Waterloo
+  country: Canada
+  lat: 43.4643
+  lon: -80.5204
+  label: University of Waterloo
+  period: 2015 - 2020
+  x: 276
+  y: 129
+  label_x: 286
+  label_y: 118
