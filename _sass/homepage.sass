@@ -289,6 +289,14 @@
 .timeline-item p
   color: #3b2f24
 
+// ─── Board column (half-width, left side) ────────────────────────────────────
+
+.board-column
+  display: flex
+  flex-direction: column
+  gap: 1.4rem
+  max-width: 48%
+
 // ─── Notice board (RPG bulletin board) ───────────────────────────────────────
 
 .story-card-board
@@ -429,6 +437,9 @@
 @media (max-width: 62em)
   .hero-panel, .story-grid
     grid-template-columns: 1fr
+
+  .board-column
+    max-width: 100%
 
 @media (max-width: 42em)
   .world-stage

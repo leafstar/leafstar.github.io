@@ -1,4 +1,4 @@
-<section class="home-section story-grid">
+<section class="home-section board-column">
   <article class="story-card story-card-board">
     <div class="board-header">
       <span class="board-icon">📌</span>
@@ -20,11 +20,6 @@
 
   <article class="story-card">
     <p class="story-kicker">Education Journey</p>
-    <p class="board-subtitle">A map of the places that shaped my academic path.</p>
-
-    {% assign country_total = site.data.visitor_locations | map: "country" | uniq | size %}
-    {% assign city_total = site.data.visitor_locations | size %}
-
     <div class="journey-map-wrap">
       <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing education history locations" shape-rendering="crispEdges">
         <defs>
@@ -49,10 +44,8 @@
           <rect x="123" y="140" width="126" height="42"></rect>
           <rect x="137" y="182" width="98" height="28"></rect>
           <rect x="179" y="210" width="42" height="42"></rect>
-
           <rect x="201" y="270" width="42" height="56"></rect>
           <rect x="243" y="298" width="28" height="56"></rect>
-
           <rect x="471" y="98" width="56" height="28"></rect>
           <rect x="513" y="98" width="196" height="56"></rect>
           <rect x="485" y="154" width="224" height="42"></rect>
@@ -60,15 +53,12 @@
           <rect x="611" y="224" width="56" height="42"></rect>
           <rect x="667" y="196" width="126" height="42"></rect>
           <rect x="793" y="210" width="42" height="28"></rect>
-
           <rect x="429" y="182" width="56" height="42"></rect>
           <rect x="485" y="196" width="42" height="56"></rect>
           <rect x="443" y="224" width="70" height="56"></rect>
           <rect x="457" y="280" width="56" height="42"></rect>
-
           <rect x="779" y="336" width="56" height="28"></rect>
           <rect x="807" y="364" width="56" height="42"></rect>
-
           <rect x="863" y="252" width="42" height="28"></rect>
           <rect x="891" y="266" width="42" height="28"></rect>
         </g>
@@ -83,7 +73,6 @@
         </g>
       </svg>
     </div>
-
     <ul class="journey-locations">
       {% for location in site.data.visitor_locations %}
         <li>
