@@ -356,39 +356,57 @@
   color: #5a4a3a
   font-size: .88rem
 
-// ─── Journey map ─────────────────────────────────────────────────────────────
+// ─── Journey map (parchment) ─────────────────────────────────────────────────
 
 .journey-map-wrap
   overflow: hidden
   border: none
   margin-bottom: .8rem
 
-.visitor-map
+.parchment-map
+  position: relative
+  width: 100%
+  border-radius: 4px
+  overflow: hidden
+
+.parchment-map-img
   display: block
   width: 100%
   height: auto
-  box-sizing: border-box
-  background: linear-gradient(180deg, #1a3a52, #133450)
+  image-rendering: auto
 
-.pixel-map-land rect
-  fill: #6f7e57
-  stroke: #8e9b74
-  stroke-width: 3
+.parchment-map-overlay
+  position: absolute
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
 
-.visitor-pin-pulse
-  fill: rgba(234, 205, 123, 0.15)
+.map-pin-pulse
+  fill: rgba(160, 50, 20, 0.18)
   animation: visitor-pulse 3s ease-out infinite
 
-.visitor-pin-dot
-  fill: #eacb75
-  stroke: #fff0c7
-  stroke-width: 1.5
+.map-pin-dot
+  fill: #8b2500
+  stroke: #d4a050
+  stroke-width: 2.5
 
-.visitor-pin-label
-  fill: #f3e5cf
-  font-size: 14px
+.map-pin-label
+  fill: #3a1a08
+  font-family: 'Cinzel', serif
+  font-size: 22px
+  font-weight: 700
   paint-order: stroke
-  stroke: rgba(54, 40, 28, 0.72)
+  stroke: rgba(230, 210, 170, 0.7)
+  stroke-width: 4px
+  stroke-linejoin: round
+
+.map-pin-sublabel
+  fill: #5a3018
+  font-family: 'MedievalSharp', cursive
+  font-size: 16px
+  paint-order: stroke
+  stroke: rgba(230, 210, 170, 0.6)
   stroke-width: 3px
   stroke-linejoin: round
 
@@ -449,7 +467,9 @@
   .button-primary, .button-secondary
     width: 100%
 
-  .visitor-pin-label
+  .map-pin-label
+    font-size: 16px
+  .map-pin-sublabel
     font-size: 12px
 
   .world-flora, .world-prop

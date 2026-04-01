@@ -8,6 +8,10 @@
   y: 132
   label_x: 334
   label_y: 126
+  mx: 430
+  my: 310
+  mlx: 450
+  mly: 292
 
 - city: Edinburgh
   country: UK
@@ -19,6 +23,10 @@
   y: 95
   label_x: 501
   label_y: 86
+  mx: 710
+  my: 250
+  mlx: 730
+  mly: 232
 
 - city: Waterloo
   country: Canada
@@ -30,3 +38,7 @@
   y: 129
   label_x: 286
   label_y: 118
+  mx: 395
+  my: 300
+  mlx: 280
+  mly: 275

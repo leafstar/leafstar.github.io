@@ -21,57 +21,34 @@
   <article class="story-card">
     <p class="story-kicker">Education Journey</p>
     <div class="journey-map-wrap">
-      <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing education history locations" shape-rendering="crispEdges">
-        <defs>
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
-            <feMerge>
-              <feMergeNode in="coloredBlur"></feMergeNode>
-              <feMergeNode in="SourceGraphic"></feMergeNode>
-            </feMerge>
-          </filter>
-        </defs>
-        <rect x="0" y="0" width="1000" height="500" fill="#133450"></rect>
-        <g fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1">
-          <path d="M0 250H1000"></path>
-          <path d="M250 0V500"></path>
-          <path d="M500 0V500"></path>
-          <path d="M750 0V500"></path>
-        </g>
-        <g class="pixel-map-land">
-          <rect x="95" y="112" width="56" height="28"></rect>
-          <rect x="151" y="98" width="84" height="42"></rect>
-          <rect x="123" y="140" width="126" height="42"></rect>
-          <rect x="137" y="182" width="98" height="28"></rect>
-          <rect x="179" y="210" width="42" height="42"></rect>
-          <rect x="201" y="270" width="42" height="56"></rect>
-          <rect x="243" y="298" width="28" height="56"></rect>
-          <rect x="471" y="98" width="56" height="28"></rect>
-          <rect x="513" y="98" width="196" height="56"></rect>
-          <rect x="485" y="154" width="224" height="42"></rect>
-          <rect x="541" y="196" width="84" height="28"></rect>
-          <rect x="611" y="224" width="56" height="42"></rect>
-          <rect x="667" y="196" width="126" height="42"></rect>
-          <rect x="793" y="210" width="42" height="28"></rect>
-          <rect x="429" y="182" width="56" height="42"></rect>
-          <rect x="485" y="196" width="42" height="56"></rect>
-          <rect x="443" y="224" width="70" height="56"></rect>
-          <rect x="457" y="280" width="56" height="42"></rect>
-          <rect x="779" y="336" width="56" height="28"></rect>
-          <rect x="807" y="364" width="56" height="42"></rect>
-          <rect x="863" y="252" width="42" height="28"></rect>
-          <rect x="891" y="266" width="42" height="28"></rect>
-        </g>
-        <g class="visitor-map-pins">
+      <div class="parchment-map">
+        <img src="/assets/images/procedural-world/worldmap.png" alt="Parchment world map" class="parchment-map-img" />
+        <svg class="parchment-map-overlay" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <filter id="pin-glow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+              <feMerge>
+                <feMergeNode in="blur"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+              </feMerge>
+            </filter>
+          </defs>
+          <!-- Dashed travel routes -->
+          <g class="map-routes" fill="none" stroke="#5a3018" stroke-width="2.5" stroke-dasharray="10 6" opacity="0.55">
+            <path d="M {{ site.data.visitor_locations[2].mx }} {{ site.data.visitor_locations[2].my }} Q 500 220, {{ site.data.visitor_locations[0].mx }} {{ site.data.visitor_locations[0].my }}" />
+            <path d="M {{ site.data.visitor_locations[0].mx }} {{ site.data.visitor_locations[0].my }} Q 580 180, {{ site.data.visitor_locations[1].mx }} {{ site.data.visitor_locations[1].my }}" />
+          </g>
+          <!-- Location pins -->
           {% for location in site.data.visitor_locations %}
-            <circle cx="{{ location.x }}" cy="{{ location.y }}" r="11" class="visitor-pin-pulse"></circle>
-            <circle cx="{{ location.x }}" cy="{{ location.y }}" r="4.5" class="visitor-pin-dot" filter="url(#glow)"></circle>
-            <text x="{{ location.label_x | default: location.x | plus: 10 }}" y="{{ location.label_y | default: location.y | minus: 10 }}" class="visitor-pin-label">
-              {{ location.label }}, {{ location.city }}
-            </text>
+            <g class="map-pin-group">
+              <circle cx="{{ location.mx }}" cy="{{ location.my }}" r="18" class="map-pin-pulse"></circle>
+              <circle cx="{{ location.mx }}" cy="{{ location.my }}" r="8" class="map-pin-dot" filter="url(#pin-glow)"></circle>
+              <text x="{{ location.mlx | default: location.mx | plus: 16 }}" y="{{ location.mly | default: location.my | minus: 16 }}" class="map-pin-label">{{ location.label }}</text>
+              <text x="{{ location.mlx | default: location.mx | plus: 16 }}" y="{{ location.mly | default: location.my | plus: 2 }}" class="map-pin-sublabel">{{ location.city }} · {{ location.period }}</text>
+            </g>
           {% endfor %}
-        </g>
-      </svg>
+        </svg>
+      </div>
     </div>
     <ul class="journey-locations">
       {% for location in site.data.visitor_locations %}
