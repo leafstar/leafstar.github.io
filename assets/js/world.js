@@ -434,8 +434,9 @@
     if (!layer) return;
 
     var npcs = [
-      { sprite: '/assets/images/npcs/soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.15, y: 50, x0: 52, x1: 88, scale: 1.8 },
-      { sprite: '/assets/images/npcs/orc-walk.png', frames: 8, w: 100, h: 100, speed: 0.1, y: 70, x0: 58, x1: 82, scale: 1.6 },
+      { sprite: '/assets/images/npcs/soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.15, y: 45, x0: 52, x1: 88, scale: 2.8 },
+      { sprite: '/assets/images/npcs/orc-walk.png', frames: 8, w: 100, h: 100, speed: 0.1, y: 68, x0: 58, x1: 82, scale: 2.4 },
+      { sprite: '/assets/images/npcs/soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.12, y: 82, x0: 62, x1: 92, scale: 3.0 },
     ];
 
     npcs.forEach(function(npc) {
@@ -529,7 +530,7 @@
     // Panel
     var panel = document.createElement('div');
     panel.id = 'wand-panel';
-    panel.style.cssText = 'position:fixed;top:4.2rem;right:3.8rem;z-index:10001;background:rgba(20,18,30,.92);border:2px solid rgba(200,180,255,.25);border-radius:4px;padding:8px;display:none;max-width:280px;backdrop-filter:blur(6px)';
+    panel.style.cssText = 'position:fixed;top:4.2rem;right:3.8rem;z-index:10001;background:rgba(20,18,30,.92);border:2px solid rgba(200,180,255,.25);border-radius:4px;padding:10px;display:none;max-width:500px;backdrop-filter:blur(6px)';
 
     var title = document.createElement('div');
     title.style.cssText = 'color:#c8b4ff;font-size:11px;font-family:Cinzel,serif;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;text-align:center';
@@ -537,12 +538,12 @@
     panel.appendChild(title);
 
     var grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(10,1fr);gap:2px';
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(10,1fr);gap:4px';
     for (var i = 1; i <= WAND_COUNT; i++) {
       (function(idx) {
         var cell = document.createElement('div');
-        cell.style.cssText = 'width:28px;height:28px;border:1px solid transparent;border-radius:2px;display:flex;align-items:center;justify-content:center;transition:border-color .15s';
-        cell.innerHTML = '<img src="' + wandUrl(idx) + '" style="width:24px;height:24px;image-rendering:pixelated" />';
+        cell.style.cssText = 'width:44px;height:44px;border:1px solid transparent;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:border-color .15s;background:rgba(255,255,255,.06)';
+        cell.innerHTML = '<img src="' + wandUrl(idx) + '" style="width:38px;height:38px;image-rendering:pixelated" />';
         cell.onmouseenter = function() { cell.style.borderColor = 'rgba(200,180,255,.5)'; };
         cell.onmouseleave = function() { cell.style.borderColor = 'transparent'; };
         cell.onclick = function(e) {
