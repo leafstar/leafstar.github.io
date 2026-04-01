@@ -50,9 +50,9 @@ title: ""
         <p class="story-kicker">Academic Timeline</p>
         <div class="timeline-list">
           <div class="timeline-item">
-            <p class="timeline-period">2015 - 2020</p>
-            <h3>Bachelor's in Computer Science</h3>
-            <p>University of Waterloo.</p>
+            <p class="timeline-period">2023 - Present</p>
+            <h3>PhD Student</h3>
+            <p>Northeastern University, working with Prof. Lili Su on federated reinforcement learning.</p>
           </div>
           <div class="timeline-item">
             <p class="timeline-period">2021 - 2022</p>
@@ -60,9 +60,9 @@ title: ""
             <p>University of Edinburgh, working with Prof. Daniel Paulin.</p>
           </div>
           <div class="timeline-item">
-            <p class="timeline-period">2023 - Present</p>
-            <h3>PhD Student</h3>
-            <p>Northeastern University, working with Prof. Lili Su on federated reinforcement learning.</p>
+            <p class="timeline-period">2015 - 2020</p>
+            <h3>Bachelor's in Computer Science</h3>
+            <p>University of Waterloo.</p>
           </div>
         </div>
       </article>
