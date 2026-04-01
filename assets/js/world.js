@@ -114,103 +114,174 @@
   }
 
   // ─── Layer 1 + 2: terrain canvas ─────────────────────────────────────────
+  // ─── Biome & terrain helpers ───────────────────────────────────────────
+  // Second independent noise channel (offset seed) for biome variation
+  function perlin2(x, y) { return perlin(x + 137.7, y + 251.3); }
+  function fbm2(x, y) {
+    return perlin2(x, y) * 0.65 + perlin2(x * 2.1, y * 2.1) * 0.35;
+  }
+
+  // Biome types driven by two noise channels
+  // Returns: 'lushGrass' | 'dryGrass' | 'mossy' | 'rocky' | 'dirt'
+  function getBiome(xFrac, yFrac) {
+    const n1 = fbm(xFrac * 4.5, yFrac * 3.5);   // moisture
+    const n2 = fbm2(xFrac * 5.0, yFrac * 4.0);   // rockiness
+    if (n2 > 0.62) return 'rocky';
+    if (n1 > 0.58) return 'mossy';
+    if (n1 < 0.35) return 'dryGrass';
+    if (n2 < 0.35) return 'dirt';
+    return 'lushGrass';
+  }
+
   function drawTerrain(canvas, terrainImgs, W, H) {
     const ctx = canvas.getContext('2d');
-    const FREQ = 0.0028;
 
-    // Path geometry (winding dirt road right of center)
+    // ── Path geometry (winding dirt road right of center) ──
     const PATH_CX = W * 0.56;
-    const PATH_HW = W * 0.082;
+    const PATH_HW = W * 0.075;
     function pathDist(x, y) {
       const wander = (fbm(y * 0.0022, x * 0.0007) - 0.5) * W * 0.10;
       return Math.abs(x - PATH_CX - wander);
     }
-    function pathAlpha(x, y) {
-      return smoothstep(PATH_HW * 1.4, PATH_HW * 0.25, pathDist(x, y));
+    function pathStrength(x, y) {
+      const d = pathDist(x, y);
+      if (d < PATH_HW * 0.7) return 1.0;               // hard core
+      if (d < PATH_HW * 1.3) return smoothstep(PATH_HW * 1.3, PATH_HW * 0.7, d); // transition
+      return 0;
     }
-    function onPath(x, y) { return pathDist(x, y) < PATH_HW * 1.2; }
+    function onPath(x, y) { return pathDist(x, y) < PATH_HW * 1.3; }
 
-    // Pass 0: solid base fill
+    // ── Pass 0: solid dark base ──
     ctx.fillStyle = '#2c4a14';
     ctx.fillRect(0, 0, W, H);
 
     if (!terrainImgs) { applyVignette(ctx, W, H); return; }
 
-    function drawPatch(img, x, y, sz, alpha) {
+    // Helper: draw patch with optional rotation
+    function drawPatch(img, x, y, sz, alpha, rot) {
       if (!img) return;
       ctx.globalAlpha = alpha;
       const aspect = img.naturalHeight / img.naturalWidth;
-      ctx.drawImage(img, x - sz/2, y - (sz*aspect)/2, sz, sz*aspect);
+      const hw = sz / 2, hh = (sz * aspect) / 2;
+      if (rot) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        ctx.drawImage(img, -hw, -hh, sz, sz * aspect);
+        ctx.restore();
+      } else {
+        ctx.drawImage(img, x - hw, y - hh, sz, sz * aspect);
+      }
     }
 
-    // Pass 1a: dense fine-grain grass base (small, many, low alpha)
-    const grassImgs = [terrainImgs.grass1, terrainImgs.grass2, terrainImgs.grassPath, terrainImgs.grassRocky];
-    const baseCount = Math.floor((W * H) / 5000);
-    for (let i = 0; i < baseCount; i++) {
-      const x = srng() * W, y = srng() * H;
-      if (onPath(x, y) && srng() < 0.80) continue;
-      const img = grassImgs[Math.floor(srng() * grassImgs.length)];
-      drawPatch(img, x, y, 90 + srng() * 80, 0.50 + srng() * 0.30);
+    // ── Biome tile pools ──
+    const biomeTiles = {
+      lushGrass: [terrainImgs.grass1, terrainImgs.grass2],
+      dryGrass:  [terrainImgs.grassPath, terrainImgs.grassRocky],
+      mossy:     [terrainImgs.mossy, terrainImgs.rootsGreen, terrainImgs.grass2],
+      rocky:     [terrainImgs.rockGrass, terrainImgs.grassRocky, terrainImgs.stonePile],
+      dirt:      [terrainImgs.dirtDry, terrainImgs.dirtCracked],
+    };
+    const pathTiles = [terrainImgs.dirtDry, terrainImgs.dirtCracked, terrainImgs.dirtRuts];
+    const pathEdgeTiles = [terrainImgs.grassRocky, terrainImgs.rockGrass, terrainImgs.dirtDry];
+    const detailTiles = [terrainImgs.logs, terrainImgs.stonePile, terrainImgs.roots,
+                         terrainImgs.rockGrass, terrainImgs.rootsGreen];
+
+    // ── LAYER 1: Dense base — large overlapping tiles, full coverage ──
+    // Grid-based placement with jitter to eliminate gaps
+    const TILE_SZ = 180;
+    const STEP = Math.floor(TILE_SZ * 0.55); // heavy overlap
+    for (let gy = -TILE_SZ; gy < H + TILE_SZ; gy += STEP) {
+      for (let gx = -TILE_SZ; gx < W + TILE_SZ; gx += STEP) {
+        const jx = gx + (srng() - 0.5) * STEP * 0.7;
+        const jy = gy + (srng() - 0.5) * STEP * 0.7;
+        const xf = jx / W, yf = jy / H;
+        const ps = pathStrength(jx, jy);
+
+        let pool;
+        if (ps > 0.8) {
+          pool = pathTiles;
+        } else if (ps > 0.3) {
+          // Path edge: mix path and grass
+          pool = pathEdgeTiles;
+        } else {
+          pool = biomeTiles[getBiome(xf, yf)];
+        }
+        const img = pool[Math.floor(srng() * pool.length)];
+        const sz = TILE_SZ + (srng() - 0.5) * 60;
+        const rot = (srng() - 0.5) * 0.4; // ±0.2 rad
+        drawPatch(img, jx, jy, sz, 0.70 + srng() * 0.25, rot);
+      }
     }
 
-    // Pass 1b: larger accent grass patches (sparser, more visible)
-    const accentCount = Math.floor((W * H) / 14000);
+    // ── LAYER 2: Biome accent — medium patches reinforce zoning ──
+    const accentCount = Math.floor((W * H) / 8000);
     for (let i = 0; i < accentCount; i++) {
       const x = srng() * W, y = srng() * H;
-      if (onPath(x, y) && srng() < 0.75) continue;
-      const img = grassImgs[Math.floor(srng() * grassImgs.length)];
-      drawPatch(img, x, y, 160 + srng() * 120, 0.45 + srng() * 0.35);
+      const xf = x / W, yf = y / H;
+      const ps = pathStrength(x, y);
+      if (ps > 0.5) continue; // skip path core
+
+      const biome = getBiome(xf, yf);
+      const pool = biomeTiles[biome];
+      const img = pool[Math.floor(srng() * pool.length)];
+      const sz = 100 + srng() * 120;
+      const rot = srng() * Math.PI * 2;
+      const alpha = biome === 'mossy' ? 0.55 + srng() * 0.3
+                  : biome === 'rocky' ? 0.50 + srng() * 0.3
+                  : 0.40 + srng() * 0.30;
+      drawPatch(img, x, y, sz, alpha, rot);
     }
 
-    // Pass 2: edge patches (mossy, rocky, roots) — sides only
-    const edgeImgs = [terrainImgs.mossy, terrainImgs.grassRocky, terrainImgs.rockGrass, terrainImgs.rootsGreen];
-    const edgeCount = Math.floor((W * H) / 9000);
+    // ── LAYER 3: Path — dense fill for the road ──
+    const pathCount = Math.floor((W * H) / 6000);
+    for (let i = 0; i < pathCount; i++) {
+      const x = (0.25 + srng() * 0.60) * W;
+      const y = srng() * H;
+      const ps = pathStrength(x, y);
+      if (ps < 0.15) continue;
+      const img = pathTiles[Math.floor(srng() * pathTiles.length)];
+      const sz = 70 + srng() * 80;
+      const rot = (srng() - 0.5) * 0.3;
+      drawPatch(img, x, y, sz, (0.55 + srng() * 0.35) * ps, rot);
+    }
+
+    // Path mud accents
+    const mudCount = Math.floor((W * H) / 25000);
+    for (let i = 0; i < mudCount; i++) {
+      const x = (0.30 + srng() * 0.50) * W;
+      const y = srng() * H;
+      const ps = pathStrength(x, y);
+      if (ps < 0.4) continue;
+      drawPatch(terrainImgs.mudpool, x, y, 130 + srng() * 100,
+        (0.45 + srng() * 0.30) * ps, (srng() - 0.5) * 0.2);
+    }
+
+    // ── LAYER 4: Edge darkening — mossy/root patches near screen edges ──
+    const edgeImgs = [terrainImgs.mossy, terrainImgs.rootsGreen, terrainImgs.roots];
+    const edgeCount = Math.floor((W * H) / 7000);
     for (let i = 0; i < edgeCount; i++) {
       const xFrac = srng(), y = srng() * H;
       const edgeDist = Math.min(xFrac, 1 - xFrac);
-      if (edgeDist > 0.32) continue;
+      if (edgeDist > 0.28) continue;
       const x = xFrac * W;
-      const n = fbm(x * FREQ, y * FREQ);
-      if (n < 0.30) continue;
       const img = edgeImgs[Math.floor(srng() * edgeImgs.length)];
-      const ew = smoothstep(0.32, 0.02, edgeDist);
-      drawPatch(img, x, y, 130 + srng() * 100,
-        (0.55 + srng() * 0.30) * ew * smoothstep(0.30, 0.58, n));
+      const ew = smoothstep(0.28, 0.0, edgeDist);
+      const rot = srng() * Math.PI * 2;
+      drawPatch(img, x, y, 120 + srng() * 100,
+        (0.45 + srng() * 0.30) * ew, rot);
     }
 
-    // Pass 3a: dirt path base — dense small patches
-    const dirtImgs = [terrainImgs.dirtDry, terrainImgs.dirtCracked, terrainImgs.dirtRuts];
-    const pathBaseCount = Math.floor((W * H) / 7000);
-    for (let i = 0; i < pathBaseCount; i++) {
-      const x = (0.25 + srng() * 0.60) * W;
-      const y = srng() * H;
-      const pa = pathAlpha(x, y);
-      if (pa < 0.05) continue;
-      drawPatch(dirtImgs[Math.floor(srng() * dirtImgs.length)],
-        x, y, 80 + srng() * 70, (0.60 + srng() * 0.30) * pa);
-    }
-
-    // Pass 3b: dirt path accent (larger patches, mud pools)
-    const pathAccentCount = Math.floor((W * H) / 18000);
-    for (let i = 0; i < pathAccentCount; i++) {
-      const x = (0.30 + srng() * 0.50) * W;
-      const y = srng() * H;
-      const pa = pathAlpha(x, y);
-      if (pa < 0.08) continue;
-      const img = srng() < 0.25 ? terrainImgs.mudpool : terrainImgs.dirtCracked;
-      drawPatch(img, x, y, 150 + srng() * 130, (0.55 + srng() * 0.35) * pa);
-    }
-
-    // Pass 4: sparse ground details everywhere (roots, stones, logs)
-    // Avoid camp structure areas
+    // ── LAYER 5: Scattered ground detail (roots, stones, logs) ──
     const exclusions = buildExclusions();
-    const detailImgs = [terrainImgs.logs, terrainImgs.stonePile, terrainImgs.roots, terrainImgs.rockGrass, terrainImgs.rootsGreen];
-    const detailCount = Math.floor((W * H) / 22000);
+    const detailCount = Math.floor((W * H) / 18000);
     for (let i = 0; i < detailCount; i++) {
       const x = srng() * W, y = srng() * H;
       if (nearStructure(x / W * 100, y / H * 100, exclusions)) continue;
-      const img = detailImgs[Math.floor(srng() * detailImgs.length)];
-      drawPatch(img, x, y, 80 + srng() * 70, 0.60 + srng() * 0.30);
+      if (pathStrength(x, y) > 0.6 && srng() < 0.7) continue; // fewer details on path
+      const img = detailTiles[Math.floor(srng() * detailTiles.length)];
+      const sz = 60 + srng() * 80;
+      drawPatch(img, x, y, sz, 0.55 + srng() * 0.35, srng() * Math.PI * 2);
     }
 
     ctx.globalAlpha = 1;
