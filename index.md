@@ -86,19 +86,19 @@ title: ""
     </div>
     <div class="hud-abilities">
       <a href="https://leafstar.github.io/MuxingWang.pdf" class="hud-skill" title="Curriculum Vitae">
-        <kbd>Q</kbd><span class="skill-icon">📜</span><span class="skill-name">CV</span>
+        <kbd>D</kbd><span class="skill-icon">📜</span><span class="skill-name">CV</span>
       </a>
       <a href="{{ '/blog/' | relative_url }}" class="hud-skill" title="Blog">
-        <kbd>W</kbd><span class="skill-icon">📖</span><span class="skill-name">Blog</span>
+        <kbd>T</kbd><span class="skill-icon">📖</span><span class="skill-name">Blog</span>
       </a>
       <a href="https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en" class="hud-skill" title="Google Scholar">
         <kbd>E</kbd><span class="skill-icon">🎓</span><span class="skill-name">Scholar</span>
       </a>
       <a href="https://github.com/leafstar" class="hud-skill" title="GitHub">
-        <kbd>R</kbd><span class="skill-icon">⚔️</span><span class="skill-name">GitHub</span>
+        <kbd>F</kbd><span class="skill-icon">⚔️</span><span class="skill-name">GitHub</span>
       </a>
       <a href="mailto:wang.muxin@northeastern.edu" class="hud-skill" title="Email">
-        <kbd>D</kbd><span class="skill-icon">✉️</span><span class="skill-name">Mail</span>
+        <kbd>W</kbd><span class="skill-icon">✉️</span><span class="skill-name">Mail</span>
       </a>
     </div>
   </div>
