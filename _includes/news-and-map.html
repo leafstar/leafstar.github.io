@@ -1,46 +1,31 @@
-<section class="home-section home-grid">
-  <div class="section-heading">
-    <div>
-      <h2>News</h2>
-      <p>Short updates, milestones, and announcements.</p>
+<section class="home-section story-grid">
+  <article class="story-card story-card-board">
+    <div class="board-header">
+      <span class="board-icon">📌</span>
+      <h2>Notice Board</h2>
     </div>
-  </div>
+    <div class="board-posts">
+      {% for item in site.data.news limit: 4 %}
+        <div class="board-note">
+          <p class="board-date">{{ item.date | date: "%Y.%m" }}</p>
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.summary }}</p>
+          {% if item.link %}
+            <a href="{{ item.link | relative_url }}">{{ item.link_text | default: "Read more" }} &rarr;</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </article>
 
-  <div class="news-grid">
-    {% for item in site.data.news limit: 3 %}
-      <article class="news-card">
-        <p class="news-date">{{ item.date | date: site.date_format }}</p>
-        <h3>{{ item.title }}</h3>
-        <p>{{ item.summary }}</p>
-        {% if item.link %}
-          <a href="{{ item.link | relative_url }}">{{ item.link_text | default: "Read more" }}</a>
-        {% endif %}
-      </article>
-    {% endfor %}
-  </div>
-  <section class="home-section visitor-section">
-    <div class="section-heading">
-      <div>
-        <h2>Education Journey</h2>
-        <p>A map of the places that shaped my academic path.</p>
-      </div>
-    </div>
+  <article class="story-card">
+    <p class="story-kicker">Education Journey</p>
+    <p class="board-subtitle">A map of the places that shaped my academic path.</p>
 
     {% assign country_total = site.data.visitor_locations | map: "country" | uniq | size %}
     {% assign city_total = site.data.visitor_locations | size %}
 
-    <div class="visitor-map-shell">
-      <div class="visitor-map-stats">
-        <div>
-          <strong>{{ city_total }}</strong>
-          <span>academic locations</span>
-        </div>
-        <div>
-          <strong>{{ country_total }}</strong>
-          <span>countries represented</span>
-        </div>
-      </div>
-
+    <div class="journey-map-wrap">
       <svg class="visitor-map" viewBox="0 0 1000 500" role="img" aria-label="World map showing education history locations" shape-rendering="crispEdges">
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -97,12 +82,15 @@
           {% endfor %}
         </g>
       </svg>
-
-      <ul class="visitor-list">
-        {% for location in site.data.visitor_locations %}
-          <li>{{ location.label }}, {{ location.city }}{% if location.period %} ({{ location.period }}){% endif %}</li>
-        {% endfor %}
-      </ul>
     </div>
-  </section>
+
+    <ul class="journey-locations">
+      {% for location in site.data.visitor_locations %}
+        <li>
+          <strong>{{ location.label }}</strong>
+          <span>{{ location.city }} &middot; {{ location.period }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </article>
 </section>

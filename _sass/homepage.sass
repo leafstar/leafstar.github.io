@@ -225,29 +225,6 @@
 .home-section
   margin-top: 3rem
 
-.home-grid
-  display: grid
-  grid-template-columns: minmax(0, .9fr) minmax(0, 1.25fr)
-  gap: 1.5rem
-  align-items: start
-
-.section-heading
-  display: flex
-  flex-wrap: wrap
-  align-items: end
-  justify-content: space-between
-  gap: 1rem
-  margin-bottom: 1.25rem
-  font-family: "Courier New", "Lucida Console", monospace
-
-.section-heading h2
-  margin: 0
-  text-transform: uppercase
-
-.section-heading p
-  margin: .25rem 0 0
-  color: #f3e8cf
-
 // ─── Story cards ─────────────────────────────────────────────────────────────
 
 .story-grid
@@ -312,67 +289,83 @@
 .timeline-item p
   color: #3b2f24
 
-// ─── News cards ──────────────────────────────────────────────────────────────
+// ─── Notice board (RPG bulletin board) ───────────────────────────────────────
 
-.news-grid
+.story-card-board
+  background: linear-gradient(180deg, rgba(110, 88, 58, 0.97), rgba(82, 64, 40, 0.98))
+  border-color: #3a3020
+  box-shadow: 0 0 0 4px #7a6848, 0 10px 0 rgba(40, 30, 18, 0.18)
+  color: #f3e8cf
+
+.board-header
+  display: flex
+  align-items: center
+  gap: .6rem
+  margin-bottom: 1.2rem
+  padding-bottom: .8rem
+  border-bottom: 2px solid rgba(243, 232, 207, 0.15)
+
+.board-header h2
+  margin: 0
+  color: #f3e8cf
+  font-size: 1.15rem
+  text-transform: uppercase
+  letter-spacing: .1em
+
+.board-icon
+  font-size: 1.3rem
+
+.board-posts
   display: grid
-  gap: 1rem
+  gap: .8rem
 
-.news-card
-  position: sticky
-  top: 1.25rem
-  background: linear-gradient(180deg, rgba(208, 189, 146, 0.95), rgba(186, 162, 119, 0.96))
-  border: 4px solid #61452a
-  border-radius: 0
-  padding: 1.35rem 1.35rem 1.2rem
-  box-shadow: 0 0 0 4px #9f7a4f, 0 10px 0 rgba(79, 55, 29, 0.14)
-  font-family: "Courier New", "Lucida Console", monospace
+.board-note
+  position: relative
+  padding: .9rem 1rem
+  background: rgba(243, 232, 207, 0.08)
+  border: 2px solid rgba(243, 232, 207, 0.12)
+  border-left: 4px solid #c75637
 
-.news-card h3
-  margin: 0 0 .55rem
-  font-size: 1.1rem
+.board-note h3
+  margin: 0 0 .35rem
+  font-size: .95rem
+  color: #f3e8cf
   text-transform: uppercase
 
-.news-card p
-  margin: 0 0 .7rem
-  color: #4c3827
+.board-note p
+  margin: 0 0 .3rem
+  color: rgba(243, 232, 207, 0.78)
+  font-size: .88rem
 
-.news-date
-  color: #aa452d
-  font-size: .9rem
-  letter-spacing: .02em
+.board-note a
+  color: #eacb75
+  font-size: .85rem
 
-// ─── Visitor map ─────────────────────────────────────────────────────────────
+.board-date
+  color: #c75637
+  font-size: .78rem
+  font-weight: 700
+  letter-spacing: .06em
+  margin-bottom: .3rem
 
-.visitor-map-shell
-  background: linear-gradient(180deg, rgba(90, 80, 63, 0.97), rgba(67, 57, 45, 0.98))
-  border: 4px solid #2f291f
-  border-radius: 0
+.board-subtitle
+  margin: 0 0 1rem
+  color: #5a4a3a
+  font-size: .88rem
+
+// ─── Journey map ─────────────────────────────────────────────────────────────
+
+.journey-map-wrap
   overflow: hidden
-  box-shadow: 0 0 0 4px #7c6a56, 0 10px 0 rgba(47, 41, 31, 0.16)
-  font-family: "Courier New", "Lucida Console", monospace
-
-.visitor-map-stats
-  display: flex
-  flex-wrap: wrap
-  gap: 1.5rem
-  padding: 1.2rem 1.2rem 0
-
-.visitor-map-stats strong
-  display: block
-  font-size: 1.4rem
-
-.visitor-map-stats span
-  color: rgba(#f2e6d5, 0.86)
-  font-size: .95rem
+  border: 2px solid rgba(90, 74, 58, 0.4)
+  margin-bottom: .8rem
 
 .visitor-map
   display: block
   width: 100%
   height: auto
-  padding: .8rem
   box-sizing: border-box
-  background: linear-gradient(180deg, #7b725c, #695f49)
+  background: linear-gradient(180deg, #1a3a52, #133450)
 
 .pixel-map-land rect
   fill: #6f7e57
@@ -396,21 +389,27 @@
   stroke-width: 3px
   stroke-linejoin: round
 
-.visitor-list
-  display: flex
-  flex-wrap: wrap
-  gap: .65rem
+.journey-locations
   list-style: none
   margin: 0
-  padding: 0 1.2rem 1.2rem
+  padding: 0
+  display: grid
+  gap: .5rem
 
-.visitor-list li
-  margin: 0
-  padding: .35rem .7rem
-  border-radius: 0
-  background: rgba(245, 230, 205, 0.08)
-  border: 3px solid rgba(245, 230, 205, 0.08)
-  font-size: .95rem
+.journey-locations li
+  display: flex
+  justify-content: space-between
+  align-items: baseline
+  padding: .4rem 0
+  border-bottom: 1px dashed rgba(90, 74, 58, 0.25)
+  font-size: .88rem
+
+.journey-locations li strong
+  color: #241d18
+
+.journey-locations li span
+  color: #734728
+  font-size: .82rem
 
 // ─── Animations ──────────────────────────────────────────────────────────────
 
@@ -428,11 +427,8 @@
 // ─── Responsive ──────────────────────────────────────────────────────────────
 
 @media (max-width: 62em)
-  .hero-panel, .story-grid, .home-grid
+  .hero-panel, .story-grid
     grid-template-columns: 1fr
-
-  .news-card
-    position: static
 
 @media (max-width: 42em)
   .world-stage
