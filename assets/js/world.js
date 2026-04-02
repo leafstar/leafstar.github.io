@@ -1319,7 +1319,7 @@
   function initTimeOfDay() {
     var overlay = document.createElement('div');
     overlay.id = 'time-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:90;transition:background 120s linear,opacity 120s linear;mix-blend-mode:multiply';
+    overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:90;mix-blend-mode:multiply';
     var stage = document.getElementById('world-stage');
     if (stage) stage.appendChild(overlay);
     else document.body.appendChild(overlay);
@@ -1356,35 +1356,55 @@
     // Returns { bg, overlayOpacity, starOpacity, label, icon }
     function getTimePeriod(hour, minute) {
       var t = hour + minute / 60;
-      if (t >= 5 && t < 6.5) return {
-        bg: 'rgba(180,100,40,.18)', label: 'Dawn', icon: '\u{1F305}',
-        starOpacity: Math.max(0, 1 - (t - 5) / 1.5)
-      };
+      // Night→Dawn 4-5 — transition from .93 to .55
+      if (t >= 4 && t < 5) {
+        var p = (t - 4); // 0→1
+        var op = 0.93 - 0.38 * p; // .93→.55
+        return { bg: 'rgba(5,5,20,' + op.toFixed(2) + ')', label: 'Night', icon: '\u{1F30C}',
+          starOpacity: 1 - p, isNight: true };
+      }
+      // Dawn 5-6:30 — .55→.04
+      if (t >= 5 && t < 6.5) {
+        var p = (t - 5) / 1.5; // 0→1
+        var op = 0.55 - 0.51 * p; // .55→.04
+        return { bg: 'rgba(30,15,10,' + op.toFixed(2) + ')', label: 'Dawn', icon: '\u{1F305}',
+          starOpacity: Math.max(0, 0.5 * (1 - p)), isNight: op > 0.3 };
+      }
+      // Morning 6:30-8 — very slight warm
       if (t >= 6.5 && t < 8) return {
-        bg: 'rgba(200,160,60,.08)', label: 'Morning', icon: '\u{1F304}',
+        bg: 'rgba(200,160,60,.04)', label: 'Morning', icon: '\u{1F304}',
         starOpacity: 0
       };
+      // Day 8-16:30 — no overlay
       if (t >= 8 && t < 16.5) return {
         bg: 'transparent', label: 'Day', icon: '\u2600\uFE0F',
         starOpacity: 0
       };
-      if (t >= 16.5 && t < 18) return {
-        bg: 'rgba(200,120,30,.15)', label: 'Sunset', icon: '\u{1F307}',
-        starOpacity: 0
-      };
-      if (t >= 18 && t < 19.5) return {
-        bg: 'rgba(60,30,80,.25)', label: 'Dusk', icon: '\u{1F306}',
-        starOpacity: (t - 18) / 1.5
-      };
-      // Night: 23 - 4 (very dark, stars prominent)
+      // Sunset 16:30-18 — gentle warm darken
+      if (t >= 16.5 && t < 18) {
+        var p = (t - 16.5) / 1.5; // 0→1
+        var op = 0.05 + 0.25 * p; // .05→.30
+        return { bg: 'rgba(40,20,10,' + op.toFixed(2) + ')', label: 'Sunset', icon: '\u{1F307}',
+          starOpacity: 0, isNight: op > 0.2 };
+      }
+      // Dusk 18-19:30 — getting dark
+      if (t >= 18 && t < 19.5) {
+        var p = (t - 18) / 1.5; // 0→1
+        var op = 0.30 + 0.15 * p; // .30→.45
+        return { bg: 'rgba(15,10,40,' + op.toFixed(2) + ')', label: 'Dusk', icon: '\u{1F306}',
+          starOpacity: p, isNight: true };
+      }
+      // Night 23-4 (4-5 handled above) — deepest dark
       if (t >= 23 || t < 4) return {
         bg: 'rgba(5,5,20,.93)', label: 'Night', icon: '\u{1F30C}',
         starOpacity: 1, isNight: true
       };
-      // Evening: 19.5 - 23
+      // Evening 19:30-23 — dark, gradually deepening
+      var p = (t - 19.5) / 3.5; // 0→1
+      var op = 0.45 + 0.48 * p; // .45→.93
       return {
-        bg: 'rgba(10,10,40,.4)', label: 'Evening', icon: '\u{1F319}',
-        starOpacity: 1
+        bg: 'rgba(5,5,20,' + op.toFixed(2) + ')', label: 'Evening', icon: '\u{1F319}',
+        starOpacity: 1, isNight: true
       };
     }
 
@@ -1399,11 +1419,51 @@
     var torchOn = false;
     var torchX = 0, torchY = 0;
     var currentBg = 'transparent';
+    var timeOverride = null; // null = auto (real time), or {h, m} for manual override
+
+    // Time override options
+    var timeOptions = [
+      { icon: '\u{1F504}', label: 'Auto', h: -1 },
+      { icon: '\u{1F305}', label: 'Dawn', h: 5, m: 30 },
+      { icon: '\u{1F304}', label: 'Morning', h: 7, m: 0 },
+      { icon: '\u2600\uFE0F', label: 'Day', h: 12, m: 0 },
+      { icon: '\u{1F307}', label: 'Sunset', h: 17, m: 0 },
+      { icon: '\u{1F306}', label: 'Dusk', h: 18, m: 30 },
+      { icon: '\u{1F319}', label: 'Evening', h: 21, m: 0 },
+      { icon: '\u{1F30C}', label: 'Night', h: 1, m: 0 }
+    ];
+
+    // Time panel (same style as weather panel)
+    var timePanel = document.createElement('div');
+    timePanel.style.cssText = 'position:fixed;top:2.8rem;left:1.2rem;z-index:10001;background:rgba(20,18,30,.92);border:2px solid rgba(200,180,255,.25);border-radius:4px;padding:4px;display:none;backdrop-filter:blur(6px)';
+    timeOptions.forEach(function(opt, i) {
+      var row = document.createElement('div');
+      row.style.cssText = 'padding:4px 12px;font-family:"Courier New",monospace;font-size:12px;color:rgba(255,255,255,.85);border-radius:3px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s';
+      row.innerHTML = '<span>' + opt.icon + '</span><span>' + opt.label + '</span>';
+      row.onmouseenter = function() { row.style.background = 'rgba(255,255,255,.12)'; };
+      row.onmouseleave = function() { row.style.background = 'transparent'; };
+      row.onclick = function(e) {
+        e.stopPropagation();
+        if (i === 0) { timeOverride = null; }
+        else { timeOverride = { h: opt.h, m: opt.m }; }
+        updateTime();
+        timePanel.style.display = 'none';
+        if (window.__unlockAudio) window.__unlockAudio();
+      };
+      timePanel.appendChild(row);
+    });
+    document.body.appendChild(timePanel);
+
+    timeHud.style.cursor = 'pointer';
+    timeHud.onclick = function(e) {
+      e.stopPropagation();
+      timePanel.style.display = timePanel.style.display === 'none' ? 'block' : 'none';
+    };
+    document.addEventListener('click', function() { timePanel.style.display = 'none'; });
 
     window.__setTorchMode = function(on) {
       torchOn = on;
       if (!on) {
-        // Remove mask — background was never touched
         overlay.style.webkitMaskImage = 'none';
         overlay.style.maskImage = 'none';
       }
@@ -1411,30 +1471,32 @@
     window.__updateTorchPos = function(x, y) {
       torchX = x; torchY = y;
       if (torchOn) {
-        // CSS mask punches a hole — background stays UNTOUCHED
         var mask = 'radial-gradient(circle 60px at ' + x + 'px ' + y + 'px, transparent 0%, black 100%)';
         overlay.style.webkitMaskImage = mask;
         overlay.style.maskImage = mask;
       }
     };
 
+    var currentStarOpacity = 0;
     function updateTime() {
-      var now = new Date();
-      var h = now.getHours(), m = now.getMinutes();
+      var h, m;
+      if (timeOverride) { h = timeOverride.h; m = timeOverride.m; }
+      else { var now = new Date(); h = now.getHours(); m = now.getMinutes(); }
       var period = getTimePeriod(h, m);
       isNightTime = !!period.isNight;
 
       currentBg = period.bg;
-      overlay.style.background = period.bg;  // ALWAYS set — torch uses mask, not background
+      overlay.style.background = period.bg;
       overlay.style.mixBlendMode = period.isNight ? 'normal' : 'multiply';
 
+      currentStarOpacity = period.starOpacity;
       starCanvas.style.opacity = period.starOpacity;
       var timeStr = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-      timeHud.innerHTML = '<span>' + period.icon + '</span><span>' + timeStr + ' ' + period.label + '</span>';
+      timeHud.innerHTML = '<span>' + period.icon + '</span><span>' + timeStr + ' ' + period.label + ' \u25BE</span>';
       currentPeriod = period.label;
     }
     updateTime();
-    setInterval(updateTime, 30000);
+    setInterval(updateTime, 300000);
 
     // Animate stars (brighter in deep night)
     var starVisible = false;
@@ -1461,9 +1523,7 @@
     }
 
     function animStars(time) {
-      var now = new Date();
-      var period = getTimePeriod(now.getHours(), now.getMinutes());
-      if (period.starOpacity > 0) {
+      if (currentStarOpacity > 0) {
         starVisible = true;
         drawStars(time);
       } else if (starVisible) {
