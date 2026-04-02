@@ -1241,7 +1241,7 @@
     document.body.appendChild(glow);
 
     // Selectors for interactive elements
-    var INTERACTIVE = 'a, button, [role="button"], #toggle-content, #font-toggle-btn, #wand-selector-btn, #wand-panel div, .hud-stat, .game-bar a, .board-note a, .story-card a, .nav-link, input, select, textarea, [onclick], .clickable';
+    var INTERACTIVE = 'a, button, [role="button"], #toggle-content, #font-toggle-btn, #wand-selector-btn, #wand-panel div, #audio-toggle, #weather-hud, .hud-stat, .game-bar a, .board-note a, .story-card a, .nav-link, input, select, textarea, [onclick], .clickable';
     var active = false;
 
     document.addEventListener('mousemove', function(e) {
@@ -1628,33 +1628,31 @@
     // Crossfade helper: fade out old, fade in new over ~2s
     function crossfadeTo(target) {
       if (currentAmbient === target) return;
-      var old = currentAmbient;
+
+      // Stop all other ambient tracks
+      allAmbient.forEach(function(a) {
+        if (a !== target) {
+          a.pause();
+          a.currentTime = 0;
+        }
+      });
       currentAmbient = target;
 
-      if (old) {
-        var fadeOut = setInterval(function() {
-          if (old.volume > 0.02) {
-            old.volume = Math.max(0, old.volume - 0.02);
-          } else {
-            clearInterval(fadeOut);
-            old.pause();
-            old.currentTime = 0;
-          }
-        }, 50);
-      }
-
       if (target && !muted) {
+        var maxVol = target === ambientDay ? 0.3 : 0.25;
         target.volume = 0;
-        target.play().catch(function(){});
-        var maxVol = target === ambientDay ? 0.3 : (target === ambientNight ? 0.25 : 0.25);
-        var fadeIn = setInterval(function() {
-          if (target.volume < maxVol - 0.02) {
-            target.volume = Math.min(maxVol, target.volume + 0.02);
-          } else {
-            target.volume = maxVol;
-            clearInterval(fadeIn);
-          }
-        }, 50);
+        target.play().then(function() {
+          // Fade in
+          var fadeIn = setInterval(function() {
+            if (target !== currentAmbient) { clearInterval(fadeIn); return; }
+            if (target.volume < maxVol - 0.02) {
+              target.volume = Math.min(maxVol, target.volume + 0.02);
+            } else {
+              target.volume = maxVol;
+              clearInterval(fadeIn);
+            }
+          }, 50);
+        }).catch(function(){});
       }
     }
 
