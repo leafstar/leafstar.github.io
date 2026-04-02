@@ -1528,11 +1528,177 @@
     weatherHud.style.cssText = 'position:fixed;top:1.2rem;left:10.5rem;z-index:10000;background:rgba(0,0,0,.5);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;font-family:"Courier New",monospace;font-size:12px;backdrop-filter:blur(4px);display:flex;align-items:center;gap:6px;user-select:none';
     weatherHud.innerHTML = '<span>' + (weatherIcons[currentWeather] || '') + '</span><span>' + (weatherNames[currentWeather] || 'Clear') + '</span>';
     document.body.appendChild(weatherHud);
+
+    // Expose for audio system
+    window.__currentWeather = currentWeather;
+  }
+
+  // ─── Audio system ────────────────────────────────────────────────────────
+  function initAudio() {
+    var AUDIO_BASE = '/assets/audio/';
+    var ambientFiles = {
+      day:   AUDIO_BASE + 'birds-isaiah658.ogg',
+      night: AUDIO_BASE + 'mutant_frog-1.ogg',
+      rain:  AUDIO_BASE + 'rain.ogg',
+    };
+
+    // Create audio elements
+    var ambientDay   = new Audio(ambientFiles.day);
+    var ambientNight = new Audio(ambientFiles.night);
+    var ambientRain  = new Audio(ambientFiles.rain);
+    var sfxClick     = new Audio(AUDIO_BASE + 'magic-wand-sparkle.wav');
+    var sfxHover     = new Audio(AUDIO_BASE + 'magic-hover.wav');
+
+    // All ambient tracks loop
+    ambientDay.loop = true;
+    ambientNight.loop = true;
+    ambientRain.loop = true;
+
+    // Volumes
+    ambientDay.volume   = 0.3;
+    ambientNight.volume = 0.25;
+    ambientRain.volume  = 0.25;
+    sfxClick.volume     = 0.4;
+    sfxHover.volume     = 0.15;
+
+    var allAmbient = [ambientDay, ambientNight, ambientRain];
+    var muted = localStorage.getItem('audio-muted') === '1';
+    var unlocked = false; // browser audio context unlocked?
+    var currentAmbient = null;
+
+    // Crossfade helper: fade out old, fade in new over ~2s
+    function crossfadeTo(target) {
+      if (currentAmbient === target) return;
+      var old = currentAmbient;
+      currentAmbient = target;
+
+      if (old) {
+        var fadeOut = setInterval(function() {
+          if (old.volume > 0.02) {
+            old.volume = Math.max(0, old.volume - 0.02);
+          } else {
+            clearInterval(fadeOut);
+            old.pause();
+            old.currentTime = 0;
+          }
+        }, 50);
+      }
+
+      if (target && !muted) {
+        target.volume = 0;
+        target.play().catch(function(){});
+        var maxVol = target === ambientDay ? 0.3 : (target === ambientNight ? 0.25 : 0.25);
+        var fadeIn = setInterval(function() {
+          if (target.volume < maxVol - 0.02) {
+            target.volume = Math.min(maxVol, target.volume + 0.02);
+          } else {
+            target.volume = maxVol;
+            clearInterval(fadeIn);
+          }
+        }, 50);
+      }
+    }
+
+    // Determine which ambient to play based on time + weather
+    function pickAmbient() {
+      // Weather overrides: rain always plays rain sound
+      var weather = window.__currentWeather || 'clear';
+      if (weather === 'rain') return ambientRain;
+
+      // Time-based
+      var timePeriod = window.__currentTimePeriod ? window.__currentTimePeriod() : 'Day';
+      if (timePeriod === 'Night' || timePeriod === 'Dusk') return ambientNight;
+      return ambientDay;
+    }
+
+    // Update ambient loop (called periodically)
+    function updateAmbient() {
+      if (!unlocked || muted) return;
+      var target = pickAmbient();
+      crossfadeTo(target);
+    }
+
+    // Mute/unmute all
+    function setMuted(m) {
+      muted = m;
+      localStorage.setItem('audio-muted', m ? '1' : '0');
+      if (m) {
+        allAmbient.forEach(function(a) { a.pause(); a.currentTime = 0; });
+        currentAmbient = null;
+      } else if (unlocked) {
+        updateAmbient();
+      }
+    }
+
+    // Unlock audio on first user interaction
+    function unlock() {
+      if (unlocked) return;
+      unlocked = true;
+      if (!muted) updateAmbient();
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('keydown', unlock);
+    }
+    document.addEventListener('click', unlock);
+    document.addEventListener('keydown', unlock);
+
+    // Periodically check if ambient should change (every 30s)
+    setInterval(updateAmbient, 30000);
+
+    // ── SFX: click on interactive elements ──
+    var INTERACTIVE = 'a, button, [role="button"], #toggle-content, #font-toggle-btn, #wand-selector-btn, .hud-skill, .board-note a, .story-card a, .nav-link';
+    document.addEventListener('click', function(e) {
+      if (muted || !unlocked) return;
+      var target = e.target.closest(INTERACTIVE);
+      if (target) {
+        sfxClick.currentTime = 0;
+        sfxClick.play().catch(function(){});
+      }
+    });
+
+    // ── SFX: hover glow sound ──
+    var hoverPlaying = false;
+    var origGlowUpdate = null;
+    // Watch for glow activation by polling glow element opacity
+    setInterval(function() {
+      if (muted || !unlocked) return;
+      var glow = document.getElementById('wand-glow');
+      if (!glow) return;
+      var visible = glow.style.opacity === '1';
+      if (visible && !hoverPlaying) {
+        hoverPlaying = true;
+        sfxHover.currentTime = 0;
+        sfxHover.play().catch(function(){});
+      } else if (!visible) {
+        hoverPlaying = false;
+      }
+    }, 100);
+
+    // ── Volume / mute button ──
+    var btn = document.createElement('div');
+    btn.id = 'audio-toggle';
+    btn.style.cssText = 'position:fixed;bottom:1.2rem;left:1.2rem;z-index:10000;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;text-align:center;line-height:38px;font-size:18px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
+
+    var iconOn  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.08"/></svg>';
+    var iconOff = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+
+    btn.innerHTML = muted ? iconOff : iconOn;
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      var newMuted = !muted;
+      setMuted(newMuted);
+      btn.innerHTML = newMuted ? iconOff : iconOn;
+      // First click also unlocks
+      if (!unlocked) { unlocked = true; if (!newMuted) updateAmbient(); }
+    };
+    document.body.appendChild(btn);
+
+    // Expose weather for audio system
+    // (initWeather sets window.__currentWeather)
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow(); initTimeOfDay(); initWeather(); });
+    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow(); initTimeOfDay(); initWeather(); initAudio(); });
   } else {
-    init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow(); initTimeOfDay(); initWeather();
+    init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow(); initTimeOfDay(); initWeather(); initAudio();
   }
 })();
