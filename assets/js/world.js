@@ -699,10 +699,10 @@
 
     // ── Walking patrol NPCs ──
     var walkers = [
-      { sprite: 'soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.15, preferY: 35, scale: 2.8 },
-      { sprite: 'orc-walk.png',     frames: 8, w: 100, h: 100, speed: 0.08, preferY: 55, scale: 2.4 },
-      { sprite: 'soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.12, preferY: 75, scale: 3.0 },
-      { sprite: 'orc-walk.png',     frames: 8, w: 100, h: 100, speed: 0.10, preferY: 45, scale: 2.6 },
+      { sprite: 'soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.15, preferY: 35, scale: 1.5 },
+      { sprite: 'orc-walk.png',     frames: 8, w: 100, h: 100, speed: 0.08, preferY: 55, scale: 1.5 },
+      { sprite: 'soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.12, preferY: 75, scale: 1.5 },
+      { sprite: 'orc-walk.png',     frames: 8, w: 100, h: 100, speed: 0.10, preferY: 45, scale: 1.5 },
     ];
 
     walkers.forEach(function(npc) {
@@ -750,10 +750,10 @@
 
     // ── Idle NPCs near camp structures ──
     var idlers = [
-      { sprite: 'soldier-idle.png', frames: 6, w: 100, h: 100, xp: 74, yp: 20, scale: 2.6 },
-      { sprite: 'orc-idle.png',     frames: 6, w: 100, h: 100, xp: 84, yp: 30, scale: 2.2 },
-      { sprite: 'soldier-idle.png', frames: 6, w: 100, h: 100, xp:  6, yp: 22, scale: 2.6 },
-      { sprite: 'orc-idle.png',     frames: 6, w: 100, h: 100, xp:  8, yp: 65, scale: 2.2 },
+      { sprite: 'soldier-idle.png', frames: 6, w: 100, h: 100, xp: 74, yp: 20, scale: 1.5 },
+      { sprite: 'orc-idle.png',     frames: 6, w: 100, h: 100, xp: 84, yp: 30, scale: 1.5 },
+      { sprite: 'soldier-idle.png', frames: 6, w: 100, h: 100, xp:  6, yp: 22, scale: 1.5 },
+      { sprite: 'orc-idle.png',     frames: 6, w: 100, h: 100, xp:  8, yp: 65, scale: 1.5 },
     ];
 
     idlers.forEach(function(npc) {
