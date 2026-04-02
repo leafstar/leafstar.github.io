@@ -1623,11 +1623,20 @@
     var muted = localStorage.getItem('audio-muted') === '1';
     var unlocked = false;
 
-    // ── Simple play/stop with volume ──
+    // Track load state
+    var rainReady = false, birdsReady = false;
+    ambientBirds.addEventListener('canplaythrough', function() { birdsReady = true; });
+    ambientRain.addEventListener('canplaythrough', function() { rainReady = true; });
+    ambientRain.addEventListener('error', function(e) { console.error('Rain audio error:', e); });
+    // Force load
+    ambientBirds.load();
+    ambientRain.load();
+
     function playLoop(audio, vol) {
       if (!audio.paused) return;
       audio.volume = vol;
-      audio.play().catch(function(e) { console.warn('Audio play failed:', audio.src, e); });
+      var p = audio.play();
+      if (p) p.catch(function(e) { console.warn('Audio play failed:', audio.src, e); });
     }
 
     function stopLoop(audio) {
@@ -1636,7 +1645,6 @@
       audio.currentTime = 0;
     }
 
-    // ── State update: what should be playing? ──
     function isNight() {
       var tp = window.__currentTimePeriod ? window.__currentTimePeriod() : 'Day';
       return tp === 'Night' || tp === 'Dusk';
@@ -1652,8 +1660,23 @@
       else stopLoop(ambientBirds);
 
       // Rain: play when raining (layered on top)
-      if (weather === 'rain') playLoop(ambientRain, 0.25);
-      else stopLoop(ambientRain);
+      if (weather === 'rain') {
+        if (rainReady) {
+          playLoop(ambientRain, 0.25);
+        } else {
+          // Not loaded yet — retry when ready
+          ambientRain.addEventListener('canplaythrough', function retry() {
+            rainReady = true;
+            ambientRain.removeEventListener('canplaythrough', retry);
+            if ((window.__currentWeather || 'clear') === 'rain' && unlocked && !muted) {
+              playLoop(ambientRain, 0.25);
+            }
+          });
+          ambientRain.load();
+        }
+      } else {
+        stopLoop(ambientRain);
+      }
     }
 
     // ── Frog: Poisson process at night ──
@@ -1698,7 +1721,15 @@
     setInterval(updateLayers, 30000);
 
     // Weather change callback — immediate update
-    window.__onWeatherChange = function() { updateLayers(); };
+    // Force unlock since user has interacted (click on weather dropdown)
+    window.__onWeatherChange = function() {
+      if (!unlocked) {
+        unlocked = true;
+        document.removeEventListener('click', unlock);
+        document.removeEventListener('keydown', unlock);
+      }
+      updateLayers();
+    };
 
     // ── SFX: click on interactive elements ──
     var INTERACTIVE = 'a, button, [role="button"], #toggle-content, #font-toggle-btn, #wand-selector-btn, .hud-skill, .board-note a, .story-card a, .nav-link';
