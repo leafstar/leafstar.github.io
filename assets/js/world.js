@@ -1150,6 +1150,55 @@
       })(i);
     }
     panel.appendChild(grid);
+
+    // ── Glow color picker ──
+    var glowTitle = document.createElement('div');
+    glowTitle.style.cssText = 'color:#c8b4ff;font-size:11px;font-family:Cinzel,serif;text-transform:uppercase;letter-spacing:.1em;margin:10px 0 6px;text-align:center;border-top:1px solid rgba(200,180,255,.15);padding-top:8px';
+    glowTitle.textContent = 'Glow Color';
+    panel.appendChild(glowTitle);
+
+    var GLOW_COLORS = [
+      { name: 'Purple',  halo: [140,60,255],  mid: [120,40,220],  core: [180,120,255], tint: [240,220,255] },
+      { name: 'Blue',    halo: [40,120,255],   mid: [30,100,255],  core: [120,180,255], tint: [220,235,255] },
+      { name: 'Cyan',    halo: [0,200,220],    mid: [0,170,200],   core: [80,220,240],  tint: [210,250,255] },
+      { name: 'Green',   halo: [40,200,80],    mid: [30,170,60],   core: [100,220,120], tint: [220,255,230] },
+      { name: 'Gold',    halo: [255,180,30],   mid: [220,150,20],  core: [255,220,100], tint: [255,245,220] },
+      { name: 'Red',     halo: [255,50,50],    mid: [220,30,30],   core: [255,120,100], tint: [255,225,220] },
+      { name: 'Pink',    halo: [255,60,180],   mid: [220,40,150],  core: [255,130,200], tint: [255,225,240] },
+      { name: 'White',   halo: [200,200,220],  mid: [170,170,190], core: [230,230,240], tint: [250,250,255] },
+    ];
+
+    var glowRow = document.createElement('div');
+    glowRow.style.cssText = 'display:flex;gap:5px;justify-content:center;flex-wrap:wrap';
+
+    var savedGlow = localStorage.getItem('wand-glow-color') || '0';
+    window.__glowColorIdx = parseInt(savedGlow);
+
+    GLOW_COLORS.forEach(function(c, idx) {
+      var dot = document.createElement('div');
+      var rgb = 'rgb(' + c.halo.join(',') + ')';
+      dot.style.cssText = 'width:28px;height:28px;border-radius:50%;border:2px solid ' + (idx === window.__glowColorIdx ? '#fff' : 'transparent') + ';background:radial-gradient(circle,rgba(255,255,255,.8) 15%,' + rgb + ' 60%,transparent 85%);transition:border-color .15s,transform .15s';
+      dot.title = c.name;
+      dot.onmouseenter = function() { dot.style.transform = 'scale(1.2)'; };
+      dot.onmouseleave = function() { dot.style.transform = 'scale(1)'; };
+      dot.onclick = function(e) {
+        e.stopPropagation();
+        window.__glowColorIdx = idx;
+        localStorage.setItem('wand-glow-color', idx);
+        // Update border highlights
+        var dots = glowRow.children;
+        for (var d = 0; d < dots.length; d++) dots[d].style.borderColor = 'transparent';
+        dot.style.borderColor = '#fff';
+        // Apply color to glow
+        if (window.__applyGlowColor) window.__applyGlowColor(c);
+      };
+      glowRow.appendChild(dot);
+    });
+    panel.appendChild(glowRow);
+
+    // Expose color data for glow system
+    window.__glowColors = GLOW_COLORS;
+
     document.body.appendChild(panel);
 
     btn.onclick = function(e) {
@@ -1165,17 +1214,27 @@
     glow.id = 'wand-glow';
     glow.style.cssText = 'position:fixed;pointer-events:none;z-index:99999;width:80px;height:80px;border-radius:50%;opacity:0;transition:opacity .2s;transform:translate(-50%,-50%);mix-blend-mode:screen';
 
-    // Outer purple halo (pulsing)
     var halo = document.createElement('div');
-    halo.style.cssText = 'position:absolute;inset:-24px;border-radius:50%;background:radial-gradient(circle,rgba(140,60,255,.5) 0%,rgba(120,40,220,.2) 40%,rgba(100,30,200,.06) 65%,transparent 80%);animation:wandPulse 1.4s ease-in-out infinite';
+    halo.style.cssText = 'position:absolute;inset:-24px;border-radius:50%;animation:wandPulse 1.4s ease-in-out infinite';
     glow.appendChild(halo);
 
-    // White-hot core highlight
     var core = document.createElement('div');
-    core.style.cssText = 'position:absolute;inset:12px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(240,220,255,.7) 25%,rgba(180,120,255,.3) 55%,transparent 75%);filter:blur(1.5px)';
+    core.style.cssText = 'position:absolute;inset:12px;border-radius:50%;filter:blur(1.5px)';
     glow.appendChild(core);
 
-    // Inject pulse animation
+    // Apply a color preset to halo + core
+    function applyGlowColor(c) {
+      var h = c.halo, m = c.mid, cr = c.core, t = c.tint;
+      halo.style.background = 'radial-gradient(circle,rgba(' + h + ',.5) 0%,rgba(' + m + ',.2) 40%,rgba(' + m + ',.06) 65%,transparent 80%)';
+      core.style.background = 'radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(' + t + ',.7) 25%,rgba(' + cr + ',.3) 55%,transparent 75%)';
+    }
+    window.__applyGlowColor = applyGlowColor;
+
+    // Load saved color (default purple = index 0)
+    var initColor = (window.__glowColors && window.__glowColors[window.__glowColorIdx || 0]) ||
+      { halo: [140,60,255], mid: [120,40,220], core: [180,120,255], tint: [240,220,255] };
+    applyGlowColor(initColor);
+
     var pulseStyle = document.createElement('style');
     pulseStyle.textContent = '@keyframes wandPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.35);opacity:1}}';
     document.head.appendChild(pulseStyle);
