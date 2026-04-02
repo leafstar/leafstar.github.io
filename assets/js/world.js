@@ -645,15 +645,21 @@
       render(canvas, spriteLayer, sprites, tiles, W, H);
     });
 
+    // On resize: only reposition sprites, don't re-render terrain
+    // Canvas CSS width:100% auto-stretches the terrain with nearest-neighbor
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
         const nW = stage.offsetWidth || window.innerWidth;
         const nH = stage.offsetHeight || window.innerHeight;
-        setupCanvas(canvas, nW * BG_SCALE, nH * BG_SCALE);
         spriteLayer.innerHTML = '';
-        loadAssets().then(([s, t]) => { render(canvas, spriteLayer, s, t, nW, nH); initNPCs(); });
+        loadAssets().then(([s, t]) => {
+          resetRng();
+          placeStructures(spriteLayer, s, nW, nH);
+          placeFlora(spriteLayer, s, nW, nH);
+          initNPCs();
+        });
       }, 300);
     });
   }
