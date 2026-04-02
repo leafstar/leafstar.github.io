@@ -87,8 +87,6 @@
     'log1','log2','log3','log4',
     'lamp1','lamp2','lamp3',
     'sign_1','sign_2','sign_3','sign_4','sign_5','sign_6',
-    // Mountains
-    'mountain_big','mountain_medium','mountain_small','mountain_tall','mountain_wide',
     // Shadows (plant base shadows)
     'shadow_1','shadow_2','shadow_3','shadow_4','shadow_5','shadow_6',
   ];
@@ -332,12 +330,6 @@
     { sprite: 'lamp2',      xp: 85, yp: 58, size:  50, z: 64 },
     { sprite: 'box4',       xp: 88, yp: 70, size:  40, z: 76 },
     { sprite: 'sign_5',     xp: 68, yp: 66, size:  45, z: 72 },
-    // ── Mountains (deep forest / map edges) ──
-    { sprite: 'mountain_big',    xp:  0, yp: 88, size: 180, z: 92 },
-    { sprite: 'mountain_medium', xp: 15, yp: 85, size: 140, z: 90 },
-    { sprite: 'mountain_small',  xp: 30, yp: 90, size: 100, z: 94 },
-    { sprite: 'mountain_tall',   xp: 92, yp: 85, size: 110, z: 91 },
-    { sprite: 'mountain_wide',   xp: 50, yp: 92, size: 120, z: 96 },
   ];
 
   function placeStructures(layer, sprites, W, H) {
@@ -389,7 +381,7 @@
       'grass_1','grass_2','grass_3','grass_4','grass_5','grass_6',
     ];
     CAMP_ANCHORS.forEach(a => {
-      if (a.sprite.startsWith('mountain')) return; // no flowers on mountains
+
       const sx = a.xp / 100 * W, sy = a.yp / 100 * H;
       const th = terrainHeight(sx, sy);
       if (th < 0.62) return;
@@ -1603,11 +1595,20 @@
     ambientBirds.volume = 0;
     ambientBirds.preload = 'auto';
 
-    // Rain: weather layer (plays on TOP of ambient, not replacing it)
-    var ambientRain = new Audio(AUDIO_BASE + 'rain.ogg');
-    ambientRain.loop = true;
-    ambientRain.volume = 0;
-    ambientRain.preload = 'auto';
+    // Rain: use Web Audio API to bypass format/charset issues
+    var rainCtx = null, rainSource = null, rainBuffer = null, rainGain = null, rainPlaying = false;
+    (function loadRain() {
+      rainCtx = new (window.AudioContext || window.webkitAudioContext)();
+      rainGain = rainCtx.createGain();
+      rainGain.gain.value = 0.25;
+      rainGain.connect(rainCtx.destination);
+      fetch(AUDIO_BASE + 'rain.ogg').then(function(r) { return r.arrayBuffer(); }).then(function(buf) {
+        return rainCtx.decodeAudioData(buf);
+      }).then(function(decoded) {
+        rainBuffer = decoded;
+        console.log('[audio] rain buffer loaded, duration:', decoded.duration);
+      }).catch(function(e) { console.error('[audio] rain load failed:', e); });
+    })();
 
     // Frog: Poisson-distributed one-shots at night
     var frogAudio = new Audio(AUDIO_BASE + 'mutant_frog-1.ogg');
@@ -1623,26 +1624,36 @@
     var muted = localStorage.getItem('audio-muted') === '1';
     var unlocked = false;
 
-    // Track load state
-    var rainReady = false, birdsReady = false;
-    ambientBirds.addEventListener('canplaythrough', function() { birdsReady = true; });
-    ambientRain.addEventListener('canplaythrough', function() { rainReady = true; });
-    ambientRain.addEventListener('error', function(e) { console.error('Rain audio error:', e); });
-    // Force load
-    ambientBirds.load();
-    ambientRain.load();
-
     function playLoop(audio, vol) {
       if (!audio.paused) return;
       audio.volume = vol;
       var p = audio.play();
-      if (p) p.catch(function(e) { console.warn('Audio play failed:', audio.src, e); });
+      if (p) p.catch(function(e) { console.warn('[audio] play error:', e.message); });
     }
 
     function stopLoop(audio) {
       if (audio.paused) return;
       audio.pause();
       audio.currentTime = 0;
+    }
+
+    function playRain() {
+      if (rainPlaying || !rainBuffer) return;
+      if (rainCtx.state === 'suspended') rainCtx.resume();
+      rainSource = rainCtx.createBufferSource();
+      rainSource.buffer = rainBuffer;
+      rainSource.loop = true;
+      rainSource.connect(rainGain);
+      rainSource.start(0);
+      rainPlaying = true;
+    }
+
+    function stopRain() {
+      if (!rainPlaying || !rainSource) return;
+      rainSource.stop();
+      rainSource.disconnect();
+      rainSource = null;
+      rainPlaying = false;
     }
 
     function isNight() {
@@ -1655,28 +1666,11 @@
       var weather = window.__currentWeather || 'clear';
       var night = isNight();
 
-      // Birds: play during day
       if (!night) playLoop(ambientBirds, 0.3);
       else stopLoop(ambientBirds);
 
-      // Rain: play when raining (layered on top)
-      if (weather === 'rain') {
-        if (rainReady) {
-          playLoop(ambientRain, 0.25);
-        } else {
-          // Not loaded yet — retry when ready
-          ambientRain.addEventListener('canplaythrough', function retry() {
-            rainReady = true;
-            ambientRain.removeEventListener('canplaythrough', retry);
-            if ((window.__currentWeather || 'clear') === 'rain' && unlocked && !muted) {
-              playLoop(ambientRain, 0.25);
-            }
-          });
-          ambientRain.load();
-        }
-      } else {
-        stopLoop(ambientRain);
-      }
+      if (weather === 'rain') playRain();
+      else stopRain();
     }
 
     // ── Frog: Poisson process at night ──
@@ -1700,7 +1694,8 @@
       muted = m;
       localStorage.setItem('audio-muted', m ? '1' : '0');
       if (m) {
-        [ambientBirds, ambientRain, frogAudio].forEach(function(a) { a.pause(); });
+        [ambientBirds, frogAudio].forEach(function(a) { a.pause(); });
+        stopRain();
       } else if (unlocked) {
         updateLayers();
       }
