@@ -1314,7 +1314,7 @@
         var brightness = 0.4 + 0.6 * Math.sin(time / 1000 * s.twinkleSpeed + s.phase);
         ctx.beginPath();
         ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,240,' + (brightness * 0.8).toFixed(2) + ')';
+        ctx.fillStyle = 'rgba(255,220,80,' + (brightness * 0.85).toFixed(2) + ')';
         ctx.fill();
       }
     }
