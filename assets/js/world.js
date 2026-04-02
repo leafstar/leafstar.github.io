@@ -1483,8 +1483,10 @@
 
     var ctx = wCanvas.getContext('2d');
 
+    var animRunning = false;
     function animWeather() {
-      if (maxParticles === 0) return;
+      if (maxParticles === 0) { animRunning = false; return; }
+      animRunning = true;
       ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
       var w = wCanvas.width, h = wCanvas.height;
 
@@ -1500,8 +1502,7 @@
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(p.x + p.vx * 1.5, p.y + p.len);
           ctx.stroke();
-        } else {
-          // Snow: gentle wobble
+        } else if (currentWeather === 'snow') {
           p.wobble += 0.02;
           p.x += Math.sin(p.wobble) * 0.3;
           ctx.beginPath();
@@ -1510,7 +1511,6 @@
           ctx.fill();
         }
 
-        // Reset when off screen
         if (p.y > h + 20 || p.x < -30 || p.x > w + 30) {
           var np = spawnParticle();
           particles[i] = np;
@@ -1518,16 +1518,75 @@
       }
       requestAnimationFrame(animWeather);
     }
-    requestAnimationFrame(animWeather);
+    if (maxParticles > 0) { animRunning = true; requestAnimationFrame(animWeather); }
 
-    // Weather HUD indicator (append to time hud)
+    // Weather HUD — clickable to switch weather
     var weatherIcons = { clear: '\u2600\uFE0F', rain: '\u{1F327}\uFE0F', snow: '\u2744\uFE0F', fog: '\u{1F32B}\uFE0F' };
     var weatherNames = { clear: 'Clear', rain: 'Rain', snow: 'Snow', fog: 'Fog' };
+    var weatherList = ['clear', 'rain', 'snow', 'fog'];
+
     var weatherHud = document.createElement('div');
     weatherHud.id = 'weather-hud';
     weatherHud.style.cssText = 'position:fixed;top:1.2rem;left:10.5rem;z-index:10000;background:rgba(0,0,0,.5);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;font-family:"Courier New",monospace;font-size:12px;backdrop-filter:blur(4px);display:flex;align-items:center;gap:6px;user-select:none';
-    weatherHud.innerHTML = '<span>' + (weatherIcons[currentWeather] || '') + '</span><span>' + (weatherNames[currentWeather] || 'Clear') + '</span>';
     document.body.appendChild(weatherHud);
+
+    // Dropdown panel
+    var weatherPanel = document.createElement('div');
+    weatherPanel.style.cssText = 'position:fixed;top:2.8rem;left:10.5rem;z-index:10001;background:rgba(20,18,30,.92);border:2px solid rgba(200,180,255,.25);border-radius:4px;padding:4px;display:none;backdrop-filter:blur(6px)';
+    weatherList.forEach(function(w) {
+      var opt = document.createElement('div');
+      opt.style.cssText = 'padding:4px 12px;font-family:"Courier New",monospace;font-size:12px;color:rgba(255,255,255,.85);border-radius:3px;display:flex;align-items:center;gap:6px;transition:background .15s';
+      opt.innerHTML = '<span>' + weatherIcons[w] + '</span><span>' + weatherNames[w] + '</span>';
+      opt.onmouseenter = function() { opt.style.background = 'rgba(255,255,255,.12)'; };
+      opt.onmouseleave = function() { opt.style.background = 'transparent'; };
+      opt.onclick = function(e) {
+        e.stopPropagation();
+        switchWeather(w);
+        weatherPanel.style.display = 'none';
+      };
+      weatherPanel.appendChild(opt);
+    });
+    document.body.appendChild(weatherPanel);
+
+    weatherHud.onclick = function(e) {
+      e.stopPropagation();
+      weatherPanel.style.display = weatherPanel.style.display === 'none' ? 'block' : 'none';
+    };
+    document.addEventListener('click', function() { weatherPanel.style.display = 'none'; });
+
+    function updateHudLabel() {
+      weatherHud.innerHTML = '<span>' + (weatherIcons[currentWeather] || '') + '</span><span>' + (weatherNames[currentWeather] || 'Clear') + ' \u25BE</span>';
+    }
+    updateHudLabel();
+
+    // Switch weather at runtime
+    function switchWeather(w) {
+      currentWeather = w;
+      window.__currentWeather = w;
+      updateHudLabel();
+
+      // Reset particles
+      particles.length = 0;
+      maxParticles = w === 'rain' ? 400 : (w === 'snow' ? 200 : 0);
+      if (maxParticles > 0) {
+        for (var i = 0; i < maxParticles; i++) {
+          var p = spawnParticle();
+          p.y = Math.random() * wCanvas.height;
+          particles.push(p);
+        }
+        wCanvas.style.opacity = '1';
+        if (!animRunning) { animRunning = true; requestAnimationFrame(animWeather); }
+      } else {
+        wCanvas.style.opacity = '0';
+        ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+      }
+
+      // Fog
+      fogDiv.style.opacity = w === 'fog' ? '1' : '0';
+
+      // Notify audio system
+      if (window.__onWeatherChange) window.__onWeatherChange();
+    }
 
     // Expose for audio system
     window.__currentWeather = currentWeather;
@@ -1644,6 +1703,9 @@
     // Periodically check if ambient should change (every 30s)
     setInterval(updateAmbient, 30000);
 
+    // Weather change callback
+    window.__onWeatherChange = function() { updateAmbient(); };
+
     // ── SFX: click on interactive elements ──
     var INTERACTIVE = 'a, button, [role="button"], #toggle-content, #font-toggle-btn, #wand-selector-btn, .hud-skill, .board-note a, .story-card a, .nav-link';
     document.addEventListener('click', function(e) {
@@ -1676,7 +1738,7 @@
     // ── Volume / mute button ──
     var btn = document.createElement('div');
     btn.id = 'audio-toggle';
-    btn.style.cssText = 'position:fixed;bottom:1.2rem;left:1.2rem;z-index:10000;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;text-align:center;line-height:38px;font-size:18px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
+    btn.style.cssText = 'position:fixed;bottom:1.2rem;left:1.2rem;z-index:10000;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
 
     var iconOn  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.08"/></svg>';
     var iconOff = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
