@@ -1163,7 +1163,22 @@
   function initWandGlow() {
     var glow = document.createElement('div');
     glow.id = 'wand-glow';
-    glow.style.cssText = 'position:fixed;pointer-events:none;z-index:99999;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle,rgba(200,180,255,.45) 0%,rgba(160,140,255,.2) 35%,transparent 70%);opacity:0;transition:opacity .18s;transform:translate(-50%,-50%);mix-blend-mode:screen';
+    glow.style.cssText = 'position:fixed;pointer-events:none;z-index:99999;width:80px;height:80px;border-radius:50%;opacity:0;transition:opacity .2s;transform:translate(-50%,-50%);mix-blend-mode:screen';
+
+    // Outer purple halo (pulsing)
+    var halo = document.createElement('div');
+    halo.style.cssText = 'position:absolute;inset:-24px;border-radius:50%;background:radial-gradient(circle,rgba(140,60,255,.5) 0%,rgba(120,40,220,.2) 40%,rgba(100,30,200,.06) 65%,transparent 80%);animation:wandPulse 1.4s ease-in-out infinite';
+    glow.appendChild(halo);
+
+    // White-hot core highlight
+    var core = document.createElement('div');
+    core.style.cssText = 'position:absolute;inset:12px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(240,220,255,.7) 25%,rgba(180,120,255,.3) 55%,transparent 75%);filter:blur(1.5px)';
+    glow.appendChild(core);
+
+    // Inject pulse animation
+    var pulseStyle = document.createElement('style');
+    pulseStyle.textContent = '@keyframes wandPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.35);opacity:1}}';
+    document.head.appendChild(pulseStyle);
     document.body.appendChild(glow);
 
     // Selectors for interactive elements
@@ -1181,13 +1196,26 @@
         glow.style.opacity = '1';
       } else if (!hit && active) {
         active = false;
-        glow.style.opacity = '0';
+        if (!glowLocked) glow.style.opacity = '0';
       }
     });
 
     document.addEventListener('mouseleave', function() {
       active = false;
-      glow.style.opacity = '0';
+      if (!glowLocked) glow.style.opacity = '0';
+    });
+
+    // Long-press (1s) toggles persistent glow on/off
+    var glowLocked = false, holdTimer = null;
+    document.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      holdTimer = setTimeout(function() {
+        glowLocked = !glowLocked;
+        glow.style.opacity = glowLocked ? '1' : (active ? '1' : '0');
+      }, 1000);
+    });
+    document.addEventListener('mouseup', function() {
+      clearTimeout(holdTimer);
     });
   }
 
