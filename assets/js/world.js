@@ -35,13 +35,19 @@
       fade(yf)
     ) * 0.5 + 0.5);
   }
-  function fbm(x, y) {
-    return perlin(x, y) * 0.65 + perlin(x * 2.1, y * 2.1) * 0.35;
+
+  // Multi-octave noise (7 octaves, 0.5 falloff)
+  function fbmRich(x, y) {
+    let val = 0, amp = 1, freq = 1, total = 0;
+    for (let i = 0; i < 7; i++) {
+      val += perlin(x * freq, y * freq) * amp;
+      total += amp;
+      amp *= 0.5;
+      freq *= 2.0;
+    }
+    return val / total;
   }
-  function smoothstep(lo, hi, t) {
-    t = Math.max(0, Math.min(1, (t - lo) / (hi - lo)));
-    return t * t * (3 - 2 * t);
-  }
+  function fbmRich2(x, y) { return fbmRich(x + 137.7, y + 251.3); }
 
   // ─── Seeded RNG ──────────────────────────────────────────────────────────
   let rngState = 0x9e3779b9;
@@ -53,45 +59,50 @@
   }
   function resetRng() { rngState = 0x9e3779b9; }
 
-  // ─── Asset paths (individual PNGs cut from sprite sheets) ────────────────
+  // ─── Asset paths ──────────────────────────────────────────────────────────
   const BASE = '/assets/images/procedural-world';
+  const SPRITE = BASE + '/sprites';
 
-  // terrain/terrain_01..14.png — ground patches
-  //   Row 0: 01=grass1, 02=grass2, 03=grassPath, 04=grassRocky, 05=dirtDry
-  //   Row 1: 06=dirtCracked, 07=mudpool, 08=dirtRuts, 09=mossy
-  //   Row 2: 10=rootsGreen, 11=stonePile, 12=rockGrass, 13=roots, 14=logs
-  const T_IDX = {
-    grass1: 1, grass2: 2, grassPath: 3, grassRocky: 4, dirtDry: 5,
-    dirtCracked: 6, mudpool: 7, dirtRuts: 8, mossy: 9,
-    rootsGreen: 10, stonePile: 11, rockGrass: 12, roots: 13, logs: 14,
-  };
+  // All sprite names — loaded into a flat { name: Image } map
+  const SPRITE_NAMES = [
+    // Trees (roboden forest, 6 variants + 2 fields)
+    'tree_1','tree_2','tree_3','tree_4','tree_5','tree_6','tree_big','tree_small',
+    // Bushes (6)
+    'bush_1','bush_2','bush_3','bush_4','bush_5','bush_6',
+    // Stones (16)
+    'stone_1','stone_2','stone_3','stone_4','stone_5','stone_6','stone_7','stone_8',
+    'stone_9','stone_10','stone_11','stone_12','stone_13','stone_14','stone_15','stone_16',
+    // Flowers (12) & Grass tufts (6)
+    'flower_1','flower_2','flower_3','flower_4','flower_5','flower_6',
+    'flower_7','flower_8','flower_9','flower_10','flower_11','flower_12',
+    'grass_1','grass_2','grass_3','grass_4','grass_5','grass_6',
+    // Fences (10)
+    'fence_1','fence_2','fence_3','fence_4','fence_5',
+    'fence_6','fence_7','fence_8','fence_9','fence_10',
+    // Camp structures
+    'tent_open','tent_tall','tent_flat','tent_side',
+    'campfire_stones','campfire_logs',
+    // Decor
+    'box1','box2','box3','box4',
+    'log1','log2','log3','log4',
+    'lamp1','lamp2','lamp3',
+    'sign_1','sign_2','sign_3','sign_4','sign_5','sign_6',
+    // Mountains
+    'mountain_big','mountain_medium','mountain_small','mountain_tall','mountain_wide',
+    // Shadows (plant base shadows)
+    'shadow_1','shadow_2','shadow_3','shadow_4','shadow_5','shadow_6',
+  ];
 
-  // flora/flora_01..22.png — trees, bushes, stumps, rocks, moss
-  //   Row 0: 01=tree1, 02=tree2, 03=tree3, 04=bush1, 05=bush2, 06=bush3
-  //   Row 1: 07=grass1, 08=flowers, 09=flowerSmall, 10=stump1, 11=stump2, 12=stump3
-  //   Row 2: 13=fallenLog1, 14=rockLg, 15=rockSm, 16=moss1, 17=moss2
-  //   Row 3: 18=fallenLog2, 19=rockLg2, 20=rockSm2, 21=moss3, 22=moss4
-  const FL_IDX = {
-    tree1: 1, tree2: 2, tree3: 3, bush1: 4, bush2: 5, bush3: 6,
-    grass1: 7, flowers: 8, flowerSmall: 9, stump1: 10, stump2: 11, stump3: 12,
-    fallenLog1: 13, rockLg: 14, rockSm: 15, moss1: 16, moss2: 17,
-    fallenLog2: 18, rockLg2: 19, rockSm2: 20, moss3: 21, moss4: 22,
-  };
-
-  // props/prop_01..12.png — camp structures
-  //   Row 0: 01=house, 02=tentSmall, 03=tentLarge, 04=cart
-  //   Row 1: 05=barrels, 06=sign, 07=fenceA, 08=fenceB, 09=logPile
-  //   Row 2: 10=campfire, 11=sacks, 12=chopBlock
-  const PR_IDX = {
-    house: 1, tentSmall: 2, tentLarge: 3, cart: 4,
-    barrels: 5, sign: 6, fenceA: 7, fenceB: 8, logPile: 9,
-    campfire: 10, sacks: 11, chopBlock: 12,
-  };
-
-  function pad2(n) { return String(n).padStart(2, '0'); }
-  function terrainPath(name) { return BASE + '/terrain/terrain_' + pad2(T_IDX[name]) + '.png'; }
-  function floraPath(name)   { return BASE + '/flora/flora_' + pad2(FL_IDX[name]) + '.png'; }
-  function propPath(name)    { return BASE + '/props/prop_' + pad2(PR_IDX[name]) + '.png'; }
+  // Animated sprites: sprite sheet approach (using first frame as static, animate via JS)
+  const ANIM_SPRITES = [
+    { name: 'flag1', frames: 6, prefix: 'flag1_frame' },
+    { name: 'flag2', frames: 6, prefix: 'flag2_frame' },
+    { name: 'flag3', frames: 6, prefix: 'flag3_frame' },
+    { name: 'flag4', frames: 6, prefix: 'flag4_frame' },
+    { name: 'flag5', frames: 6, prefix: 'flag5_frame' },
+    { name: 'campfire1', frames: 6, prefix: 'campfire1_frame' },
+    { name: 'campfire2', frames: 6, prefix: 'campfire2_frame' },
+  ];
 
   // ─── Image loader ────────────────────────────────────────────────────────
   function loadImg(src) {
@@ -103,350 +114,332 @@
     });
   }
 
-  function loadAll(pathFn, indexMap) {
-    const entries = Object.entries(indexMap);
-    return Promise.all(entries.map(([name]) => loadImg(pathFn(name))))
-      .then(imgs => {
-        const map = {};
-        entries.forEach(([name], i) => { map[name] = imgs[i]; });
-        return map;
-      });
-  }
-
-  // ─── Double-grid terrain system ────────────────────────────────────────────
-
-  // Second noise channel for biome variation
-  function perlin2(x, y) { return perlin(x + 137.7, y + 251.3); }
-  function fbm2(x, y) {
-    return perlin2(x, y) * 0.65 + perlin2(x * 2.1, y * 2.1) * 0.35;
-  }
-
-  // Biome enum:  0=lushGrass  1=dryGrass  2=mossy  3=rocky  4=dirt  5=path
-  const BIOME_LUSH = 0, BIOME_DRY = 1, BIOME_MOSS = 2,
-        BIOME_ROCK = 3, BIOME_DIRT = 4, BIOME_PATH = 5;
-
-  // Base fill colors per biome (painted under texture patches)
-  const BIOME_COLORS = ['#3a5e1c', '#4a5a2a', '#2e4a1a', '#4a4a36', '#6a5a3a', '#7a6a45'];
-
-  function getBiomeId(xFrac, yFrac) {
-    const n1 = fbm(xFrac * 4.5, yFrac * 3.5);
-    const n2 = fbm2(xFrac * 5.0, yFrac * 4.0);
-    if (n2 > 0.62) return BIOME_ROCK;
-    if (n1 > 0.58) return BIOME_MOSS;
-    if (n1 < 0.35) return BIOME_DRY;
-    if (n2 < 0.35) return BIOME_DIRT;
-    return BIOME_LUSH;
-  }
-
-  // ── Data grid: assign biome to each cell ──
-  function buildDataGrid(W, H, cellSz, pathStrength) {
-    const cols = Math.ceil(W / cellSz) + 2;
-    const rows = Math.ceil(H / cellSz) + 2;
-    const grid = [];
-    for (let r = 0; r < rows; r++) {
-      const row = [];
-      for (let c = 0; c < cols; c++) {
-        const cx = c * cellSz, cy = r * cellSz;
-        const ps = pathStrength(cx, cy);
-        if (ps > 0.6) {
-          row.push(BIOME_PATH);
-        } else if (ps > 0.3) {
-          // Transition zone — bias toward path or biome
-          row.push(ps > 0.45 ? BIOME_DIRT : getBiomeId(cx / W, cy / H));
-        } else {
-          row.push(getBiomeId(cx / W, cy / H));
-        }
+  // Load all sprites into a flat map
+  function loadSprites() {
+    const map = {};
+    const promises = [];
+    // Static sprites
+    SPRITE_NAMES.forEach(name => {
+      promises.push(loadImg(SPRITE + '/' + name + '.png').then(img => { map[name] = img; }));
+    });
+    // Animated sprite frames
+    ANIM_SPRITES.forEach(anim => {
+      map[anim.name] = []; // will hold array of frame images
+      for (let f = 1; f <= anim.frames; f++) {
+        const idx = f;
+        promises.push(loadImg(SPRITE + '/' + anim.prefix + f + '.png').then(img => {
+          map[anim.name][idx - 1] = img;
+        }));
       }
-      grid.push(row);
-    }
-    return grid;
+    });
+    return Promise.all(promises).then(() => map);
   }
 
-  function drawTerrain(canvas, terrainImgs, W, H) {
-    const ctx = canvas.getContext('2d');
-    const CELL = 120; // data grid cell size
+  // ─── Seamless per-pixel terrain renderer ──────────────────────────────────
+  const TILE_BASE = BASE + '/tiles';
+  const TEX_SIZE = 64; // tile texture size
 
-    // ── Path geometry ──
-    const PATH_CX = W * 0.56;
-    const PATH_HW = W * 0.075;
-    function pathDist(x, y) {
-      const wander = (fbm(y * 0.0022, x * 0.0007) - 0.5) * W * 0.10;
-      return Math.abs(x - PATH_CX - wander);
-    }
-    function pathStrength(x, y) {
-      const d = pathDist(x, y);
-      if (d < PATH_HW * 0.7) return 1.0;
-      if (d < PATH_HW * 1.3) return smoothstep(PATH_HW * 1.3, PATH_HW * 0.7, d);
-      return 0;
-    }
-
-    // ── Pass 0: solid base ──
-    ctx.fillStyle = '#2c4a14';
-    ctx.fillRect(0, 0, W, H);
-    if (!terrainImgs) { applyVignette(ctx, W, H); return; }
-
-    // Patch drawing helper
-    function drawPatch(img, x, y, sz, alpha, rot) {
-      if (!img) return;
-      ctx.globalAlpha = alpha;
-      const aspect = img.naturalHeight / img.naturalWidth;
-      const hw = sz / 2, hh = (sz * aspect) / 2;
-      if (rot) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(rot);
-        ctx.drawImage(img, -hw, -hh, sz, sz * aspect);
-        ctx.restore();
-      } else {
-        ctx.drawImage(img, x - hw, y - hh, sz, sz * aspect);
-      }
-    }
-
-    // ── Biome texture pools ──
-    const biomePatch = [
-      /* 0 lush  */ [terrainImgs.grass1, terrainImgs.grass2],
-      /* 1 dry   */ [terrainImgs.grassPath, terrainImgs.grassRocky],
-      /* 2 moss  */ [terrainImgs.mossy, terrainImgs.rootsGreen, terrainImgs.grass2],
-      /* 3 rock  */ [terrainImgs.rockGrass, terrainImgs.grassRocky, terrainImgs.stonePile],
-      /* 4 dirt  */ [terrainImgs.dirtDry, terrainImgs.dirtCracked],
-      /* 5 path  */ [terrainImgs.dirtDry, terrainImgs.dirtCracked, terrainImgs.dirtRuts],
-    ];
-    const detailImgs = [terrainImgs.logs, terrainImgs.stonePile, terrainImgs.roots,
-                        terrainImgs.rockGrass, terrainImgs.rootsGreen];
-
-    // ── Build data grid ──
-    const grid = buildDataGrid(W, H, CELL, pathStrength);
-    const rows = grid.length, cols = grid[0].length;
-
-    // ── PASS 1: Base color fill per data cell ──
-    // Solid color rectangles — guarantees zero gaps
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        ctx.fillStyle = BIOME_COLORS[grid[r][c]];
-        ctx.globalAlpha = 1;
-        ctx.fillRect(c * CELL, r * CELL, CELL + 1, CELL + 1);
-      }
-    }
-
-    // ── PASS 2: Data-grid texture — one patch per cell ──
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const biome = grid[r][c];
-        const pool = biomePatch[biome];
-        // Deterministic pick from pool based on position
-        const idx = ((c * 7 + r * 13) & 0x7fffffff) % pool.length;
-        const img = pool[idx];
-        const cx = c * CELL + CELL / 2;
-        const cy = r * CELL + CELL / 2;
-        // Slight rotation for variety
-        const rot = ((c * 3 + r * 5) % 7 - 3) * 0.15;
-        drawPatch(img, cx, cy, CELL * 1.35, 0.80, rot);
-      }
-    }
-
-    // ── PASS 3: Render grid (offset half-cell) — transition blending ──
-    // Each render cell sits at the junction of 4 data cells
-    const halfCell = CELL / 2;
-    // Offscreen canvas for compositing transitions
-    const offW = CELL, offH = CELL;
-    const off = document.createElement('canvas');
-    off.width = offW; off.height = offH;
-    const offCtx = off.getContext('2d');
-
-    for (let r = 0; r < rows - 1; r++) {
-      for (let c = 0; c < cols - 1; c++) {
-        const tl = grid[r][c], tr = grid[r][c + 1];
-        const bl = grid[r + 1][c], br = grid[r + 1][c + 1];
-        // Skip if all same biome (no transition needed)
-        if (tl === tr && tr === bl && bl === br) continue;
-
-        // Render cell position (offset by half)
-        const rx = c * CELL + halfCell;
-        const ry = r * CELL + halfCell;
-
-        // For each quadrant, draw the biome of that corner with radial fade
-        offCtx.clearRect(0, 0, offW, offH);
-        const corners = [
-          { biome: tl, cx: 0,    cy: 0    },  // top-left quadrant
-          { biome: tr, cx: offW, cy: 0    },  // top-right
-          { biome: bl, cx: 0,    cy: offH },  // bottom-left
-          { biome: br, cx: offW, cy: offH },  // bottom-right
-        ];
-
-        corners.forEach(function(corner) {
-          const pool = biomePatch[corner.biome];
-          const img = pool[((c + r + corner.cx + corner.cy) & 0x7fffffff) % pool.length];
-          if (!img) return;
-
-          offCtx.save();
-          // Radial gradient mask from this corner
-          const grad = offCtx.createRadialGradient(
-            corner.cx, corner.cy, 0,
-            corner.cx, corner.cy, CELL * 0.9
-          );
-          grad.addColorStop(0, 'rgba(0,0,0,1)');
-          grad.addColorStop(0.5, 'rgba(0,0,0,0.5)');
-          grad.addColorStop(1, 'rgba(0,0,0,0)');
-
-          // Draw biome color base into quadrant
-          offCtx.globalCompositeOperation = 'source-over';
-          offCtx.fillStyle = BIOME_COLORS[corner.biome];
-          offCtx.globalAlpha = 1;
-          offCtx.fillRect(0, 0, offW, offH);
-
-          // Draw texture patch
-          const aspect = img.naturalHeight / img.naturalWidth;
-          offCtx.globalAlpha = 0.75;
-          offCtx.drawImage(img, -offW * 0.15, -offH * 0.15, offW * 1.3, offW * 1.3 * aspect);
-
-          // Apply radial mask
-          offCtx.globalCompositeOperation = 'destination-in';
-          offCtx.globalAlpha = 1;
-          offCtx.fillStyle = grad;
-          offCtx.fillRect(0, 0, offW, offH);
-          offCtx.restore();
-        });
-
-        // Stamp transition cell onto main canvas
-        ctx.globalAlpha = 0.85;
-        ctx.drawImage(off, rx, ry, CELL, CELL);
-      }
-    }
-
-    // ── PASS 4: Organic scatter overlay — breaks grid regularity ──
-    ctx.globalAlpha = 1;
-    const scatterCount = Math.floor((W * H) / 12000);
-    for (let i = 0; i < scatterCount; i++) {
-      const x = srng() * W, y = srng() * H;
-      const xf = x / W, yf = y / H;
-      const ps = pathStrength(x, y);
-      // Look up biome at this point
-      const gc = Math.min(Math.floor(x / CELL), cols - 1);
-      const gr = Math.min(Math.floor(y / CELL), rows - 1);
-      const biome = grid[gr][gc];
-      const pool = biomePatch[biome];
-      const img = pool[Math.floor(srng() * pool.length)];
-      const sz = 100 + srng() * 140;
-      const rot = srng() * Math.PI * 2;
-      const alpha = ps > 0.5 ? 0.25 + srng() * 0.2  // subtle on path
-                              : 0.30 + srng() * 0.30; // normal elsewhere
-      drawPatch(img, x, y, sz, alpha, rot);
-    }
-
-    // ── PASS 5: Path mud accents ──
-    const mudCount = Math.floor((W * H) / 22000);
-    for (let i = 0; i < mudCount; i++) {
-      const x = (0.28 + srng() * 0.55) * W;
-      const y = srng() * H;
-      const ps = pathStrength(x, y);
-      if (ps < 0.4) continue;
-      drawPatch(terrainImgs.mudpool, x, y, 120 + srng() * 90,
-        (0.40 + srng() * 0.30) * ps, (srng() - 0.5) * 0.25);
-    }
-
-    // ── PASS 6: Edge darkening ──
-    const edgeImgs = [terrainImgs.mossy, terrainImgs.rootsGreen, terrainImgs.roots];
-    const edgeCount = Math.floor((W * H) / 8000);
-    for (let i = 0; i < edgeCount; i++) {
-      const xFrac = srng(), y = srng() * H;
-      const edgeDist = Math.min(xFrac, 1 - xFrac);
-      if (edgeDist > 0.28) continue;
-      const x = xFrac * W;
-      const img = edgeImgs[Math.floor(srng() * edgeImgs.length)];
-      const ew = smoothstep(0.28, 0.0, edgeDist);
-      drawPatch(img, x, y, 120 + srng() * 100,
-        (0.45 + srng() * 0.30) * ew, srng() * Math.PI * 2);
-    }
-
-    // ── PASS 7: Scattered ground details ──
-    const exclusions = buildExclusions();
-    const detailCount = Math.floor((W * H) / 20000);
-    for (let i = 0; i < detailCount; i++) {
-      const x = srng() * W, y = srng() * H;
-      if (nearStructure(x / W * 100, y / H * 100, exclusions)) continue;
-      if (pathStrength(x, y) > 0.6 && srng() < 0.7) continue;
-      const img = detailImgs[Math.floor(srng() * detailImgs.length)];
-      drawPatch(img, x, y, 60 + srng() * 80, 0.50 + srng() * 0.35, srng() * Math.PI * 2);
-    }
-
-    ctx.globalAlpha = 1;
-    applyVignette(ctx, W, H);
+  // ─── Terrain height (shared for placement logic) ─────────────────────────
+  const TERRAIN_ZOOM = 1400;
+  function terrainHeight(sx, sy) {
+    const h  = fbmRich(sx / TERRAIN_ZOOM, sy / TERRAIN_ZOOM);
+    const h2 = fbmRich2(sx / (TERRAIN_ZOOM * 1.3), sy / (TERRAIN_ZOOM * 1.1));
+    const raw = h * 0.65 + h2 * 0.35;
+    return Math.max(0, Math.min(1, (raw - 0.25) * 2.0));
   }
 
-  function applyVignette(ctx, W, H) {
-    // Left (content area dark)
-    const vL = ctx.createLinearGradient(0, 0, W * 0.38, 0);
-    vL.addColorStop(0,    'rgba(12,20,6,0.78)');
-    vL.addColorStop(0.50, 'rgba(12,20,6,0.22)');
-    vL.addColorStop(1,    'rgba(12,20,6,0)');
-    ctx.fillStyle = vL; ctx.fillRect(0, 0, W, H);
-    // Right edge
-    const vR = ctx.createLinearGradient(W, 0, W * 0.82, 0);
-    vR.addColorStop(0, 'rgba(12,20,6,0.60)');
-    vR.addColorStop(1, 'rgba(12,20,6,0)');
-    ctx.fillStyle = vR; ctx.fillRect(0, 0, W, H);
-    // Top
-    const vT = ctx.createLinearGradient(0, 0, 0, H * 0.15);
-    vT.addColorStop(0, 'rgba(12,20,6,0.45)');
-    vT.addColorStop(1, 'rgba(12,20,6,0)');
-    ctx.fillStyle = vT; ctx.fillRect(0, 0, W, H);
+  // Sub-biome noise for grass shade variation
+  function subBiomeNoise(sx, sy) {
+    return fbmRich(sx / 600 + 500, sy / 600 + 500);
   }
 
-  // ─── Layer 3: camp structures (fixed anchors) ─────────────────────────────
-  const CAMP_ANCHORS = [
-    // Left side (peek from behind content card)
-    { spec: 'house',     xp:  1, yp: 10, size: 200, z: 20 },
-    { spec: 'fenceA',   xp:  8, yp: 30, size: 130, z: 38 },
-    { spec: 'barrels',  xp:  6, yp: 52, size: 110, z: 58 },
-    // Right side (main visible area)
-    { spec: 'tentLarge',xp: 72, yp:  8, size: 200, z: 18 },
-    { spec: 'tentSmall',xp: 82, yp: 18, size: 150, z: 26 },
-    { spec: 'cart',     xp: 78, yp: 32, size: 180, z: 40 },
-    { spec: 'sign',     xp: 60, yp: 22, size:  90, z: 30 },
-    { spec: 'fenceB',   xp: 68, yp: 42, size: 130, z: 48 },
-    { spec: 'campfire', xp: 74, yp: 55, size: 130, z: 60 },
-    { spec: 'barrels',  xp: 84, yp: 48, size: 110, z: 54 },
-    { spec: 'sacks',    xp: 65, yp: 62, size: 100, z: 66 },
-    { spec: 'chopBlock',xp: 80, yp: 68, size: 100, z: 72 },
-    { spec: 'logPile',  xp: 90, yp: 35, size: 130, z: 42 },
-    // Lower scattered
-    { spec: 'tentSmall',xp:  4, yp: 72, size: 150, z: 76 },
-    { spec: 'fenceA',   xp: 70, yp: 78, size: 110, z: 80 },
-    { spec: 'barrels',  xp: 88, yp: 80, size: 100, z: 82 },
+  // Extract pixel data from an Image into Uint8ClampedArray
+  function extractPixels(img) {
+    if (!img) return null;
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth || img.width;
+    c.height = img.naturalHeight || img.height;
+    const cx = c.getContext('2d');
+    cx.drawImage(img, 0, 0);
+    return cx.getImageData(0, 0, c.width, c.height);
+  }
+
+  // Terrain type enum
+  const T_DEEP = 0, T_SHALLOW = 1, T_BEACH = 2, T_GRASS_L = 3, T_GRASS_D = 4;
+
+  // Height thresholds
+  const H_DEEP = 0.35, H_SHALLOW = 0.50, H_BEACH = 0.58;
+
+  // Tile texture definitions per terrain type
+  const TILE_DEFS = [
+    { type: T_DEEP,    name: 'deep0' },
+    { type: T_SHALLOW, name: 'shallow0' },
+    { type: T_BEACH,   name: 'beach0' },
+    { type: T_GRASS_L, name: 'grass0' },
+    { type: T_GRASS_D, name: 'grass3' },
   ];
 
-  // ─── Layer 3 placement ───────────────────────────────────────────────────
-  function placeStructures(layer, propImgs, W, H) {
-    if (!propImgs) return;
-    CAMP_ANCHORS.forEach(a => {
-      const img = propImgs[a.spec];
-      if (!img) return;
-      const aspect = img.naturalHeight / img.naturalWidth;
-      const h = Math.round(a.size * aspect);
-      const el = document.createElement('img');
-      el.src = img.src;
-      el.setAttribute('aria-hidden', 'true');
-      el.style.cssText = [
-        'position:absolute',
-        'left:'    + a.xp + '%',
-        'top:'     + a.yp + '%',
-        'width:'   + a.size + 'px',
-        'z-index:' + a.z,
-        'pointer-events:none',
-        'image-rendering:auto',
-      ].join(';');
-      layer.appendChild(el);
+  function loadTiles() {
+    const promises = [];
+    const textures = {}; // type → ImageData
+
+    TILE_DEFS.forEach(def => {
+      const path = TILE_BASE + '/' + def.name + '/straight/0/0.png';
+      promises.push(loadImg(path).then(img => {
+        textures[def.type] = extractPixels(img);
+      }));
     });
+
+    return Promise.all(promises).then(() => ({ textures }));
   }
 
-  // ─── Layer 4: flora placement ─────────────────────────────────────────────
+  // Sample a color from a tiling texture at world position (sx, sy)
+  function sampleTex(texData, sx, sy) {
+    if (!texData) return [60, 100, 30, 255];
+    const w = texData.width, h = texData.height;
+    const tx = ((Math.floor(sx) % w) + w) % w;
+    const ty = ((Math.floor(sy) % h) + h) % h;
+    const idx = (ty * w + tx) * 4;
+    return [texData.data[idx], texData.data[idx+1], texData.data[idx+2], 255];
+  }
 
-  // Exclusion zones around camp structures (percentage coords + radius)
+  // Classify terrain → type + blend weight to next type
+  function classifySmooth(h, sub) {
+    // Returns [typeA, typeB, blend] where blend is 0..1 transition weight
+    const FADE = 0.04; // transition width in height units
+    if (h < H_DEEP - FADE) return [T_DEEP, T_DEEP, 0];
+    if (h < H_DEEP + FADE) return [T_DEEP, T_SHALLOW, (h - H_DEEP + FADE) / (2 * FADE)];
+    if (h < H_SHALLOW - FADE) return [T_SHALLOW, T_SHALLOW, 0];
+    if (h < H_SHALLOW + FADE) return [T_SHALLOW, T_BEACH, (h - H_SHALLOW + FADE) / (2 * FADE)];
+    if (h < H_BEACH - FADE) return [T_BEACH, T_BEACH, 0];
+    if (h < H_BEACH + FADE) {
+      const gType = sub > 0.50 ? T_GRASS_D : T_GRASS_L;
+      return [T_BEACH, gType, (h - H_BEACH + FADE) / (2 * FADE)];
+    }
+    return sub > 0.50 ? [T_GRASS_D, T_GRASS_D, 0] : [T_GRASS_L, T_GRASS_L, 0];
+  }
+
+  // ─── Draw terrain (per-pixel seamless) ───────────────────────────────────
+  function drawTerrain(canvas, W, H, tiles) {
+    const ctx = canvas.getContext('2d');
+    const { textures } = tiles;
+
+    // Render at half of 2x canvas = effective 1x viewport resolution
+    const SCALE = 2;
+    const rW = Math.ceil(W / SCALE);
+    const rH = Math.ceil(H / SCALE);
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = rW;
+    offCanvas.height = rH;
+    const oCtx = offCanvas.getContext('2d');
+    const imgData = oCtx.createImageData(rW, rH);
+    const d = imgData.data;
+
+    for (let py = 0; py < rH; py++) {
+      for (let px = 0; px < rW; px++) {
+        // World coordinates
+        const sx = px * SCALE;
+        const sy = py * SCALE;
+
+        const h = terrainHeight(sx, sy);
+        const sub = subBiomeNoise(sx, sy);
+        const [tA, tB, blend] = classifySmooth(h, sub);
+
+        // Sample textures (tile at world coords for seamless tiling)
+        const cA = sampleTex(textures[tA], sx, sy);
+
+        let r, g, b;
+        if (blend < 0.01) {
+          r = cA[0]; g = cA[1]; b = cA[2];
+        } else {
+          const cB = sampleTex(textures[tB], sx, sy);
+          const inv = 1 - blend;
+          r = cA[0] * inv + cB[0] * blend;
+          g = cA[1] * inv + cB[1] * blend;
+          b = cA[2] * inv + cB[2] * blend;
+        }
+
+        // Water specular highlights
+        if (h < H_BEACH) {
+          const spec = perlin(sx / 10 + 0.3, sy / 10 + 0.7);
+          if (spec > 0.42) {
+            const bright = (spec - 0.42) * 1.5;
+            r = Math.min(255, r + 25 * bright);
+            g = Math.min(255, g + 40 * bright);
+            b = Math.min(255, b + 50 * bright);
+          }
+        }
+
+        const idx = (py * rW + px) * 4;
+        d[idx]     = r | 0;
+        d[idx + 1] = g | 0;
+        d[idx + 2] = b | 0;
+        d[idx + 3] = 255;
+      }
+    }
+
+    oCtx.putImageData(imgData, 0, 0);
+
+    // Upscale to full resolution with nearest-neighbor (pixel art look)
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(offCanvas, 0, 0, W, H);
+  }
+
+  // ─── Camp structures (terrain-aware) ─────────────────────────────────────
+  // Uses new sprites: tents, signs, boxes, logs, fences, campfire, flags, lamps
+  const CAMP_ANCHORS = [
+    // ── Main camp (right side) ──
+    { sprite: 'tent_open',  xp: 70, yp: 12, size: 120, z: 20 },
+    { sprite: 'tent_tall',  xp: 82, yp: 10, size: 100, z: 18 },
+    { sprite: 'tent_flat',  xp: 75, yp: 28, size: 110, z: 36 },
+    { sprite: 'tent_side',  xp: 86, yp: 25, size: 110, z: 33 },
+    { sprite: 'flag1',      xp: 68, yp:  5, size:  70, z: 14, anim: true },
+    { sprite: 'flag3',      xp: 90, yp:  6, size:  70, z: 15, anim: true },
+    { sprite: 'flag4',      xp: 78, yp:  4, size:  70, z: 13, anim: true },
+    { sprite: 'campfire_stones', xp: 78, yp: 44, size: 50, z: 47 },
+    { sprite: 'campfire1',  xp: 78, yp: 42, size:  70, z: 48, anim: true },
+    { sprite: 'sign_1',     xp: 65, yp: 22, size:  50, z: 30 },
+    { sprite: 'sign_4',     xp: 92, yp: 18, size:  45, z: 26 },
+    { sprite: 'box1',       xp: 88, yp: 38, size:  45, z: 44 },
+    { sprite: 'box2',       xp: 91, yp: 40, size:  45, z: 46 },
+    { sprite: 'log1',       xp: 83, yp: 48, size:  70, z: 54 },
+    { sprite: 'log2',       xp: 72, yp: 50, size:  60, z: 56 },
+    { sprite: 'log3',       xp: 90, yp: 52, size:  55, z: 58 },
+    // Fence perimeter around right camp
+    { sprite: 'fence_1',    xp: 66, yp: 35, size:  60, z: 42 },
+    { sprite: 'fence_2',    xp: 69, yp: 35, size:  60, z: 42 },
+    { sprite: 'fence_3',    xp: 72, yp: 35, size:  60, z: 42 },
+    { sprite: 'fence_6',    xp: 88, yp: 35, size:  60, z: 42 },
+    { sprite: 'fence_7',    xp: 91, yp: 35, size:  60, z: 42 },
+    { sprite: 'lamp1',      xp: 76, yp: 36, size:  50, z: 43 },
+    { sprite: 'lamp3',      xp: 93, yp: 30, size:  50, z: 38 },
+    // ── Left camp ──
+    { sprite: 'tent_open',  xp:  3, yp: 15, size: 120, z: 22 },
+    { sprite: 'flag2',      xp:  1, yp:  8, size:  70, z: 16, anim: true },
+    { sprite: 'flag5',      xp: 16, yp:  9, size:  70, z: 17, anim: true },
+    { sprite: 'campfire_logs', xp: 8, yp: 34, size: 50, z: 37 },
+    { sprite: 'campfire2',  xp:  8, yp: 32, size:  60, z: 38, anim: true },
+    { sprite: 'box3',       xp:  5, yp: 28, size:  45, z: 35 },
+    { sprite: 'sign_3',     xp: 14, yp: 18, size:  50, z: 26 },
+    { sprite: 'sign_2',     xp: 20, yp: 24, size:  45, z: 32 },
+    { sprite: 'fence_4',    xp:  1, yp: 30, size:  60, z: 36 },
+    { sprite: 'fence_8',    xp:  4, yp: 30, size:  60, z: 36 },
+    { sprite: 'log4',       xp: 12, yp: 36, size:  55, z: 42 },
+    // ── Lower scattered ──
+    { sprite: 'tent_side',  xp:  5, yp: 68, size: 110, z: 74 },
+    { sprite: 'fence_5',    xp: 72, yp: 62, size:  60, z: 68 },
+    { sprite: 'fence_9',    xp: 75, yp: 62, size:  60, z: 68 },
+    { sprite: 'lamp2',      xp: 85, yp: 58, size:  50, z: 64 },
+    { sprite: 'box4',       xp: 88, yp: 70, size:  40, z: 76 },
+    { sprite: 'sign_5',     xp: 68, yp: 66, size:  45, z: 72 },
+    // ── Mountains (deep forest / map edges) ──
+    { sprite: 'mountain_big',    xp:  0, yp: 88, size: 180, z: 92 },
+    { sprite: 'mountain_medium', xp: 15, yp: 85, size: 140, z: 90 },
+    { sprite: 'mountain_small',  xp: 30, yp: 90, size: 100, z: 94 },
+    { sprite: 'mountain_tall',   xp: 92, yp: 85, size: 110, z: 91 },
+    { sprite: 'mountain_wide',   xp: 50, yp: 92, size: 120, z: 96 },
+  ];
+
+  function placeStructures(layer, sprites, W, H) {
+    if (!sprites) return;
+    const animEls = []; // collect animated elements for animation loop
+
+    CAMP_ANCHORS.forEach(a => {
+      const sx = a.xp / 100 * W, sy = a.yp / 100 * H;
+      const th = terrainHeight(sx, sy);
+      if (th < 0.62) return; // skip water and sand
+
+      if (a.anim && Array.isArray(sprites[a.sprite])) {
+        // Animated sprite — use div with background swap
+        const frames = sprites[a.sprite];
+        if (!frames[0]) return;
+        const el = document.createElement('div');
+        el.setAttribute('aria-hidden', 'true');
+        el.style.cssText = [
+          'position:absolute',
+          'left:' + a.xp + '%', 'top:' + a.yp + '%',
+          'width:' + (a.size * BG_SCALE) + 'px', 'height:' + Math.round(a.size * 2 * BG_SCALE) + 'px',
+          'z-index:' + a.z,
+          'pointer-events:none', 'image-rendering:pixelated',
+          'background-size:contain', 'background-repeat:no-repeat',
+        ].join(';');
+        layer.appendChild(el);
+        animEls.push({ el, frames, frame: 0 });
+      } else {
+        const img = sprites[a.sprite];
+        if (!img) return;
+        const el = document.createElement('img');
+        el.src = img.src;
+        el.setAttribute('aria-hidden', 'true');
+        el.style.cssText = [
+          'position:absolute',
+          'left:' + a.xp + '%', 'top:' + a.yp + '%',
+          'width:' + (a.size * BG_SCALE) + 'px',
+          'z-index:' + a.z,
+          'pointer-events:none', 'image-rendering:pixelated',
+        ].join(';');
+        layer.appendChild(el);
+      }
+    });
+
+    // Scatter small detail sprites (flowers, grass) around each placed structure
+    const detailNames = [
+      'flower_1','flower_2','flower_3','flower_4','flower_5','flower_6',
+      'flower_7','flower_8','flower_9','flower_10','flower_11','flower_12',
+      'grass_1','grass_2','grass_3','grass_4','grass_5','grass_6',
+    ];
+    CAMP_ANCHORS.forEach(a => {
+      if (a.sprite.startsWith('mountain')) return; // no flowers on mountains
+      const sx = a.xp / 100 * W, sy = a.yp / 100 * H;
+      const th = terrainHeight(sx, sy);
+      if (th < 0.62) return;
+      // 2–5 tiny details per structure
+      const count = 2 + Math.floor(srng() * 4);
+      for (let d = 0; d < count; d++) {
+        const dName = detailNames[Math.floor(srng() * detailNames.length)];
+        const img = sprites[dName];
+        if (!img) continue;
+        const ox = a.xp + (srng() - 0.4) * 8; // scatter ±4% around structure
+        const oy = a.yp + (srng() - 0.2) * 6;
+        if (ox < 0 || ox > 100 || oy < 0 || oy > 100) continue;
+        const el = document.createElement('img');
+        el.src = img.src;
+        el.setAttribute('aria-hidden', 'true');
+        el.style.cssText = [
+          'position:absolute',
+          'left:' + ox.toFixed(1) + '%', 'top:' + oy.toFixed(1) + '%',
+          'width:' + Math.round((12 + srng() * 10) * BG_SCALE) + 'px',
+          'z-index:' + (a.z - 1),
+          'pointer-events:none', 'image-rendering:pixelated',
+        ].join(';');
+        layer.appendChild(el);
+      }
+    });
+
+    // Animate flags & campfires
+    if (animEls.length) {
+      let lastTick = 0;
+      function animLoop(time) {
+        if (time - lastTick > 150) { // ~6.6 fps
+          lastTick = time;
+          animEls.forEach(a => {
+            a.frame = (a.frame + 1) % a.frames.length;
+            if (a.frames[a.frame]) {
+              a.el.style.backgroundImage = 'url(' + a.frames[a.frame].src + ')';
+            }
+          });
+        }
+        requestAnimationFrame(animLoop);
+      }
+      requestAnimationFrame(animLoop);
+    }
+  }
+
+  // ─── Flora placement (terrain-aware) ─────────────────────────────────────
   function buildExclusions() {
     return CAMP_ANCHORS.map(a => ({
       xp: a.xp, yp: a.yp,
-      // Larger props get bigger exclusion radius
-      r: a.size >= 180 ? 13 : a.size >= 130 ? 10 : 8,
+      r: a.size >= 110 ? 10 : a.size >= 70 ? 7 : 5,
     }));
   }
 
@@ -459,175 +452,329 @@
     return false;
   }
 
-  function placeFlora(layer, floraImgs, W, H) {
-    if (!floraImgs) return;
-    const attempts = Math.floor(W / 10);
+  // Helper: pick random from array using srng
+  function rPick(arr) { return arr[Math.floor(srng() * arr.length)]; }
+
+  // Helper: place a single sprite element
+  function placeSprite(layer, img, xPct, yPct, size, z) {
+    const el = document.createElement('img');
+    el.src = img.src;
+    el.setAttribute('aria-hidden', 'true');
+    el.style.cssText = [
+      'position:absolute',
+      'left:' + xPct.toFixed(1) + '%',
+      'top:'  + yPct.toFixed(1) + '%',
+      'width:' + Math.round(size * BG_SCALE) + 'px',
+      'z-index:' + z,
+      'pointer-events:none',
+      'image-rendering:pixelated',
+    ].join(';');
+    layer.appendChild(el);
+  }
+
+  function placeFlora(layer, sprites, W, H) {
+    if (!sprites) return;
+    const attempts = Math.floor(W / 5);
     const exclusions = buildExclusions();
 
-    for (let i = 0; i < attempts; i++) {
-      const side = srng() < 0.5 ? 'left' : 'right';
-      const xFrac = side === 'left' ? srng() * 0.30 : 0.70 + srng() * 0.30;
-      const yFrac = 0.02 + srng() * 0.96;
-      const n = fbm(xFrac * 5, yFrac * 4);
-      if (n < 0.30) continue;
+    // Pre-group sprites by category
+    const trees     = ['tree_1','tree_2','tree_3','tree_4','tree_5','tree_6'].filter(n => sprites[n]);
+    const bigTree   = sprites.tree_big ? ['tree_big'] : [];
+    const smallTree = sprites.tree_small ? ['tree_small'] : [];
+    const bushes    = ['bush_1','bush_2','bush_3','bush_4','bush_5','bush_6'].filter(n => sprites[n]);
+    const stones    = ['stone_1','stone_2','stone_3','stone_4','stone_5','stone_6',
+                       'stone_7','stone_8','stone_9','stone_10'].filter(n => sprites[n]);
+    const bigStones = ['stone_11','stone_12','stone_13','stone_14','stone_15','stone_16'].filter(n => sprites[n]);
+    const flowers   = ['flower_1','flower_2','flower_3','flower_4','flower_5','flower_6',
+                       'flower_7','flower_8','flower_9','flower_10','flower_11','flower_12'].filter(n => sprites[n]);
+    const grasses   = ['grass_1','grass_2','grass_3','grass_4','grass_5','grass_6'].filter(n => sprites[n]);
+    const logs      = ['log1','log2','log3','log4'].filter(n => sprites[n]);
+    const shadows   = ['shadow_1','shadow_2','shadow_3','shadow_4','shadow_5','shadow_6'].filter(n => sprites[n]);
+    const details   = flowers.concat(grasses); // tiny scatter sprites
 
-      // Skip if too close to a camp structure
+    // Scatter tiny details around a large object (per tips: never leave big objects bare)
+    function scatterDetails(cx, cy, radius, count) {
+      for (let d = 0; d < count; d++) {
+        const angle = srng() * Math.PI * 2;
+        const dist  = srng() * radius;
+        const dx = cx + Math.cos(angle) * dist;
+        const dy = cy + Math.sin(angle) * dist * 0.6; // squish vertically for top-down perspective
+        if (dx < 0.5 || dx > 99.5 || dy < 0.5 || dy > 99.5) continue;
+        const dth = terrainHeight(dx / 100 * W, dy / 100 * H);
+        if (dth < 0.62) continue;
+        const dName = rPick(details);
+        const dImg = sprites[dName];
+        if (dImg) placeSprite(layer, dImg, dx, dy, 10 + srng() * 12, Math.floor(dy));
+      }
+    }
+
+    for (let i = 0; i < attempts; i++) {
+      const xFrac = 0.02 + srng() * 0.96;
+      const yFrac = 0.02 + srng() * 0.96;
       if (nearStructure(xFrac * 100, yFrac * 100, exclusions)) continue;
 
-      const edgeFrac = side === 'left' ? (0.30 - xFrac) / 0.30 : (xFrac - 0.70) / 0.30;
-      let img, baseSize;
+      const th = terrainHeight(xFrac * W, yFrac * H);
+      if (th < 0.55) continue; // skip water
 
-      if (edgeFrac > 0.55 && srng() < 0.55) {
-        // Large trees near outer edge
-        const trees = [floraImgs.tree1, floraImgs.tree2, floraImgs.tree3];
-        img = trees[Math.floor(srng() * trees.length)];
-        baseSize = 130 + srng() * 80;
-      } else if (srng() < 0.30) {
-        // Bushes
-        const bushes = [floraImgs.bush1, floraImgs.bush2, floraImgs.bush3];
-        img = bushes[Math.floor(srng() * bushes.length)];
-        baseSize = 80 + srng() * 50;
-      } else if (srng() < 0.25) {
-        // Stumps
-        const stumps = [floraImgs.stump1, floraImgs.stump2, floraImgs.stump3];
-        img = stumps[Math.floor(srng() * stumps.length)];
-        baseSize = 70 + srng() * 40;
-      } else if (srng() < 0.35) {
-        // Rocks
-        const rocks = [floraImgs.rockLg, floraImgs.rockSm, floraImgs.rockLg2, floraImgs.rockSm2];
-        img = rocks[Math.floor(srng() * rocks.length)];
-        baseSize = 65 + srng() * 35;
-      } else if (srng() < 0.35) {
-        // Grass / flower clumps
-        const flowers = [floraImgs.grass1, floraImgs.flowers, floraImgs.flowerSmall];
-        img = flowers[Math.floor(srng() * flowers.length)];
-        baseSize = 70 + srng() * 40;
-      } else if (srng() < 0.25) {
-        // Fallen logs
-        img = srng() < 0.5 ? floraImgs.fallenLog1 : floraImgs.fallenLog2;
-        baseSize = 80 + srng() * 40;
+      const xPct = xFrac * 100, yPct = yFrac * 100;
+      let spriteName, baseSize, isBig = false;
+
+      if (th < 0.62) {
+        // BEACH — sparse stones and driftwood
+        if (srng() < 0.7) continue;
+        if (srng() < 0.6) {
+          spriteName = rPick(stones);
+          baseSize = 20 + srng() * 25;
+        } else {
+          spriteName = rPick(logs);
+          baseSize = 35 + srng() * 25;
+        }
+      } else if (th < 0.72) {
+        // GRASS — varied mix, more open
+        const roll = srng();
+        if (roll < 0.20) {
+          spriteName = rPick(bushes);
+          baseSize = 40 + srng() * 40; // wide size range per tips
+          isBig = true;
+        } else if (roll < 0.35) {
+          spriteName = rPick(flowers);
+          baseSize = 14 + srng() * 16;
+        } else if (roll < 0.50) {
+          spriteName = rPick(grasses);
+          baseSize = 12 + srng() * 16;
+        } else if (roll < 0.62) {
+          spriteName = rPick(stones);
+          baseSize = 20 + srng() * 22;
+        } else if (roll < 0.72) {
+          spriteName = smallTree.length ? rPick(smallTree) : rPick(bushes);
+          baseSize = smallTree.length ? (35 + srng() * 30) : (40 + srng() * 35);
+          isBig = true;
+        } else if (roll < 0.85) {
+          spriteName = rPick(shadows);
+          baseSize = 18 + srng() * 16;
+        } else {
+          spriteName = rPick(logs);
+          baseSize = 35 + srng() * 25;
+        }
+        if (srng() < 0.35) continue;
       } else {
-        // Moss mounds
-        const mosses = [floraImgs.moss1, floraImgs.moss2, floraImgs.moss3, floraImgs.moss4];
-        img = mosses[Math.floor(srng() * mosses.length)];
-        baseSize = 70 + srng() * 50;
+        // FOREST — trees dominant with wide size variation
+        const roll = srng();
+        if (roll < 0.30) {
+          spriteName = rPick(trees);
+          baseSize = 40 + srng() * 55; // 40–95px (wide range!)
+          isBig = true;
+        } else if (roll < 0.42) {
+          spriteName = bigTree.length ? rPick(bigTree) : rPick(trees);
+          baseSize = bigTree.length ? (70 + srng() * 70) : (50 + srng() * 45);
+          isBig = true;
+        } else if (roll < 0.55) {
+          spriteName = rPick(bushes);
+          baseSize = 35 + srng() * 35;
+          isBig = true;
+        } else if (roll < 0.68) {
+          spriteName = rPick(shadows);
+          baseSize = 18 + srng() * 20;
+        } else if (roll < 0.78) {
+          spriteName = rPick(grasses);
+          baseSize = 12 + srng() * 16;
+        } else if (roll < 0.88) {
+          spriteName = rPick(bigStones);
+          baseSize = 30 + srng() * 35;
+          isBig = true;
+        } else {
+          spriteName = rPick(logs);
+          baseSize = 40 + srng() * 30;
+        }
+        if (th < 0.80 && srng() < 0.20) continue;
       }
 
+      const img = sprites[spriteName];
       if (!img) continue;
 
-      const el = document.createElement('img');
-      el.src = img.src;
-      el.setAttribute('aria-hidden', 'true');
-      el.style.cssText = [
-        'position:absolute',
-        'left:'    + (xFrac * 100).toFixed(1) + '%',
-        'top:'     + (yFrac * 100).toFixed(1) + '%',
-        'width:'   + Math.round(baseSize) + 'px',
-        'z-index:' + Math.floor(yFrac * 100),
-        'opacity:' + (0.82 + srng() * 0.15).toFixed(2),
-        'pointer-events:none',
-        'image-rendering:auto',
-      ].join(';');
-      layer.appendChild(el);
+      const z = Math.floor(yPct);
+      placeSprite(layer, img, xPct, yPct, baseSize, z);
+
+      // Per tips: scatter small details around large objects
+      if (isBig && details.length) {
+        scatterDetails(xPct, yPct, 4 + srng() * 3, 2 + Math.floor(srng() * 4));
+      }
     }
   }
 
   // ─── Canvas setup ────────────────────────────────────────────────────────
   function setupCanvas(canvas, W, H) {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width  = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
+    // BG_SCALE already handles resolution — skip DPR to avoid 4x overhead
+    canvas.width  = W;
+    canvas.height = H;
+    canvas.style.imageRendering = 'pixelated';
     const ctx = canvas.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = '#2c4a14';
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#1a4a80';
     ctx.fillRect(0, 0, W, H);
   }
 
   // ─── Init ────────────────────────────────────────────────────────────────
-  function render(canvas, spriteLayer, terrainImgs, floraImgs, propImgs, W, H) {
+  function render(canvas, spriteLayer, sprites, tiles, W, H) {
     resetRng();
-    drawTerrain(canvas, terrainImgs, W, H);
-    placeStructures(spriteLayer, propImgs, W, H);
-    placeFlora(spriteLayer, floraImgs, W, H);
+    drawTerrain(canvas, W, H, tiles);
+    placeStructures(spriteLayer, sprites, W, H);
+    placeFlora(spriteLayer, sprites, W, H);
   }
 
   function loadAssets() {
     return Promise.all([
-      loadAll(terrainPath, T_IDX),
-      loadAll(floraPath, FL_IDX),
-      loadAll(propPath, PR_IDX),
+      loadSprites(),
+      loadTiles(),
     ]);
   }
+
+  // Background renders at 2x viewport, CSS scales it down to 50% for detail
+  const BG_SCALE = 2;
 
   function init() {
     const stage = document.getElementById('world-stage');
     if (!stage) return;
     const canvas      = document.getElementById('world-canvas');
     const spriteLayer = document.getElementById('world-sprite-layer');
-    const W = stage.offsetWidth  || window.innerWidth;
-    const H = stage.offsetHeight || window.innerHeight;
+    const W = (stage.offsetWidth  || window.innerWidth) * BG_SCALE;
+    const H = (stage.offsetHeight || window.innerHeight) * BG_SCALE;
     setupCanvas(canvas, W, H);
 
-    loadAssets().then(([terrainImgs, floraImgs, propImgs]) => {
-      render(canvas, spriteLayer, terrainImgs, floraImgs, propImgs, W, H);
+    loadAssets().then(([sprites, tiles]) => {
+      render(canvas, spriteLayer, sprites, tiles, W, H);
     });
 
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        const nW = stage.offsetWidth, nH = stage.offsetHeight;
+        const nW = (stage.offsetWidth || window.innerWidth) * BG_SCALE;
+        const nH = (stage.offsetHeight || window.innerHeight) * BG_SCALE;
         setupCanvas(canvas, nW, nH);
         spriteLayer.innerHTML = '';
-        loadAssets().then(([t, f, p]) => render(canvas, spriteLayer, t, f, p, nW, nH));
+        loadAssets().then(([s, t]) => { render(canvas, spriteLayer, s, t, nW, nH); initNPCs(); });
       }, 300);
     });
   }
 
-  // ─── NPC walking animations ──────────────────────────────────────────────
+  // ─── NPC system (terrain-aware walkers + idle guards) ────────────────────
+  var NPC_BASE = '/assets/images/npcs/';
+
+  function findWalkableSpan(yPct, W, H, minSpanPct) {
+    var sy = yPct / 100 * H;
+    var spans = [];
+    var spanStart = -1;
+    for (var xPct = 2; xPct <= 98; xPct += 2) {
+      var th = terrainHeight(xPct / 100 * W, sy);
+      if (th >= 0.62) {
+        if (spanStart < 0) spanStart = xPct;
+      } else {
+        if (spanStart >= 0) {
+          spans.push({ x0: spanStart, x1: xPct - 2 });
+          spanStart = -1;
+        }
+      }
+    }
+    if (spanStart >= 0) spans.push({ x0: spanStart, x1: 98 });
+    var best = null;
+    for (var i = 0; i < spans.length; i++) {
+      var w = spans[i].x1 - spans[i].x0;
+      if (w >= minSpanPct && (!best || w > best.x1 - best.x0)) best = spans[i];
+    }
+    return best;
+  }
+
+  function isWalkable(xPct, yPct, W, H) {
+    return terrainHeight(xPct / 100 * W, yPct / 100 * H) >= 0.52;
+  }
+
   function initNPCs() {
     var layer = document.getElementById('world-sprite-layer');
     if (!layer) return;
+    var stage = document.getElementById('world-stage');
+    if (!stage) return;
+    var W = (stage.offsetWidth || window.innerWidth) * BG_SCALE;
+    var H = (stage.offsetHeight || window.innerHeight) * BG_SCALE;
 
-    var npcs = [
-      { sprite: '/assets/images/npcs/soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.15, y: 45, x0: 52, x1: 88, scale: 2.8 },
-      { sprite: '/assets/images/npcs/orc-walk.png', frames: 8, w: 100, h: 100, speed: 0.1, y: 68, x0: 58, x1: 82, scale: 2.4 },
-      { sprite: '/assets/images/npcs/soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.12, y: 82, x0: 62, x1: 92, scale: 3.0 },
+    // ── Walking patrol NPCs ──
+    var walkers = [
+      { sprite: 'soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.15, preferY: 35, scale: 2.8 },
+      { sprite: 'orc-walk.png',     frames: 8, w: 100, h: 100, speed: 0.08, preferY: 55, scale: 2.4 },
+      { sprite: 'soldier-walk.png', frames: 8, w: 100, h: 100, speed: 0.12, preferY: 75, scale: 3.0 },
+      { sprite: 'orc-walk.png',     frames: 8, w: 100, h: 100, speed: 0.10, preferY: 45, scale: 2.6 },
     ];
 
-    npcs.forEach(function(npc) {
+    walkers.forEach(function(npc) {
+      var bestY = npc.preferY, span = null;
+      for (var dy = 0; dy <= 20; dy += 4) {
+        span = findWalkableSpan(npc.preferY + dy, W, H, 15);
+        if (span) { bestY = npc.preferY + dy; break; }
+        if (dy > 0) {
+          span = findWalkableSpan(npc.preferY - dy, W, H, 15);
+          if (span) { bestY = npc.preferY - dy; break; }
+        }
+      }
+      if (!span) return;
+
       var el = document.createElement('div');
-      var sz = Math.round(npc.w * npc.scale);
-      el.style.cssText = 'position:absolute;width:' + sz + 'px;height:' + sz + 'px;background:url(' + npc.sprite + ') 0 0 / ' + (npc.frames * 100) + '% 100%;image-rendering:pixelated;z-index:5;pointer-events:none';
-      el.style.top = npc.y + '%';
-      el.style.left = npc.x0 + '%';
+      var sz = Math.round(npc.w * npc.scale * BG_SCALE);
+      el.style.cssText = 'position:absolute;width:' + sz + 'px;height:' + sz + 'px;background:url(' + NPC_BASE + npc.sprite + ') 0 0 / ' + (npc.frames * 100) + '% 100%;image-rendering:pixelated;z-index:' + Math.floor(bestY) + ';pointer-events:none';
+      el.style.top = bestY + '%';
+      el.style.left = span.x0 + '%';
       layer.appendChild(el);
 
-      var frame = 0;
-      var xPct = npc.x0;
-      var dir = 1;
-      var fps = 8;
-      var lastFrame = 0;
-      var lastMove = 0;
-
+      var frame = 0, xPct = span.x0, dir = 1, fps = 8, lastFrame = 0, lastMove = 0;
       function animate(time) {
-        // Frame animation
         if (time - lastFrame > 1000 / fps) {
           lastFrame = time;
           frame = (frame + 1) % npc.frames;
           el.style.backgroundPositionX = -(frame * sz) + 'px';
         }
-        // Movement (fixed step per frame, no dt multiplication)
         if (time - lastMove > 16) {
           lastMove = time;
-          xPct += dir * npc.speed;
-          if (xPct > npc.x1) { dir = -1; el.style.transform = 'scaleX(-1)'; }
-          if (xPct < npc.x0) { dir = 1; el.style.transform = 'scaleX(1)'; }
-          el.style.left = xPct + '%';
+          var nextX = xPct + dir * npc.speed;
+          var th = terrainHeight(nextX / 100 * W, bestY / 100 * H);
+          if (th < 0.62 || nextX > span.x1 || nextX < span.x0) {
+            dir = -dir;
+            el.style.transform = dir > 0 ? 'scaleX(1)' : 'scaleX(-1)';
+          } else {
+            xPct = nextX;
+            el.style.left = xPct + '%';
+          }
         }
         requestAnimationFrame(animate);
       }
       requestAnimationFrame(animate);
+    });
+
+    // ── Idle NPCs near camp structures ──
+    var idlers = [
+      { sprite: 'soldier-idle.png', frames: 6, w: 100, h: 100, xp: 74, yp: 20, scale: 2.6 },
+      { sprite: 'orc-idle.png',     frames: 6, w: 100, h: 100, xp: 84, yp: 30, scale: 2.2 },
+      { sprite: 'soldier-idle.png', frames: 6, w: 100, h: 100, xp:  6, yp: 22, scale: 2.6 },
+      { sprite: 'orc-idle.png',     frames: 6, w: 100, h: 100, xp:  8, yp: 65, scale: 2.2 },
+    ];
+
+    idlers.forEach(function(npc) {
+      if (!isWalkable(npc.xp, npc.yp, W, H)) return;
+      var el = document.createElement('div');
+      var sz = Math.round(npc.w * npc.scale * BG_SCALE);
+      el.style.cssText = 'position:absolute;width:' + sz + 'px;height:' + sz + 'px;background:url(' + NPC_BASE + npc.sprite + ') 0 0 / ' + (npc.frames * 100) + '% 100%;image-rendering:pixelated;z-index:' + Math.floor(npc.yp) + ';pointer-events:none';
+      el.style.top = npc.yp + '%';
+      el.style.left = npc.xp + '%';
+      layer.appendChild(el);
+
+      var frame = 0, fps = 6, lastFrame = 0;
+      function animIdle(time) {
+        if (time - lastFrame > 1000 / fps) {
+          lastFrame = time;
+          frame = (frame + 1) % npc.frames;
+          el.style.backgroundPositionX = -(frame * sz) + 'px';
+        }
+        requestAnimationFrame(animIdle);
+      }
+      requestAnimationFrame(animIdle);
     });
   }
 
@@ -657,12 +804,45 @@
     };
   }
 
+  // ─── UI: Font toggle (readable ↔ quill) ─────────────────────────────────
+  function initFontToggle() {
+    // Restore saved preference
+    if (localStorage.getItem('readable-font') === '1') {
+      document.body.classList.add('readable-font');
+    }
+
+    var isReadable = function() { return document.body.classList.contains('readable-font'); };
+
+    var btn = document.createElement('div');
+    btn.id = 'font-toggle-btn';
+    btn.style.cssText = 'position:fixed;bottom:1.2rem;right:1.2rem;z-index:10000;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:42px;height:42px;text-align:center;line-height:42px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;font-size:20px;padding:0';
+    // Quill icon when in fancy mode, "Aa" when in readable mode
+    function updateBtn() {
+      if (isReadable()) {
+        btn.innerHTML = '<span style="font-family:MedievalSharp,cursive;font-size:20px">Aa</span>';
+        btn.title = 'Switch to quill font';
+      } else {
+        btn.innerHTML = '\u270E';
+        btn.title = 'Switch to readable font';
+      }
+    }
+    updateBtn();
+
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      var on = document.body.classList.toggle('readable-font');
+      localStorage.setItem('readable-font', on ? '1' : '0');
+      updateBtn();
+    };
+    document.body.appendChild(btn);
+  }
+
   // ─── UI: Wand cursor selector ───────────────────────────────────────────
   function initWandSelector() {
     var WAND_COUNT = 50;
-    var BASE = '/assets/images/wands/Icons_13_';
+    var WBASE = '/assets/images/wands/Icons_13_';
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
-    function wandUrl(n) { return BASE + pad(n) + '.png'; }
+    function wandUrl(n) { return WBASE + pad(n) + '.png'; }
 
     function applyCursor(id) {
       var url = wandUrl(parseInt(id));
@@ -672,18 +852,15 @@
       style.textContent = 'html, *, *::before, *::after { cursor: ' + rule + ' !important; }';
     }
 
-    // Load saved wand
     var saved = localStorage.getItem('cursor-wand') || '01';
     applyCursor(saved);
 
-    // Wand button
     var btn = document.createElement('div');
     btn.id = 'wand-selector-btn';
     btn.style.cssText = 'position:fixed;top:4.2rem;right:1.2rem;z-index:10000;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;text-align:center;line-height:38px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;padding:0';
     btn.innerHTML = '<img src="' + wandUrl(parseInt(saved)) + '" style="width:24px;height:24px;image-rendering:pixelated;vertical-align:middle" />';
     document.body.appendChild(btn);
 
-    // Panel
     var panel = document.createElement('div');
     panel.id = 'wand-panel';
     panel.style.cssText = 'position:fixed;top:4.2rem;right:3.8rem;z-index:10001;background:rgba(20,18,30,.92);border:2px solid rgba(200,180,255,.25);border-radius:4px;padding:10px;display:none;max-width:500px;backdrop-filter:blur(6px)';
@@ -724,8 +901,8 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initWandSelector(); });
+    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); });
   } else {
-    init(); initNPCs(); initToggle(); initWandSelector();
+    init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector();
   }
 })();

@@ -46,5 +46,17 @@ body > article:not(:has(.world-stage)) h3
 body > article:not(:has(.world-stage)) a
   color: #6a3f21
 
+// Readable font mode (toggled via JS button)
+// Overrides MedievalSharp → PT Sans, Cinzel → PT Sans everywhere
+body.readable-font *
+  font-family: 'PT Sans', 'Segoe UI', sans-serif !important
+
+body.readable-font h1, body.readable-font h2, body.readable-font h3
+  font-family: 'PT Sans', 'Segoe UI', sans-serif !important
+
+// Keep monospace elements as-is
+body.readable-font code, body.readable-font pre, body.readable-font .game-bar *, body.readable-font .hud-stat *
+  font-family: "Courier New", "Lucida Console", monospace !important
+
 body > article:has(.world-stage)
   padding: 0

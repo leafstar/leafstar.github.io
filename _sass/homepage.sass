@@ -15,22 +15,26 @@
   position: absolute
   top: 0
   left: 0
-  width: 100%
-  height: 100%
+  width: 200%
+  height: 200%
   z-index: 0
   pointer-events: none
   display: block
-  filter: saturate(1.35) contrast(1.12)
+  filter: saturate(1.15) contrast(1.05)
+  transform: scale(0.5)
+  transform-origin: top left
 
 .world-sprite-layer
   position: absolute
   top: 0
   left: 0
-  width: 100%
-  height: 100%
+  width: 200%
+  height: 200%
   z-index: 1
   pointer-events: none
   overflow: hidden
+  transform: scale(0.5)
+  transform-origin: top left
 
 .world-flora
   position: absolute
@@ -38,7 +42,7 @@
   pointer-events: none
   user-select: none
   image-rendering: auto
-  filter: saturate(.9) brightness(.88)
+  filter: brightness(.95)
 
 .world-prop
   position: absolute
@@ -46,8 +50,7 @@
   pointer-events: none
   user-select: none
   image-rendering: auto
-  filter: saturate(.88) brightness(.9)
-  opacity: .92
+  filter: brightness(.95)
 
 .world-content
   position: relative
@@ -175,7 +178,7 @@
   padding: .6rem
   border-radius: 0
   border: 24px solid transparent
-  border-image: url('/assets/images/procedural-world/frame-dark.png') 60 fill / 24px / 0 round
+  border-image: url('/assets/images/procedural-world/frame-parchment.png') 70 fill / 24px / 0 round
   box-shadow: none
 
 .hero-portrait
@@ -184,20 +187,20 @@
   aspect-ratio: 4 / 5
   object-fit: cover
   border-radius: 0
-  border: 4px solid #253120
+  border: none
 
 .hero-fact-card
   padding: .8rem 1rem
   border-radius: 0
   border: 20px solid transparent
-  border-image: url('/assets/images/procedural-world/frame-dark.png') 60 fill / 20px / 0 round
+  border-image: url('/assets/images/procedural-world/frame-parchment.png') 70 fill / 20px / 0 round
   box-shadow: none
-  color: #fff
+  color: #30261e
 
 .hero-fact-label
   margin: 0 0 .35rem
   font-family: 'Cinzel', serif
-  color: rgba(255, 246, 224, 0.8)
+  color: #6a4a2a
   font-size: .82rem
   letter-spacing: .12em
   text-transform: uppercase
@@ -207,6 +210,7 @@
   font-family: 'Cinzel', serif
   font-size: 1rem
   line-height: 1.55
+  color: #30261e
 
 // ─── Home sections ───────────────────────────────────────────────────────────
 
