@@ -1595,114 +1595,132 @@
   // ─── Audio system ────────────────────────────────────────────────────────
   function initAudio() {
     var AUDIO_BASE = '/assets/audio/';
-    var ambientFiles = {
-      day:   AUDIO_BASE + 'birds-isaiah658.ogg',
-      night: AUDIO_BASE + 'mutant_frog-1.ogg',
-      rain:  AUDIO_BASE + 'rain.ogg',
-    };
 
-    // Create audio elements
-    var ambientDay   = new Audio(ambientFiles.day);
-    var ambientNight = new Audio(ambientFiles.night);
-    var ambientRain  = new Audio(ambientFiles.rain);
-    var sfxClick     = new Audio(AUDIO_BASE + 'magic-wand-sparkle.wav');
-    var sfxHover     = new Audio(AUDIO_BASE + 'magic-hover.wav');
+    // ── Layers: ambient (birds) + weather (rain) + frog sfx ──
+    // Birds: daytime loop
+    var ambientBirds = new Audio(AUDIO_BASE + 'birds-isaiah658.ogg');
+    ambientBirds.loop = true;
+    ambientBirds.volume = 0;
+    ambientBirds.preload = 'auto';
 
-    // All ambient tracks loop
-    ambientDay.loop = true;
-    ambientNight.loop = true;
+    // Rain: weather layer (plays on TOP of ambient, not replacing it)
+    var ambientRain = new Audio(AUDIO_BASE + 'rain.ogg');
     ambientRain.loop = true;
+    ambientRain.volume = 0;
+    ambientRain.preload = 'auto';
 
-    // Volumes
-    ambientDay.volume   = 0.3;
-    ambientNight.volume = 0.25;
-    ambientRain.volume  = 0.25;
-    sfxClick.volume     = 0.4;
-    sfxHover.volume     = 0.15;
+    // Frog: Poisson-distributed one-shots at night
+    var frogAudio = new Audio(AUDIO_BASE + 'mutant_frog-1.ogg');
+    frogAudio.preload = 'auto';
+    frogAudio.volume = 0.3;
 
-    var allAmbient = [ambientDay, ambientNight, ambientRain];
+    // UI sfx
+    var sfxClick = new Audio(AUDIO_BASE + 'magic-wand-sparkle.wav');
+    var sfxHover = new Audio(AUDIO_BASE + 'magic-hover.wav');
+    sfxClick.volume = 0.4;
+    sfxHover.volume = 0.15;
+
     var muted = localStorage.getItem('audio-muted') === '1';
-    var unlocked = false; // browser audio context unlocked?
-    var currentAmbient = null;
+    var unlocked = false;
 
-    // Crossfade helper: fade out old, fade in new over ~2s
-    function crossfadeTo(target) {
-      if (currentAmbient === target) return;
-
-      // Stop all other ambient tracks
-      allAmbient.forEach(function(a) {
-        if (a !== target) {
-          a.pause();
-          a.currentTime = 0;
+    // ── Fade helpers ──
+    function fadeAudio(audio, targetVol, duration) {
+      var step = 0.02;
+      var interval = duration / (Math.abs(targetVol - audio.volume) / step + 1);
+      if (interval < 20) interval = 20;
+      var timer = setInterval(function() {
+        if (Math.abs(audio.volume - targetVol) < step + 0.001) {
+          audio.volume = targetVol;
+          clearInterval(timer);
+          if (targetVol === 0) audio.pause();
+        } else if (audio.volume < targetVol) {
+          audio.volume = Math.min(1, audio.volume + step);
+        } else {
+          audio.volume = Math.max(0, audio.volume - step);
         }
-      });
-      currentAmbient = target;
-
-      if (target && !muted) {
-        var maxVol = target === ambientDay ? 0.3 : 0.25;
-        target.volume = 0;
-        target.play().then(function() {
-          // Fade in
-          var fadeIn = setInterval(function() {
-            if (target !== currentAmbient) { clearInterval(fadeIn); return; }
-            if (target.volume < maxVol - 0.02) {
-              target.volume = Math.min(maxVol, target.volume + 0.02);
-            } else {
-              target.volume = maxVol;
-              clearInterval(fadeIn);
-            }
-          }, 50);
-        }).catch(function(){});
-      }
+      }, interval);
     }
 
-    // Determine which ambient to play based on time + weather
-    function pickAmbient() {
-      // Weather overrides: rain always plays rain sound
-      var weather = window.__currentWeather || 'clear';
-      if (weather === 'rain') return ambientRain;
-
-      // Time-based
-      var timePeriod = window.__currentTimePeriod ? window.__currentTimePeriod() : 'Day';
-      if (timePeriod === 'Night' || timePeriod === 'Dusk') return ambientNight;
-      return ambientDay;
+    function startAudio(audio, vol) {
+      audio.volume = 0;
+      audio.play().then(function() {
+        fadeAudio(audio, vol, 2000);
+      }).catch(function(e) { console.warn('Audio play failed:', e); });
     }
 
-    // Update ambient loop (called periodically)
-    function updateAmbient() {
+    function stopAudio(audio) {
+      if (!audio.paused) fadeAudio(audio, 0, 1500);
+    }
+
+    // ── State update: what should be playing? ──
+    function isNight() {
+      var tp = window.__currentTimePeriod ? window.__currentTimePeriod() : 'Day';
+      return tp === 'Night' || tp === 'Dusk';
+    }
+
+    function updateLayers() {
       if (!unlocked || muted) return;
-      var target = pickAmbient();
-      crossfadeTo(target);
+      var weather = window.__currentWeather || 'clear';
+      var night = isNight();
+
+      // Birds: play during day, stop at night
+      if (!night && ambientBirds.paused) startAudio(ambientBirds, 0.3);
+      else if (night && !ambientBirds.paused) stopAudio(ambientBirds);
+
+      // Rain: play when raining (on top of everything)
+      if (weather === 'rain' && ambientRain.paused) startAudio(ambientRain, 0.25);
+      else if (weather !== 'rain' && !ambientRain.paused) stopAudio(ambientRain);
     }
 
-    // Mute/unmute all
+    // ── Frog: Poisson process at night ──
+    // Mean interval: ~8 seconds (lambda = 1/8000)
+    var frogTimer = null;
+    function scheduleFrog() {
+      if (muted || !unlocked) return;
+      // Exponential distribution: -ln(U) / lambda
+      var meanMs = 8000;
+      var delay = -Math.log(Math.random()) * meanMs;
+      delay = Math.max(2000, Math.min(delay, 25000)); // clamp 2s - 25s
+      frogTimer = setTimeout(function() {
+        if (muted) { scheduleFrog(); return; }
+        var night = isNight();
+        if (night) {
+          frogAudio.volume = 0.15 + Math.random() * 0.2; // vary volume
+          frogAudio.currentTime = 0;
+          frogAudio.play().catch(function(){});
+        }
+        scheduleFrog();
+      }, delay);
+    }
+    scheduleFrog();
+
+    // ── Mute / unmute ──
     function setMuted(m) {
       muted = m;
       localStorage.setItem('audio-muted', m ? '1' : '0');
       if (m) {
-        allAmbient.forEach(function(a) { a.pause(); a.currentTime = 0; });
-        currentAmbient = null;
+        [ambientBirds, ambientRain, frogAudio].forEach(function(a) { a.pause(); a.volume = 0; });
       } else if (unlocked) {
-        updateAmbient();
+        updateLayers();
       }
     }
 
-    // Unlock audio on first user interaction
+    // Unlock on first interaction
     function unlock() {
       if (unlocked) return;
       unlocked = true;
-      if (!muted) updateAmbient();
+      if (!muted) updateLayers();
       document.removeEventListener('click', unlock);
       document.removeEventListener('keydown', unlock);
     }
     document.addEventListener('click', unlock);
     document.addEventListener('keydown', unlock);
 
-    // Periodically check if ambient should change (every 30s)
-    setInterval(updateAmbient, 30000);
+    // Periodically update layers (time changes)
+    setInterval(updateLayers, 30000);
 
-    // Weather change callback
-    window.__onWeatherChange = function() { updateAmbient(); };
+    // Weather change callback — immediate update
+    window.__onWeatherChange = function() { updateLayers(); };
 
     // ── SFX: click on interactive elements ──
     var INTERACTIVE = 'a, button, [role="button"], #toggle-content, #font-toggle-btn, #wand-selector-btn, .hud-skill, .board-note a, .story-card a, .nav-link';
