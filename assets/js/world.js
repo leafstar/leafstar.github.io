@@ -1232,59 +1232,67 @@
     document.head.appendChild(pulseStyle);
     document.body.appendChild(glow);
 
-    // Selectors for interactive elements
+    // ── Wand state machine ──
+    // State: 0 = off (hover-only), 1 = glow (always on), 2 = torch (spotlight)
+    // Long-press 1s cycles: 0 → 1 → 2 → 0
     var INTERACTIVE = 'a, button, [role="button"], #toggle-content, #font-toggle-btn, #wand-selector-btn, #wand-panel div, #audio-toggle, #weather-hud, .hud-stat, .game-bar a, .board-note a, .story-card a, .nav-link, input, select, textarea, [onclick], .clickable';
-    var active = false;
+    var hoverActive = false;  // mouse is over an interactive element
+    var wandState = 0;        // 0=off, 1=glow, 2=torch
+    var holdTimer = null;
 
+    function updateGlowVisibility() {
+      if (wandState >= 1) {
+        // Glow or torch: always visible
+        glow.style.opacity = '1';
+      } else {
+        // Off: only show on hover
+        glow.style.opacity = hoverActive ? '1' : '0';
+      }
+    }
+
+    function setWandState(s) {
+      wandState = s;
+      if (s === 0) {
+        glow.style.width = '80px';
+        glow.style.height = '80px';
+        if (window.__toggleTorch) window.__toggleTorch(false);
+      } else if (s === 1) {
+        glow.style.width = '80px';
+        glow.style.height = '80px';
+        if (window.__toggleTorch) window.__toggleTorch(false);
+      } else {
+        glow.style.width = '120px';
+        glow.style.height = '120px';
+        if (window.__toggleTorch) window.__toggleTorch(true);
+      }
+      updateGlowVisibility();
+    }
+
+    // Track mouse position + hover state
     document.addEventListener('mousemove', function(e) {
       glow.style.left = e.clientX + 'px';
       glow.style.top  = e.clientY + 'px';
 
       var target = document.elementFromPoint(e.clientX, e.clientY);
-      var hit = target && target.closest(INTERACTIVE);
-      if (hit && !active) {
-        active = true;
-        glow.style.opacity = '1';
-      } else if (!hit && active) {
-        active = false;
-        if (!glowLocked) glow.style.opacity = '0';
-      }
+      var wasActive = hoverActive;
+      hoverActive = !!(target && target.closest(INTERACTIVE));
+      if (hoverActive !== wasActive) updateGlowVisibility();
     });
 
     document.addEventListener('mouseleave', function() {
-      active = false;
-      if (!glowLocked) glow.style.opacity = '0';
+      hoverActive = false;
+      updateGlowVisibility();
     });
 
-    // Long-press: 1s = toggle glow, 2s = toggle torch (bright spotlight)
-    var glowLocked = false, torchMode = false;
-    var holdTimer1 = null, holdTimer2 = null;
+    // Long-press 1s: cycle through states
     document.addEventListener('mousedown', function(e) {
       if (e.button !== 0) return;
-      holdTimer1 = setTimeout(function() {
-        // 1s: toggle normal glow
-        glowLocked = !glowLocked;
-        glow.style.opacity = glowLocked ? '1' : (active ? '1' : '0');
+      holdTimer = setTimeout(function() {
+        setWandState((wandState + 1) % 3);
       }, 1000);
-      holdTimer2 = setTimeout(function() {
-        // 2s: toggle torch mode (bright spotlight)
-        torchMode = !torchMode;
-        if (window.__toggleTorch) window.__toggleTorch(torchMode);
-        // Also lock glow on in torch mode
-        if (torchMode) {
-          glowLocked = true;
-          glow.style.opacity = '1';
-          glow.style.width = '120px';
-          glow.style.height = '120px';
-        } else {
-          glow.style.width = '80px';
-          glow.style.height = '80px';
-        }
-      }, 2000);
     });
     document.addEventListener('mouseup', function() {
-      clearTimeout(holdTimer1);
-      clearTimeout(holdTimer2);
+      clearTimeout(holdTimer);
     });
   }
 
