@@ -1589,29 +1589,15 @@
     var AUDIO_BASE = '/assets/audio/';
 
     // ── Layers: ambient (birds) + weather (rain) + frog sfx ──
-    // Birds: daytime loop
-    var ambientBirds = new Audio(AUDIO_BASE + 'birds-isaiah658.ogg');
+    var ambientBirds = new Audio(AUDIO_BASE + 'birds.mp3');
     ambientBirds.loop = true;
-    ambientBirds.volume = 0;
     ambientBirds.preload = 'auto';
 
-    // Rain: use Web Audio API to bypass format/charset issues
-    var rainCtx = null, rainSource = null, rainBuffer = null, rainGain = null, rainPlaying = false;
-    (function loadRain() {
-      rainCtx = new (window.AudioContext || window.webkitAudioContext)();
-      rainGain = rainCtx.createGain();
-      rainGain.gain.value = 0.25;
-      rainGain.connect(rainCtx.destination);
-      fetch(AUDIO_BASE + 'rain.ogg').then(function(r) { return r.arrayBuffer(); }).then(function(buf) {
-        return rainCtx.decodeAudioData(buf);
-      }).then(function(decoded) {
-        rainBuffer = decoded;
-        console.log('[audio] rain buffer loaded, duration:', decoded.duration);
-      }).catch(function(e) { console.error('[audio] rain load failed:', e); });
-    })();
+    var ambientRain = new Audio(AUDIO_BASE + 'rain.mp3');
+    ambientRain.loop = true;
+    ambientRain.preload = 'auto';
 
-    // Frog: Poisson-distributed one-shots at night
-    var frogAudio = new Audio(AUDIO_BASE + 'mutant_frog-1.ogg');
+    var frogAudio = new Audio(AUDIO_BASE + 'frog.mp3');
     frogAudio.preload = 'auto';
     frogAudio.volume = 0.3;
 
@@ -1637,24 +1623,6 @@
       audio.currentTime = 0;
     }
 
-    function playRain() {
-      if (rainPlaying || !rainBuffer) return;
-      if (rainCtx.state === 'suspended') rainCtx.resume();
-      rainSource = rainCtx.createBufferSource();
-      rainSource.buffer = rainBuffer;
-      rainSource.loop = true;
-      rainSource.connect(rainGain);
-      rainSource.start(0);
-      rainPlaying = true;
-    }
-
-    function stopRain() {
-      if (!rainPlaying || !rainSource) return;
-      rainSource.stop();
-      rainSource.disconnect();
-      rainSource = null;
-      rainPlaying = false;
-    }
 
     function isNight() {
       var tp = window.__currentTimePeriod ? window.__currentTimePeriod() : 'Day';
@@ -1669,8 +1637,8 @@
       if (!night) playLoop(ambientBirds, 0.3);
       else stopLoop(ambientBirds);
 
-      if (weather === 'rain') playRain();
-      else stopRain();
+      if (weather === 'rain') playLoop(ambientRain, 0.25);
+      else stopLoop(ambientRain);
     }
 
     // ── Frog: Poisson process at night ──
@@ -1694,8 +1662,7 @@
       muted = m;
       localStorage.setItem('audio-muted', m ? '1' : '0');
       if (m) {
-        [ambientBirds, frogAudio].forEach(function(a) { a.pause(); });
-        stopRain();
+        [ambientBirds, ambientRain, frogAudio].forEach(function(a) { a.pause(); });
       } else if (unlocked) {
         updateLayers();
       }
