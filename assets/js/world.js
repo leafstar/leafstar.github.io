@@ -1159,9 +1159,41 @@
     document.addEventListener('click', function() { panel.style.display = 'none'; });
   }
 
+  // ─── Wand glow effect on interactive elements ───────────────────────────
+  function initWandGlow() {
+    var glow = document.createElement('div');
+    glow.id = 'wand-glow';
+    glow.style.cssText = 'position:fixed;pointer-events:none;z-index:99999;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle,rgba(200,180,255,.45) 0%,rgba(160,140,255,.2) 35%,transparent 70%);opacity:0;transition:opacity .18s;transform:translate(-50%,-50%);mix-blend-mode:screen';
+    document.body.appendChild(glow);
+
+    // Selectors for interactive elements
+    var INTERACTIVE = 'a, button, [role="button"], #toggle-content, #font-toggle-btn, #wand-selector-btn, #wand-panel div, .hud-stat, .game-bar a, .board-note a, .story-card a, .nav-link, input, select, textarea, [onclick], .clickable';
+    var active = false;
+
+    document.addEventListener('mousemove', function(e) {
+      glow.style.left = e.clientX + 'px';
+      glow.style.top  = e.clientY + 'px';
+
+      var target = document.elementFromPoint(e.clientX, e.clientY);
+      var hit = target && target.closest(INTERACTIVE);
+      if (hit && !active) {
+        active = true;
+        glow.style.opacity = '1';
+      } else if (!hit && active) {
+        active = false;
+        glow.style.opacity = '0';
+      }
+    });
+
+    document.addEventListener('mouseleave', function() {
+      active = false;
+      glow.style.opacity = '0';
+    });
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); });
+    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow(); });
   } else {
-    init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector();
+    init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow();
   }
 })();
