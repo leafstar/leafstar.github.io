@@ -474,10 +474,31 @@
 
   function placeFlora(layer, sprites, W, H) {
     if (!sprites) return;
-    const attempts = Math.floor(W / 5);
+    const attempts = Math.floor(W / 1.8);
     const exclusions = buildExclusions();
 
-    // Pre-group sprites by category
+    // ── Overlap prevention for large sprites ──
+    // Stores placed large objects as { x (%), y (%), r (%) }
+    const placed = [];
+    function overlapsPlaced(xPct, yPct, radiusPct) {
+      for (let i = 0; i < placed.length; i++) {
+        const p = placed[i];
+        const dx = xPct - p.x;
+        // Trees extend upward: check more space above than below
+        const dy = yPct - p.y;
+        const dyUp = dy > 0 ? dy * 0.6 : dy * 2.5; // strong upward check (tree canopy extends far up)
+        const minDist = radiusPct + p.r;
+        if (dx * dx + dyUp * dyUp < minDist * minDist) return true;
+      }
+      return false;
+    }
+    // Convert pixel size to collision radius (percentage units)
+    // Use generous radius to prevent visual overlap
+    function sizeToRadius(sizePx) {
+      return (sizePx / W) * 100 * 1.0;
+    }
+
+    // ── Sprite groups ──
     const trees     = ['tree_1','tree_2','tree_3','tree_4','tree_5','tree_6'].filter(n => sprites[n]);
     const bigTree   = sprites.tree_big ? ['tree_big'] : [];
     const smallTree = sprites.tree_small ? ['tree_small'] : [];
@@ -490,114 +511,346 @@
     const grasses   = ['grass_1','grass_2','grass_3','grass_4','grass_5','grass_6'].filter(n => sprites[n]);
     const logs      = ['log1','log2','log3','log4'].filter(n => sprites[n]);
     const shadows   = ['shadow_1','shadow_2','shadow_3','shadow_4','shadow_5','shadow_6'].filter(n => sprites[n]);
-    const details   = flowers.concat(grasses); // tiny scatter sprites
+    const details   = flowers.concat(grasses);
 
-    // Scatter tiny details around a large object (per tips: never leave big objects bare)
+    // ── World narrative: camp clearings in a forest ──
+    // Camp centers (percentage coords) — derived from CAMP_ANCHORS layout
+    const campCenters = [
+      { x: 80, y: 25 },  // main camp (right side)
+      { x: 10, y: 25 },  // left camp
+      { x:  8, y: 70 },  // lower left outpost
+      { x: 80, y: 65 },  // lower right area
+    ];
+
+    // Distance to nearest camp center (in percentage units)
+    function campDist(xPct, yPct) {
+      let minD = 999;
+      for (let i = 0; i < campCenters.length; i++) {
+        const dx = xPct - campCenters[i].x;
+        const dy = (yPct - campCenters[i].y) * 1.3; // stretch Y for top-down perspective
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < minD) minD = d;
+      }
+      return minD;
+    }
+
+    // Vegetation zone based on distance from human activity:
+    //   0-12%  = CLEARED (camp interior, no trees)
+    //   12-22% = EDGE (tree stumps, sparse regrowth, small bushes)
+    //   22-40% = OPEN WOODLAND (scattered trees, flowers, grassland)
+    //   40%+   = DEEP FOREST (dense canopy, understory, fallen logs)
+    // Rocky outcrops overlay via separate noise channel
+    function rockyNoise(sx, sy) {
+      return fbmRich(sx / 350 + 300, sy / 350 + 300);
+    }
+
+    // Edge irregularity: make tree line wavy, not circular
+    function edgeJitter(sx, sy) {
+      return (fbmRich(sx / 200 + 100, sy / 200 + 100) - 0.5) * 10;
+    }
+
+    // Scatter ground cover around a placed object
     function scatterDetails(cx, cy, radius, count) {
       for (let d = 0; d < count; d++) {
         const angle = srng() * Math.PI * 2;
         const dist  = srng() * radius;
         const dx = cx + Math.cos(angle) * dist;
-        const dy = cy + Math.sin(angle) * dist * 0.6; // squish vertically for top-down perspective
+        const dy = cy + Math.sin(angle) * dist * 0.6;
         if (dx < 0.5 || dx > 99.5 || dy < 0.5 || dy > 99.5) continue;
         const dth = terrainHeight(dx / 100 * W, dy / 100 * H);
-        if (dth < 0.62) continue;
+        if (dth < 0.58) continue;
         const dName = rPick(details);
         const dImg = sprites[dName];
-        if (dImg) placeSprite(layer, dImg, dx, dy, 10 + srng() * 12, Math.floor(dy));
+        if (dImg) placeSprite(layer, dImg, dx, dy, 6 + srng() * 7, Math.floor(dy));
       }
     }
 
+    // Place a cluster of companion trees/bushes near a large tree
+    function placeCluster(cx, cy, mainSize) {
+      const count = 2 + Math.floor(srng() * 3);
+      for (let c = 0; c < count; c++) {
+        const angle = srng() * Math.PI * 2;
+        const dist = 1.5 + srng() * 3.5;
+        const nx = cx + Math.cos(angle) * dist;
+        const ny = cy + Math.sin(angle) * dist * 0.6;
+        if (nx < 0.5 || nx > 99.5 || ny < 0.5 || ny > 99.5) continue;
+        if (nearStructure(nx, ny, exclusions)) continue;
+        const nth = terrainHeight(nx / 100 * W, ny / 100 * H);
+        if (nth < 0.58) continue;
+        const roll = srng();
+        let name, sz;
+        if (roll < 0.35) {
+          name = rPick(trees);
+          sz = 50 + srng() * 25;
+        } else if (roll < 0.60) {
+          name = smallTree.length ? rPick(smallTree) : rPick(bushes);
+          sz = 30 + srng() * 18;
+        } else {
+          name = rPick(bushes);
+          sz = 22 + srng() * 20;
+        }
+        const img = sprites[name];
+        if (img) {
+          const cr = sizeToRadius(sz);
+          if (overlapsPlaced(nx, ny, cr)) continue;
+          placed.push({ x: nx, y: ny, r: cr });
+          placeSprite(layer, img, nx, ny, sz, Math.floor(ny));
+          if (details.length && srng() < 0.5) {
+            scatterDetails(nx, ny, 2 + srng() * 2, 1 + Math.floor(srng() * 3));
+          }
+        }
+      }
+    }
+
+    // ── Main placement loop ──
     for (let i = 0; i < attempts; i++) {
-      const xFrac = 0.02 + srng() * 0.96;
-      const yFrac = 0.02 + srng() * 0.96;
-      if (nearStructure(xFrac * 100, yFrac * 100, exclusions)) continue;
+      const xFrac = 0.01 + srng() * 0.98;
+      const yFrac = 0.01 + srng() * 0.98;
+      const xPct = xFrac * 100, yPct = yFrac * 100;
+
+      if (nearStructure(xPct, yPct, exclusions)) continue;
 
       const th = terrainHeight(xFrac * W, yFrac * H);
-      if (th < 0.55) continue; // skip water
+      if (th < 0.55) continue; // water
 
-      const xPct = xFrac * 100, yPct = yFrac * 100;
-      let spriteName, baseSize, isBig = false;
+      // Distance to nearest camp + edge noise for organic tree line
+      const dist = campDist(xPct, yPct) + edgeJitter(xFrac * W, yFrac * H);
+      // Rocky overlay
+      const rocky = rockyNoise(xFrac * W, yFrac * H);
+      // Screen edge proximity (0 at center, 1 at edge) — forest thickens at edges
+      const edgeX = Math.max(0, 1 - Math.min(xFrac, 1 - xFrac) / 0.15);
+      const edgeY = Math.max(0, 1 - Math.min(yFrac, 1 - yFrac) / 0.12);
+      const edgeFactor = Math.max(edgeX, edgeY); // 0..1, high at screen edges
+
+      let spriteName, baseSize, isBig = false, isTree = false;
 
       if (th < 0.62) {
-        // BEACH — sparse stones and driftwood
-        if (srng() < 0.7) continue;
+        // ── WATERSIDE — sparse stones, driftwood ──
+        if (srng() < 0.60) continue;
         if (srng() < 0.6) {
           spriteName = rPick(stones);
-          baseSize = 20 + srng() * 25;
+          baseSize = 18 + srng() * 22;
         } else {
           spriteName = rPick(logs);
-          baseSize = 35 + srng() * 25;
-        }
-      } else if (th < 0.72) {
-        // GRASS — varied mix, more open
-        const roll = srng();
-        if (roll < 0.20) {
-          spriteName = rPick(bushes);
-          baseSize = 40 + srng() * 40; // wide size range per tips
+          baseSize = 30 + srng() * 22;
           isBig = true;
-        } else if (roll < 0.35) {
-          spriteName = rPick(flowers);
-          baseSize = 14 + srng() * 16;
-        } else if (roll < 0.50) {
+        }
+
+      } else if (dist < 12) {
+        // ── CAMP INTERIOR — almost bare, trampled ground ──
+        // Very sparse: only small ground details
+        if (srng() < 0.75) continue;
+        const roll = srng();
+        if (roll < 0.5) {
           spriteName = rPick(grasses);
-          baseSize = 12 + srng() * 16;
-        } else if (roll < 0.62) {
-          spriteName = rPick(stones);
-          baseSize = 20 + srng() * 22;
-        } else if (roll < 0.72) {
-          spriteName = smallTree.length ? rPick(smallTree) : rPick(bushes);
-          baseSize = smallTree.length ? (35 + srng() * 30) : (40 + srng() * 35);
-          isBig = true;
-        } else if (roll < 0.85) {
+          baseSize = 8 + srng() * 10;
+        } else if (roll < 0.8) {
           spriteName = rPick(shadows);
-          baseSize = 18 + srng() * 16;
+          baseSize = 12 + srng() * 10;
         } else {
-          spriteName = rPick(logs);
-          baseSize = 35 + srng() * 25;
+          spriteName = rPick(stones);
+          baseSize = 12 + srng() * 14;
         }
-        if (srng() < 0.35) continue;
-      } else {
-        // FOREST — trees dominant with wide size variation
+
+      } else if (dist < 22) {
+        // ── CAMP EDGE — tree stumps, sparse regrowth ──
+        // Transition zone: small bushes coming back, some logs from felled trees
+        if (srng() < 0.30) continue;
         const roll = srng();
-        if (roll < 0.30) {
-          spriteName = rPick(trees);
-          baseSize = 40 + srng() * 55; // 40–95px (wide range!)
+        if (roll < 0.25) {
+          spriteName = rPick(bushes);
+          baseSize = 22 + srng() * 28;
           isBig = true;
-        } else if (roll < 0.42) {
-          spriteName = bigTree.length ? rPick(bigTree) : rPick(trees);
-          baseSize = bigTree.length ? (70 + srng() * 70) : (50 + srng() * 45);
+        } else if (roll < 0.40) {
+          spriteName = rPick(logs); // felled tree remains
+          baseSize = 30 + srng() * 25;
           isBig = true;
         } else if (roll < 0.55) {
-          spriteName = rPick(bushes);
-          baseSize = 35 + srng() * 35;
+          spriteName = smallTree.length ? rPick(smallTree) : rPick(bushes);
+          baseSize = 28 + srng() * 25;
           isBig = true;
-        } else if (roll < 0.68) {
-          spriteName = rPick(shadows);
-          baseSize = 18 + srng() * 20;
-        } else if (roll < 0.78) {
+        } else if (roll < 0.72) {
           spriteName = rPick(grasses);
-          baseSize = 12 + srng() * 16;
-        } else if (roll < 0.88) {
+          baseSize = 10 + srng() * 12;
+        } else if (roll < 0.85) {
+          spriteName = rPick(flowers); // wildflowers in cleared area
+          baseSize = 7 + srng() * 7;
+        } else {
+          spriteName = rPick(stones);
+          baseSize = 15 + srng() * 18;
+        }
+
+      } else if (rocky > 0.68 && dist > 18) {
+        // ── ROCKY OUTCROP — boulders and tough plants ──
+        if (srng() < 0.08) continue;
+        const roll = srng();
+        if (roll < 0.35) {
           spriteName = rPick(bigStones);
-          baseSize = 30 + srng() * 35;
+          baseSize = 35 + srng() * 50;
           isBig = true;
+        } else if (roll < 0.60) {
+          spriteName = rPick(stones);
+          baseSize = 20 + srng() * 28;
+        } else if (roll < 0.75) {
+          spriteName = rPick(bushes);
+          baseSize = 22 + srng() * 25;
+        } else if (roll < 0.85) {
+          spriteName = rPick(shadows);
+          baseSize = 14 + srng() * 16;
+        } else {
+          spriteName = rPick(grasses);
+          baseSize = 9 + srng() * 11;
+        }
+
+      } else if (dist < 40 && edgeFactor < 0.3) {
+        // ── OPEN WOODLAND — scattered trees, wildflowers ──
+        if (srng() < 0.12) continue;
+        const roll = srng();
+        if (roll < 0.14) {
+          spriteName = rPick(trees);
+          baseSize = 55 + srng() * 25;
+          isBig = true; isTree = true;
+        } else if (roll < 0.22) {
+          spriteName = smallTree.length ? rPick(smallTree) : rPick(bushes);
+          baseSize = 35 + srng() * 18;
+          isBig = true;
+        } else if (roll < 0.36) {
+          spriteName = rPick(bushes);
+          baseSize = 26 + srng() * 22;
+          isBig = true;
+        } else if (roll < 0.52) {
+          spriteName = rPick(flowers);
+          baseSize = 7 + srng() * 8;
+        } else if (roll < 0.68) {
+          spriteName = rPick(grasses);
+          baseSize = 9 + srng() * 13;
+        } else if (roll < 0.78) {
+          spriteName = rPick(stones);
+          baseSize = 14 + srng() * 18;
+        } else if (roll < 0.88) {
+          spriteName = rPick(shadows);
+          baseSize = 14 + srng() * 14;
         } else {
           spriteName = rPick(logs);
-          baseSize = 40 + srng() * 30;
+          baseSize = 28 + srng() * 22;
+          isBig = true;
         }
-        if (th < 0.80 && srng() < 0.20) continue;
+
+      } else {
+        // ── DEEP FOREST — dense canopy, dark understory ──
+        // Density increases toward screen edges
+        if (srng() < 0.02) continue;
+        const roll = srng();
+        // Trees grow bigger and more frequent deeper in
+        const depthBonus = Math.min(1, (dist - 35) / 30); // 0..1
+        if (roll < 0.35 + depthBonus * 0.10) {
+          spriteName = rPick(trees);
+          baseSize = 60 + srng() * 30 + depthBonus * 10;
+          isBig = true; isTree = true;
+        } else if (roll < 0.50 + depthBonus * 0.08) {
+          spriteName = bigTree.length ? rPick(bigTree) : rPick(trees);
+          baseSize = bigTree.length ? (80 + srng() * 35) : (65 + srng() * 25);
+          isBig = true; isTree = true;
+        } else if (roll < 0.67) {
+          spriteName = rPick(bushes);
+          baseSize = 28 + srng() * 25;
+          isBig = true;
+        } else if (roll < 0.78) {
+          spriteName = rPick(shadows);
+          baseSize = 16 + srng() * 20;
+        } else if (roll < 0.86) {
+          spriteName = rPick(grasses);
+          baseSize = 10 + srng() * 14;
+        } else if (roll < 0.93) {
+          spriteName = rPick(logs); // fallen trees in old forest
+          baseSize = 38 + srng() * 35;
+          isBig = true;
+        } else {
+          spriteName = rPick(bigStones);
+          baseSize = 26 + srng() * 30;
+          isBig = true;
+        }
       }
 
       const img = sprites[spriteName];
       if (!img) continue;
 
+      // Overlap check for large sprites (trees, big bushes, big stones)
+      if (isBig) {
+        const r = sizeToRadius(baseSize);
+        if (overlapsPlaced(xPct, yPct, r)) continue;
+        placed.push({ x: xPct, y: yPct, r: r });
+      }
+
       const z = Math.floor(yPct);
       placeSprite(layer, img, xPct, yPct, baseSize, z);
 
-      // Per tips: scatter small details around large objects
+      // Deep forest: frequent tree clusters for dense canopy
+      if (isTree && dist > 30 && srng() < 0.55) {
+        placeCluster(xPct, yPct, baseSize);
+      }
+      // Woodland: occasional clusters
+      if (isTree && dist >= 22 && dist <= 30 && srng() < 0.25) {
+        placeCluster(xPct, yPct, baseSize);
+      }
+
+      // Ground cover around large objects
       if (isBig && details.length) {
-        scatterDetails(xPct, yPct, 4 + srng() * 3, 2 + Math.floor(srng() * 4));
+        scatterDetails(xPct, yPct, 3.5 + srng() * 3, 2 + Math.floor(srng() * 4));
+      }
+    }
+
+    // ── Edge tree wall: dense trees covering ~50% of map borders ──
+    const edgeAttempts = Math.floor(W * 3);
+    for (let i = 0; i < edgeAttempts; i++) {
+      let xFrac, yFrac;
+      const side = srng();
+      if (side < 0.25) {
+        xFrac = 0.005 + srng() * 0.99;
+        yFrac = 0.005 + srng() * 0.18;
+      } else if (side < 0.50) {
+        xFrac = 0.005 + srng() * 0.99;
+        yFrac = 0.82 + srng() * 0.175;
+      } else if (side < 0.75) {
+        xFrac = 0.005 + srng() * 0.18;
+        yFrac = 0.005 + srng() * 0.99;
+      } else {
+        xFrac = 0.82 + srng() * 0.175;
+        yFrac = 0.005 + srng() * 0.99;
+      }
+
+      const th = terrainHeight(xFrac * W, yFrac * H);
+      if (th < 0.55) continue;
+      const xPct = xFrac * 100, yPct = yFrac * 100;
+      if (nearStructure(xPct, yPct, exclusions)) continue;
+
+      const roll = srng();
+      let name, sz;
+      if (roll < 0.50) {
+        name = rPick(trees);
+        sz = 60 + srng() * 30;
+      } else if (roll < 0.75) {
+        name = bigTree.length ? rPick(bigTree) : rPick(trees);
+        sz = bigTree.length ? (80 + srng() * 35) : (65 + srng() * 25);
+      } else if (roll < 0.88) {
+        name = rPick(bushes);
+        sz = 28 + srng() * 22;
+      } else {
+        name = smallTree.length ? rPick(smallTree) : rPick(bushes);
+        sz = 32 + srng() * 20;
+      }
+
+      const img = sprites[name];
+      if (!img) continue;
+
+      // Use slightly tighter collision radius so trees pack closer at edges
+      const r = sizeToRadius(sz) * 0.8;
+      if (overlapsPlaced(xPct, yPct, r)) continue;
+      placed.push({ x: xPct, y: yPct, r: r });
+      placeSprite(layer, img, xPct, yPct, sz, Math.floor(yPct));
+
+      if (details.length && srng() < 0.5) {
+        scatterDetails(xPct, yPct, 2.5 + srng() * 2, 1 + Math.floor(srng() * 3));
       }
     }
   }
