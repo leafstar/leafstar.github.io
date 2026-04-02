@@ -1623,33 +1623,17 @@
     var muted = localStorage.getItem('audio-muted') === '1';
     var unlocked = false;
 
-    // ── Fade helpers ──
-    function fadeAudio(audio, targetVol, duration) {
-      var step = 0.02;
-      var interval = duration / (Math.abs(targetVol - audio.volume) / step + 1);
-      if (interval < 20) interval = 20;
-      var timer = setInterval(function() {
-        if (Math.abs(audio.volume - targetVol) < step + 0.001) {
-          audio.volume = targetVol;
-          clearInterval(timer);
-          if (targetVol === 0) audio.pause();
-        } else if (audio.volume < targetVol) {
-          audio.volume = Math.min(1, audio.volume + step);
-        } else {
-          audio.volume = Math.max(0, audio.volume - step);
-        }
-      }, interval);
+    // ── Simple play/stop with volume ──
+    function playLoop(audio, vol) {
+      if (!audio.paused) return;
+      audio.volume = vol;
+      audio.play().catch(function(e) { console.warn('Audio play failed:', audio.src, e); });
     }
 
-    function startAudio(audio, vol) {
-      audio.volume = 0;
-      audio.play().then(function() {
-        fadeAudio(audio, vol, 2000);
-      }).catch(function(e) { console.warn('Audio play failed:', e); });
-    }
-
-    function stopAudio(audio) {
-      if (!audio.paused) fadeAudio(audio, 0, 1500);
+    function stopLoop(audio) {
+      if (audio.paused) return;
+      audio.pause();
+      audio.currentTime = 0;
     }
 
     // ── State update: what should be playing? ──
@@ -1663,29 +1647,23 @@
       var weather = window.__currentWeather || 'clear';
       var night = isNight();
 
-      // Birds: play during day, stop at night
-      if (!night && ambientBirds.paused) startAudio(ambientBirds, 0.3);
-      else if (night && !ambientBirds.paused) stopAudio(ambientBirds);
+      // Birds: play during day
+      if (!night) playLoop(ambientBirds, 0.3);
+      else stopLoop(ambientBirds);
 
-      // Rain: play when raining (on top of everything)
-      if (weather === 'rain' && ambientRain.paused) startAudio(ambientRain, 0.25);
-      else if (weather !== 'rain' && !ambientRain.paused) stopAudio(ambientRain);
+      // Rain: play when raining (layered on top)
+      if (weather === 'rain') playLoop(ambientRain, 0.25);
+      else stopLoop(ambientRain);
     }
 
     // ── Frog: Poisson process at night ──
-    // Mean interval: ~8 seconds (lambda = 1/8000)
-    var frogTimer = null;
     function scheduleFrog() {
-      if (muted || !unlocked) return;
-      // Exponential distribution: -ln(U) / lambda
       var meanMs = 8000;
       var delay = -Math.log(Math.random()) * meanMs;
-      delay = Math.max(2000, Math.min(delay, 25000)); // clamp 2s - 25s
-      frogTimer = setTimeout(function() {
-        if (muted) { scheduleFrog(); return; }
-        var night = isNight();
-        if (night) {
-          frogAudio.volume = 0.15 + Math.random() * 0.2; // vary volume
+      delay = Math.max(2000, Math.min(delay, 25000));
+      setTimeout(function() {
+        if (!muted && unlocked && isNight()) {
+          frogAudio.volume = 0.15 + Math.random() * 0.2;
           frogAudio.currentTime = 0;
           frogAudio.play().catch(function(){});
         }
@@ -1699,7 +1677,7 @@
       muted = m;
       localStorage.setItem('audio-muted', m ? '1' : '0');
       if (m) {
-        [ambientBirds, ambientRain, frogAudio].forEach(function(a) { a.pause(); a.volume = 0; });
+        [ambientBirds, ambientRain, frogAudio].forEach(function(a) { a.pause(); });
       } else if (unlocked) {
         updateLayers();
       }
