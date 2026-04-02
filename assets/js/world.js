@@ -1359,7 +1359,7 @@
       };
       // Night: 23 - 4 (very dark, stars prominent)
       if (t >= 23 || t < 4) return {
-        bg: 'rgba(5,5,20,.75)', label: 'Night', icon: '\u{1F30C}',
+        bg: 'rgba(5,5,20,.82)', label: 'Night', icon: '\u{1F30C}',
         starOpacity: 1, isNight: true
       };
       // Evening: 19.5 - 23
@@ -1424,6 +1424,8 @@
 
       if (!torchActive) {
         overlay.style.background = period.bg;
+        // Night: remove blend mode so dark overlay actually darkens
+        overlay.style.mixBlendMode = period.isNight ? 'normal' : 'multiply';
       }
 
       starCanvas.style.opacity = period.starOpacity;
