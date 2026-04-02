@@ -1252,18 +1252,13 @@
 
     function setWandState(s) {
       wandState = s;
-      if (s === 0) {
+      if (s <= 1) {
         glow.style.width = '80px';
         glow.style.height = '80px';
-        if (window.__toggleTorch) window.__toggleTorch(false);
-      } else if (s === 1) {
-        glow.style.width = '80px';
-        glow.style.height = '80px';
-        if (window.__toggleTorch) window.__toggleTorch(false);
       } else {
+        // Torch: bigger, brighter glow
         glow.style.width = '120px';
         glow.style.height = '120px';
-        if (window.__toggleTorch) window.__toggleTorch(true);
       }
       updateGlowVisibility();
     }
@@ -1378,55 +1373,14 @@
     var currentPeriod = '';
     var isNightTime = false;
 
-    // ── Wand torch: spotlight overlay, toggled by user (long-press 2s) ──
-    var torchOverlay = document.createElement('div');
-    torchOverlay.id = 'torch-overlay';
-    torchOverlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:95;opacity:0;transition:opacity 0.5s linear';
-    if (stage) stage.appendChild(torchOverlay);
-    else document.body.appendChild(torchOverlay);
-
-    var mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
-    var torchActive = false;
-    document.addEventListener('mousemove', function(e) {
-      mouseX = e.clientX; mouseY = e.clientY;
-      if (torchActive) updateTorch();
-    });
-
-    function updateTorch() {
-      torchOverlay.style.background = 'radial-gradient(circle 160px at ' + mouseX + 'px ' + mouseY + 'px, ' +
-        'transparent 0%, ' +
-        'rgba(5,5,20,.3) 40%, ' +
-        'rgba(5,5,20,.7) 65%, ' +
-        'rgba(5,5,20,.85) 100%)';
-    }
-
-    // Expose torch toggle for wand glow system
-    window.__toggleTorch = function(on) {
-      torchActive = on;
-      if (on) {
-        overlay.style.background = 'transparent';
-        torchOverlay.style.opacity = '1';
-        updateTorch();
-      } else {
-        torchOverlay.style.opacity = '0';
-        // Restore current time period overlay
-        var now = new Date();
-        var period = getTimePeriod(now.getHours(), now.getMinutes());
-        overlay.style.background = period.bg;
-      }
-    };
-
     function updateTime() {
       var now = new Date();
       var h = now.getHours(), m = now.getMinutes();
       var period = getTimePeriod(h, m);
       isNightTime = !!period.isNight;
 
-      if (!torchActive) {
-        overlay.style.background = period.bg;
-        // Night: remove blend mode so dark overlay actually darkens
-        overlay.style.mixBlendMode = period.isNight ? 'normal' : 'multiply';
-      }
+      overlay.style.background = period.bg;
+      overlay.style.mixBlendMode = period.isNight ? 'normal' : 'multiply';
 
       starCanvas.style.opacity = period.starOpacity;
       var timeStr = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
