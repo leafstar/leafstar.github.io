@@ -1278,9 +1278,261 @@
     });
   }
 
+  // ─── Time of Day system (real local time) ────────────────────────────────
+  function initTimeOfDay() {
+    var overlay = document.createElement('div');
+    overlay.id = 'time-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:90;transition:background 120s linear,opacity 120s linear;mix-blend-mode:multiply';
+    var stage = document.getElementById('world-stage');
+    if (stage) stage.appendChild(overlay);
+    else document.body.appendChild(overlay);
+
+    // Star canvas for nighttime
+    var starCanvas = document.createElement('canvas');
+    starCanvas.id = 'star-canvas';
+    starCanvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:89;opacity:0;transition:opacity 60s linear';
+    if (stage) stage.appendChild(starCanvas);
+    else document.body.appendChild(starCanvas);
+
+    function resizeStars() {
+      starCanvas.width = window.innerWidth;
+      starCanvas.height = window.innerHeight;
+    }
+    resizeStars();
+    window.addEventListener('resize', resizeStars);
+
+    // Generate fixed star positions
+    var stars = [];
+    for (var i = 0; i < 120; i++) {
+      stars.push({
+        x: Math.random(),
+        y: Math.random() * 0.7, // mostly upper sky
+        r: 0.5 + Math.random() * 1.5,
+        twinkleSpeed: 0.5 + Math.random() * 2,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    function drawStars(time) {
+      var ctx = starCanvas.getContext('2d');
+      var w = starCanvas.width, h = starCanvas.height;
+      ctx.clearRect(0, 0, w, h);
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        var brightness = 0.4 + 0.6 * Math.sin(time / 1000 * s.twinkleSpeed + s.phase);
+        ctx.beginPath();
+        ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,240,' + (brightness * 0.8).toFixed(2) + ')';
+        ctx.fill();
+      }
+    }
+
+    // Time periods and their visual settings
+    // Returns { bg, overlayOpacity, starOpacity, label, icon }
+    function getTimePeriod(hour, minute) {
+      var t = hour + minute / 60;
+      if (t >= 5 && t < 6.5) return {
+        bg: 'rgba(180,100,40,.18)', label: 'Dawn', icon: '\u{1F305}',
+        starOpacity: Math.max(0, 1 - (t - 5) / 1.5)
+      };
+      if (t >= 6.5 && t < 8) return {
+        bg: 'rgba(200,160,60,.08)', label: 'Morning', icon: '\u{1F304}',
+        starOpacity: 0
+      };
+      if (t >= 8 && t < 16.5) return {
+        bg: 'transparent', label: 'Day', icon: '\u2600\uFE0F',
+        starOpacity: 0
+      };
+      if (t >= 16.5 && t < 18) return {
+        bg: 'rgba(200,120,30,.15)', label: 'Sunset', icon: '\u{1F307}',
+        starOpacity: 0
+      };
+      if (t >= 18 && t < 19.5) return {
+        bg: 'rgba(60,30,80,.25)', label: 'Dusk', icon: '\u{1F306}',
+        starOpacity: (t - 18) / 1.5
+      };
+      // Night: 19.5 - 5
+      return {
+        bg: 'rgba(10,10,40,.4)', label: 'Night', icon: '\u{1F319}',
+        starOpacity: 1
+      };
+    }
+
+    // HUD time indicator
+    var timeHud = document.createElement('div');
+    timeHud.id = 'time-hud';
+    timeHud.style.cssText = 'position:fixed;top:1.2rem;left:1.2rem;z-index:10000;background:rgba(0,0,0,.5);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;font-family:"Courier New",monospace;font-size:12px;backdrop-filter:blur(4px);display:flex;align-items:center;gap:6px;user-select:none';
+    document.body.appendChild(timeHud);
+
+    var currentPeriod = '';
+    function updateTime() {
+      var now = new Date();
+      var h = now.getHours(), m = now.getMinutes();
+      var period = getTimePeriod(h, m);
+      overlay.style.background = period.bg;
+      starCanvas.style.opacity = period.starOpacity;
+      var timeStr = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+      timeHud.innerHTML = '<span>' + period.icon + '</span><span>' + timeStr + ' ' + period.label + '</span>';
+      currentPeriod = period.label;
+    }
+    updateTime();
+    setInterval(updateTime, 30000); // update every 30s
+
+    // Animate stars
+    var starVisible = false;
+    function animStars(time) {
+      var now = new Date();
+      var period = getTimePeriod(now.getHours(), now.getMinutes());
+      if (period.starOpacity > 0) {
+        starVisible = true;
+        drawStars(time);
+      } else if (starVisible) {
+        starVisible = false;
+        var ctx = starCanvas.getContext('2d');
+        ctx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+      }
+      requestAnimationFrame(animStars);
+    }
+    requestAnimationFrame(animStars);
+
+    // Expose for weather system
+    window.__currentTimePeriod = function() { return currentPeriod; };
+  }
+
+  // ─── Weather system ─────────────────────────────────────────────────────
+  function initWeather() {
+    var stage = document.getElementById('world-stage');
+    if (!stage) return;
+
+    // Weather canvas (for rain/snow particles)
+    var wCanvas = document.createElement('canvas');
+    wCanvas.id = 'weather-canvas';
+    wCanvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:91;opacity:0;transition:opacity 3s linear';
+    stage.appendChild(wCanvas);
+
+    // Fog overlay
+    var fogDiv = document.createElement('div');
+    fogDiv.id = 'fog-overlay';
+    fogDiv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:88;opacity:0;transition:opacity 5s linear;background:linear-gradient(180deg,rgba(180,180,180,.0) 0%,rgba(200,200,200,.25) 30%,rgba(200,200,200,.3) 50%,rgba(180,180,180,.15) 80%,rgba(160,160,160,.0) 100%)';
+    stage.appendChild(fogDiv);
+
+    function resizeCanvas() {
+      wCanvas.width = window.innerWidth;
+      wCanvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    var WEATHERS = ['clear', 'clear', 'clear', 'rain', 'rain', 'snow', 'fog', 'fog'];
+    // Pick weather from seeded daily random (same weather all day, changes daily)
+    var today = new Date();
+    var daySeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+    var weatherIdx = ((daySeed * 1664525 + 1013904223) >>> 0) % WEATHERS.length;
+    var currentWeather = WEATHERS[weatherIdx];
+
+    // Season influence: more snow in Dec-Feb, more rain in Mar-May
+    var month = today.getMonth(); // 0-indexed
+    if (month >= 11 || month <= 1) {
+      // Winter: higher snow chance
+      if (currentWeather === 'rain') currentWeather = 'snow';
+    } else if (month >= 5 && month <= 7) {
+      // Summer: less snow
+      if (currentWeather === 'snow') currentWeather = 'clear';
+    }
+
+    // Particles
+    var particles = [];
+    var maxParticles = currentWeather === 'rain' ? 400 : (currentWeather === 'snow' ? 200 : 0);
+
+    function spawnParticle() {
+      if (currentWeather === 'rain') {
+        return {
+          x: Math.random() * wCanvas.width * 1.2 - wCanvas.width * 0.1,
+          y: -10,
+          vx: -1.5 + Math.random() * -1,
+          vy: 12 + Math.random() * 6,
+          len: 12 + Math.random() * 10,
+          alpha: 0.2 + Math.random() * 0.3
+        };
+      } else {
+        return {
+          x: Math.random() * wCanvas.width,
+          y: -10,
+          vx: Math.sin(Date.now() / 3000) * 0.5 + (Math.random() - 0.5) * 0.3,
+          vy: 0.5 + Math.random() * 1.2,
+          r: 1 + Math.random() * 3,
+          alpha: 0.4 + Math.random() * 0.4,
+          wobble: Math.random() * Math.PI * 2
+        };
+      }
+    }
+
+    // Initialize particles
+    if (maxParticles > 0) {
+      for (var i = 0; i < maxParticles; i++) {
+        var p = spawnParticle();
+        p.y = Math.random() * wCanvas.height; // start scattered
+        particles.push(p);
+      }
+      wCanvas.style.opacity = '1';
+    }
+
+    if (currentWeather === 'fog') {
+      fogDiv.style.opacity = '1';
+    }
+
+    var ctx = wCanvas.getContext('2d');
+
+    function animWeather() {
+      if (maxParticles === 0) return;
+      ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+      var w = wCanvas.width, h = wCanvas.height;
+
+      for (var i = 0; i < particles.length; i++) {
+        var p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (currentWeather === 'rain') {
+          ctx.strokeStyle = 'rgba(180,200,230,' + p.alpha.toFixed(2) + ')';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + p.vx * 1.5, p.y + p.len);
+          ctx.stroke();
+        } else {
+          // Snow: gentle wobble
+          p.wobble += 0.02;
+          p.x += Math.sin(p.wobble) * 0.3;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,' + p.alpha.toFixed(2) + ')';
+          ctx.fill();
+        }
+
+        // Reset when off screen
+        if (p.y > h + 20 || p.x < -30 || p.x > w + 30) {
+          var np = spawnParticle();
+          particles[i] = np;
+        }
+      }
+      requestAnimationFrame(animWeather);
+    }
+    requestAnimationFrame(animWeather);
+
+    // Weather HUD indicator (append to time hud)
+    var weatherIcons = { clear: '\u2600\uFE0F', rain: '\u{1F327}\uFE0F', snow: '\u2744\uFE0F', fog: '\u{1F32B}\uFE0F' };
+    var weatherNames = { clear: 'Clear', rain: 'Rain', snow: 'Snow', fog: 'Fog' };
+    var weatherHud = document.createElement('div');
+    weatherHud.id = 'weather-hud';
+    weatherHud.style.cssText = 'position:fixed;top:1.2rem;left:10.5rem;z-index:10000;background:rgba(0,0,0,.5);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;font-family:"Courier New",monospace;font-size:12px;backdrop-filter:blur(4px);display:flex;align-items:center;gap:6px;user-select:none';
+    weatherHud.innerHTML = '<span>' + (weatherIcons[currentWeather] || '') + '</span><span>' + (weatherNames[currentWeather] || 'Clear') + '</span>';
+    document.body.appendChild(weatherHud);
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow(); });
+    document.addEventListener('DOMContentLoaded', () => { init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow(); initTimeOfDay(); initWeather(); });
   } else {
-    init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow();
+    init(); initNPCs(); initToggle(); initFontToggle(); initWandSelector(); initWandGlow(); initTimeOfDay(); initWeather();
   }
 })();
