@@ -1252,13 +1252,33 @@
 
     function setWandState(s) {
       wandState = s;
+      var c = (window.__glowColors && window.__glowColors[window.__glowColorIdx || 0]) ||
+        { halo: [140,60,255], mid: [120,40,220], core: [180,120,255], tint: [240,220,255] };
       if (s <= 1) {
+        // Small glow: fixed core only, no pulse
         glow.style.width = '80px';
         glow.style.height = '80px';
+        halo.style.animation = 'none';
+        halo.style.opacity = '0';
+        core.style.display = '';
+        core.style.inset = '12px';
+        applyGlowColor(c);
+        // Restore normal time overlay
+        if (window.__setTorchMode) window.__setTorchMode(false);
       } else {
-        // Torch: bigger, brighter glow
+        // Torch: illumination hole (inner) + pulsing halo (outer), no core
         glow.style.width = '120px';
         glow.style.height = '120px';
+        halo.style.animation = 'wandPulse 1.4s ease-in-out infinite';
+        halo.style.opacity = '';
+        core.style.display = 'none';
+        applyGlowColor(c);
+        // Punch a light hole in the dark overlay — apply mask immediately at current cursor pos
+        if (window.__setTorchMode) window.__setTorchMode(true);
+        if (window.__updateTorchPos) {
+          var gx = parseInt(glow.style.left) || 0, gy = parseInt(glow.style.top) || 0;
+          window.__updateTorchPos(gx, gy);
+        }
       }
       updateGlowVisibility();
     }
@@ -1267,6 +1287,10 @@
     document.addEventListener('mousemove', function(e) {
       glow.style.left = e.clientX + 'px';
       glow.style.top  = e.clientY + 'px';
+      // Update torch hole position
+      if (wandState === 2 && window.__updateTorchPos) {
+        window.__updateTorchPos(e.clientX, e.clientY);
+      }
 
       var target = document.elementFromPoint(e.clientX, e.clientY);
       var wasActive = hoverActive;
@@ -1354,7 +1378,7 @@
       };
       // Night: 23 - 4 (very dark, stars prominent)
       if (t >= 23 || t < 4) return {
-        bg: 'rgba(5,5,20,.82)', label: 'Night', icon: '\u{1F30C}',
+        bg: 'rgba(5,5,20,.93)', label: 'Night', icon: '\u{1F30C}',
         starOpacity: 1, isNight: true
       };
       // Evening: 19.5 - 23
@@ -1372,6 +1396,27 @@
 
     var currentPeriod = '';
     var isNightTime = false;
+    var torchOn = false;
+    var torchX = 0, torchY = 0;
+    var currentBg = 'transparent';
+
+    window.__setTorchMode = function(on) {
+      torchOn = on;
+      if (!on) {
+        // Remove mask — background was never touched
+        overlay.style.webkitMaskImage = 'none';
+        overlay.style.maskImage = 'none';
+      }
+    };
+    window.__updateTorchPos = function(x, y) {
+      torchX = x; torchY = y;
+      if (torchOn) {
+        // CSS mask punches a hole — background stays UNTOUCHED
+        var mask = 'radial-gradient(circle 60px at ' + x + 'px ' + y + 'px, transparent 0%, black 100%)';
+        overlay.style.webkitMaskImage = mask;
+        overlay.style.maskImage = mask;
+      }
+    };
 
     function updateTime() {
       var now = new Date();
@@ -1379,7 +1424,8 @@
       var period = getTimePeriod(h, m);
       isNightTime = !!period.isNight;
 
-      overlay.style.background = period.bg;
+      currentBg = period.bg;
+      overlay.style.background = period.bg;  // ALWAYS set — torch uses mask, not background
       overlay.style.mixBlendMode = period.isNight ? 'normal' : 'multiply';
 
       starCanvas.style.opacity = period.starOpacity;
