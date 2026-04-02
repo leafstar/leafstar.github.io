@@ -358,7 +358,7 @@
         el.style.cssText = [
           'position:absolute',
           'left:' + a.xp + '%', 'top:' + a.yp + '%',
-          'width:' + (a.size * BG_SCALE) + 'px', 'height:' + Math.round(a.size * 2 * BG_SCALE) + 'px',
+          'width:' + a.size + 'px', 'height:' + Math.round(a.size * 2) + 'px',
           'z-index:' + a.z,
           'pointer-events:none', 'image-rendering:pixelated',
           'background-size:contain', 'background-repeat:no-repeat',
@@ -374,7 +374,7 @@
         el.style.cssText = [
           'position:absolute',
           'left:' + a.xp + '%', 'top:' + a.yp + '%',
-          'width:' + (a.size * BG_SCALE) + 'px',
+          'width:' + a.size + 'px',
           'z-index:' + a.z,
           'pointer-events:none', 'image-rendering:pixelated',
         ].join(';');
@@ -408,7 +408,7 @@
         el.style.cssText = [
           'position:absolute',
           'left:' + ox.toFixed(1) + '%', 'top:' + oy.toFixed(1) + '%',
-          'width:' + Math.round((12 + srng() * 10) * BG_SCALE) + 'px',
+          'width:' + Math.round(12 + srng() * 10) + 'px',
           'z-index:' + (a.z - 1),
           'pointer-events:none', 'image-rendering:pixelated',
         ].join(';');
@@ -464,7 +464,7 @@
       'position:absolute',
       'left:' + xPct.toFixed(1) + '%',
       'top:'  + yPct.toFixed(1) + '%',
-      'width:' + Math.round(size * BG_SCALE) + 'px',
+      'width:' + Math.round(size) + 'px',
       'z-index:' + z,
       'pointer-events:none',
       'image-rendering:pixelated',
@@ -615,11 +615,14 @@
   }
 
   // ─── Init ────────────────────────────────────────────────────────────────
-  function render(canvas, spriteLayer, sprites, tiles, W, H) {
+  // Terrain canvas renders at 2x viewport for detail; sprites stay at 1x
+  const BG_SCALE = 2;
+
+  function render(canvas, spriteLayer, sprites, tiles, viewW, viewH) {
     resetRng();
-    drawTerrain(canvas, W, H, tiles);
-    placeStructures(spriteLayer, sprites, W, H);
-    placeFlora(spriteLayer, sprites, W, H);
+    drawTerrain(canvas, viewW * BG_SCALE, viewH * BG_SCALE, tiles);
+    placeStructures(spriteLayer, sprites, viewW, viewH);
+    placeFlora(spriteLayer, sprites, viewW, viewH);
   }
 
   function loadAssets() {
@@ -629,17 +632,14 @@
     ]);
   }
 
-  // Background renders at 2x viewport, CSS scales it down to 50% for detail
-  const BG_SCALE = 2;
-
   function init() {
     const stage = document.getElementById('world-stage');
     if (!stage) return;
     const canvas      = document.getElementById('world-canvas');
     const spriteLayer = document.getElementById('world-sprite-layer');
-    const W = (stage.offsetWidth  || window.innerWidth) * BG_SCALE;
-    const H = (stage.offsetHeight || window.innerHeight) * BG_SCALE;
-    setupCanvas(canvas, W, H);
+    const W = stage.offsetWidth  || window.innerWidth;
+    const H = stage.offsetHeight || window.innerHeight;
+    setupCanvas(canvas, W * BG_SCALE, H * BG_SCALE);
 
     loadAssets().then(([sprites, tiles]) => {
       render(canvas, spriteLayer, sprites, tiles, W, H);
@@ -649,9 +649,9 @@
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        const nW = (stage.offsetWidth || window.innerWidth) * BG_SCALE;
-        const nH = (stage.offsetHeight || window.innerHeight) * BG_SCALE;
-        setupCanvas(canvas, nW, nH);
+        const nW = stage.offsetWidth || window.innerWidth;
+        const nH = stage.offsetHeight || window.innerHeight;
+        setupCanvas(canvas, nW * BG_SCALE, nH * BG_SCALE);
         spriteLayer.innerHTML = '';
         loadAssets().then(([s, t]) => { render(canvas, spriteLayer, s, t, nW, nH); initNPCs(); });
       }, 300);
@@ -694,8 +694,8 @@
     if (!layer) return;
     var stage = document.getElementById('world-stage');
     if (!stage) return;
-    var W = (stage.offsetWidth || window.innerWidth) * BG_SCALE;
-    var H = (stage.offsetHeight || window.innerHeight) * BG_SCALE;
+    var W = stage.offsetWidth || window.innerWidth;
+    var H = stage.offsetHeight || window.innerHeight;
 
     // ── Walking patrol NPCs ──
     var walkers = [
@@ -718,7 +718,7 @@
       if (!span) return;
 
       var el = document.createElement('div');
-      var sz = Math.round(npc.w * npc.scale * BG_SCALE);
+      var sz = Math.round(npc.w * npc.scale);
       el.style.cssText = 'position:absolute;width:' + sz + 'px;height:' + sz + 'px;background:url(' + NPC_BASE + npc.sprite + ') 0 0 / ' + (npc.frames * 100) + '% 100%;image-rendering:pixelated;z-index:' + Math.floor(bestY) + ';pointer-events:none';
       el.style.top = bestY + '%';
       el.style.left = span.x0 + '%';
@@ -759,7 +759,7 @@
     idlers.forEach(function(npc) {
       if (!isWalkable(npc.xp, npc.yp, W, H)) return;
       var el = document.createElement('div');
-      var sz = Math.round(npc.w * npc.scale * BG_SCALE);
+      var sz = Math.round(npc.w * npc.scale);
       el.style.cssText = 'position:absolute;width:' + sz + 'px;height:' + sz + 'px;background:url(' + NPC_BASE + npc.sprite + ') 0 0 / ' + (npc.frames * 100) + '% 100%;image-rendering:pixelated;z-index:' + Math.floor(npc.yp) + ';pointer-events:none';
       el.style.top = npc.yp + '%';
       el.style.left = npc.xp + '%';
