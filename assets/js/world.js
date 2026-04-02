@@ -1256,17 +1256,35 @@
       if (!glowLocked) glow.style.opacity = '0';
     });
 
-    // Long-press (1s) toggles persistent glow on/off
-    var glowLocked = false, holdTimer = null;
+    // Long-press: 1s = toggle glow, 2s = toggle torch (bright spotlight)
+    var glowLocked = false, torchMode = false;
+    var holdTimer1 = null, holdTimer2 = null;
     document.addEventListener('mousedown', function(e) {
       if (e.button !== 0) return;
-      holdTimer = setTimeout(function() {
+      holdTimer1 = setTimeout(function() {
+        // 1s: toggle normal glow
         glowLocked = !glowLocked;
         glow.style.opacity = glowLocked ? '1' : (active ? '1' : '0');
       }, 1000);
+      holdTimer2 = setTimeout(function() {
+        // 2s: toggle torch mode (bright spotlight)
+        torchMode = !torchMode;
+        if (window.__toggleTorch) window.__toggleTorch(torchMode);
+        // Also lock glow on in torch mode
+        if (torchMode) {
+          glowLocked = true;
+          glow.style.opacity = '1';
+          glow.style.width = '120px';
+          glow.style.height = '120px';
+        } else {
+          glow.style.width = '80px';
+          glow.style.height = '80px';
+        }
+      }, 2000);
     });
     document.addEventListener('mouseup', function() {
-      clearTimeout(holdTimer);
+      clearTimeout(holdTimer1);
+      clearTimeout(holdTimer2);
     });
   }
 
@@ -1282,7 +1300,7 @@
     // Star canvas for nighttime
     var starCanvas = document.createElement('canvas');
     starCanvas.id = 'star-canvas';
-    starCanvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:89;opacity:0;transition:opacity 60s linear';
+    starCanvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:96;opacity:0;transition:opacity 60s linear';
     if (stage) stage.appendChild(starCanvas);
     else document.body.appendChild(starCanvas);
 
@@ -1331,14 +1349,14 @@
         bg: 'rgba(60,30,80,.25)', label: 'Dusk', icon: '\u{1F306}',
         starOpacity: (t - 18) / 1.5
       };
-      // Deep Night: 23 - 4 (very dark, wand torch mode)
+      // Night: 23 - 4 (very dark, stars prominent)
       if (t >= 23 || t < 4) return {
-        bg: 'rgba(5,5,20,.75)', label: 'Deep Night', icon: '\u{1F30C}',
-        starOpacity: 1, deepNight: true
+        bg: 'rgba(5,5,20,.75)', label: 'Night', icon: '\u{1F30C}',
+        starOpacity: 1, isNight: true
       };
-      // Night: 19.5 - 23
+      // Evening: 19.5 - 23
       return {
-        bg: 'rgba(10,10,40,.4)', label: 'Night', icon: '\u{1F319}',
+        bg: 'rgba(10,10,40,.4)', label: 'Evening', icon: '\u{1F319}',
         starOpacity: 1
       };
     }
@@ -1350,19 +1368,20 @@
     document.body.appendChild(timeHud);
 
     var currentPeriod = '';
-    var isDeepNight = false;
+    var isNightTime = false;
 
-    // ── Wand torch: spotlight that follows mouse in deep night ──
+    // ── Wand torch: spotlight overlay, toggled by user (long-press 2s) ──
     var torchOverlay = document.createElement('div');
     torchOverlay.id = 'torch-overlay';
-    torchOverlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:95;opacity:0;transition:opacity 3s linear';
+    torchOverlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:95;opacity:0;transition:opacity 0.5s linear';
     if (stage) stage.appendChild(torchOverlay);
     else document.body.appendChild(torchOverlay);
 
     var mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+    var torchActive = false;
     document.addEventListener('mousemove', function(e) {
       mouseX = e.clientX; mouseY = e.clientY;
-      if (isDeepNight) updateTorch();
+      if (torchActive) updateTorch();
     });
 
     function updateTorch() {
@@ -1373,21 +1392,30 @@
         'rgba(5,5,20,.85) 100%)';
     }
 
+    // Expose torch toggle for wand glow system
+    window.__toggleTorch = function(on) {
+      torchActive = on;
+      if (on) {
+        overlay.style.background = 'transparent';
+        torchOverlay.style.opacity = '1';
+        updateTorch();
+      } else {
+        torchOverlay.style.opacity = '0';
+        // Restore current time period overlay
+        var now = new Date();
+        var period = getTimePeriod(now.getHours(), now.getMinutes());
+        overlay.style.background = period.bg;
+      }
+    };
+
     function updateTime() {
       var now = new Date();
       var h = now.getHours(), m = now.getMinutes();
       var period = getTimePeriod(h, m);
+      isNightTime = !!period.isNight;
 
-      if (period.deepNight) {
-        // Deep night: use torch overlay instead of flat color
-        overlay.style.background = 'transparent';
-        torchOverlay.style.opacity = '1';
-        isDeepNight = true;
-        updateTorch();
-      } else {
+      if (!torchActive) {
         overlay.style.background = period.bg;
-        torchOverlay.style.opacity = '0';
-        isDeepNight = false;
       }
 
       starCanvas.style.opacity = period.starOpacity;
@@ -1404,16 +1432,16 @@
       var ctx = starCanvas.getContext('2d');
       var w = starCanvas.width, h = starCanvas.height;
       ctx.clearRect(0, 0, w, h);
-      var boost = isDeepNight ? 1.0 : 0.85;
+      var boost = isNightTime ? 1.0 : 0.85;
       for (var i = 0; i < stars.length; i++) {
         var s = stars[i];
         var brightness = 0.4 + 0.6 * Math.sin(time / 1000 * s.twinkleSpeed + s.phase);
         ctx.beginPath();
-        ctx.arc(s.x * w, s.y * h, isDeepNight ? s.r * 1.3 : s.r, 0, Math.PI * 2);
+        ctx.arc(s.x * w, s.y * h, isNightTime ? s.r * 1.3 : s.r, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255,220,80,' + (brightness * boost).toFixed(2) + ')';
         ctx.fill();
         // Add glow halo in deep night
-        if (isDeepNight && s.r > 1) {
+        if (isNightTime && s.r > 1) {
           ctx.beginPath();
           ctx.arc(s.x * w, s.y * h, s.r * 3, 0, Math.PI * 2);
           ctx.fillStyle = 'rgba(255,220,80,' + (brightness * 0.12).toFixed(2) + ')';
@@ -1439,7 +1467,7 @@
 
     // Expose for weather/audio system
     window.__currentTimePeriod = function() { return currentPeriod; };
-    window.__isDeepNight = function() { return isDeepNight; };
+    window.__isNightTime = function() { return isNightTime; };
   }
 
   // ─── Weather system ─────────────────────────────────────────────────────
@@ -1677,7 +1705,7 @@
 
     function isNight() {
       var tp = window.__currentTimePeriod ? window.__currentTimePeriod() : 'Day';
-      return tp === 'Night' || tp === 'Dusk';
+      return tp === 'Night' || tp === 'Evening' || tp === 'Dusk';
     }
 
     function updateLayers() {
