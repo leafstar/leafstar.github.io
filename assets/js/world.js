@@ -1066,7 +1066,7 @@
 
     var btn = document.createElement('div');
     btn.id = 'font-toggle-btn';
-    btn.style.cssText = 'position:fixed;bottom:1.2rem;right:1.2rem;z-index:10000;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:42px;height:42px;text-align:center;line-height:42px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;font-size:20px;padding:0';
+    btn.style.cssText = 'position:fixed;bottom:1.2rem;left:4.2rem;z-index:10000;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:38px;height:38px;text-align:center;line-height:38px;backdrop-filter:blur(4px);user-select:none;transition:background .2s;font-size:18px;padding:0';
     // Quill icon when in fancy mode, "Aa" when in readable mode
     function updateBtn() {
       if (isReadable()) {
@@ -1756,7 +1756,7 @@
     sfxClick.volume = 0.4;
     sfxHover.volume = 0.15;
 
-    var muted = localStorage.getItem('audio-muted') === '1';
+    var muted = localStorage.getItem('audio-unmuted') !== '1';
     var unlocked = false;
 
     function playLoop(audio, vol) {
@@ -1809,7 +1809,7 @@
     // ── Mute / unmute ──
     function setMuted(m) {
       muted = m;
-      localStorage.setItem('audio-muted', m ? '1' : '0');
+      localStorage.setItem('audio-unmuted', m ? '0' : '1');
       if (m) {
         [ambientBirds, ambientRain, frogAudio].forEach(function(a) { a.pause(); });
       } else if (unlocked) {
