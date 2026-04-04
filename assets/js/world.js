@@ -1882,11 +1882,15 @@
     btn.innerHTML = muted ? iconOff : iconOn;
     btn.onclick = function(e) {
       e.stopPropagation();
+      // First click unlocks audio
+      if (!unlocked) {
+        unlocked = true;
+        document.removeEventListener('click', unlock);
+        document.removeEventListener('keydown', unlock);
+      }
       var newMuted = !muted;
       setMuted(newMuted);
       btn.innerHTML = newMuted ? iconOff : iconOn;
-      // First click also unlocks
-      if (!unlocked) { unlocked = true; if (!newMuted) updateAmbient(); }
     };
     document.body.appendChild(btn);
 
