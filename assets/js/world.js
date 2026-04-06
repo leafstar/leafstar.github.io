@@ -1564,22 +1564,48 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    var WEATHERS = ['clear', 'clear', 'clear', 'rain', 'rain', 'snow', 'fog', 'fog'];
-    // Pick weather from seeded daily random (same weather all day, changes daily)
-    var today = new Date();
-    var daySeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-    var weatherIdx = ((daySeed * 1664525 + 1013904223) >>> 0) % WEATHERS.length;
-    var currentWeather = WEATHERS[weatherIdx];
+    var currentWeather = 'clear';
 
-    // Season influence: more snow in Dec-Feb, more rain in Mar-May
-    var month = today.getMonth(); // 0-indexed
-    if (month >= 11 || month <= 1) {
-      // Winter: higher snow chance
-      if (currentWeather === 'rain') currentWeather = 'snow';
-    } else if (month >= 5 && month <= 7) {
-      // Summer: less snow
-      if (currentWeather === 'snow') currentWeather = 'clear';
+    // Fetch real weather from Open-Meteo (free, no API key)
+    function fetchRealWeather() {
+      // Step 1: get visitor location via IP
+      fetch('https://ipapi.co/json/')
+        .then(function(r) { return r.json(); })
+        .then(function(geo) {
+          var lat = geo.latitude, lon = geo.longitude;
+          // Step 2: get current weather from Open-Meteo
+          return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=weather_code');
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var code = data.current && data.current.weather_code;
+          var w = mapWeatherCode(code);
+          if (w !== currentWeather) switchWeather(w);
+        })
+        .catch(function(e) { console.warn('[weather] API failed, using default:', e.message); });
     }
+
+    // WMO weather codes → our types
+    function mapWeatherCode(code) {
+      if (code == null) return 'clear';
+      // 0-3: clear/cloudy
+      if (code <= 3) return 'clear';
+      // 45,48: fog
+      if (code === 45 || code === 48) return 'fog';
+      // 51-67: drizzle/rain
+      if (code >= 51 && code <= 67) return 'rain';
+      // 71-77: snow
+      if (code >= 71 && code <= 77) return 'snow';
+      // 80-82: rain showers
+      if (code >= 80 && code <= 82) return 'rain';
+      // 85-86: snow showers
+      if (code >= 85 && code <= 86) return 'snow';
+      // 95-99: thunderstorm
+      if (code >= 95) return 'rain';
+      return 'clear';
+    }
+
+    fetchRealWeather();
 
     // Particles
     var particles = [];
