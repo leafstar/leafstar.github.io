@@ -29,11 +29,13 @@ title: ""
 
   <section id="research" class="academic-section">
     <h2>Research Interests</h2>
-    <p>
-      Federated Reinforcement Learning; theoretical convergence guarantees for RL algorithms
-      (e.g., Fed-Q-Learning and Fed-Actor-Critic Learning), especially under
-      <em>heterogeneous environments</em>.
-    </p>
+    <ul class="research-badges">
+      <li>Federated Reinforcement Learning</li>
+      <li>Reinforcement Learning</li>
+      <li>Theoretical Guarantee</li>
+      <li>Heterogeneous Environments</li>
+      <li>Personalized Policy Training</li>
+    </ul>
   </section>
 
   <section id="publications" class="academic-section">
