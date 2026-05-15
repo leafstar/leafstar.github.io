@@ -10,29 +10,19 @@ title: ""
       <img src="/assets/images/portrait.jpg" alt="Muxing Wang" />
     </div>
     <div class="profile-text">
-      <h1>Muxing Wang</h1>
       <p class="affiliation">PhD Candidate &middot; Northeastern University</p>
       <p class="bio">
         I am a PhD candidate in Computer Engineering at Northeastern University, advised by
         <a href="https://lilisu3.sites.northeastern.edu/">Prof. Lili Su</a>.
         My research focuses on <strong>federated reinforcement learning</strong>, particularly
-        theoretical convergence guarantees for federated RL algorithms — such as Fed-Q-Learning
-        and Fed-Actor-Critic — under heterogeneous environments.
+        theoretical convergence guarantees for federated RL algorithms &mdash; such as Fed-Q-Learning
+        and Fed-Actor-Critic &mdash; under heterogeneous environments.
       </p>
       <p class="bio">
         Before Northeastern, I received an MSc in Statistics and Operational Research from the
         University of Edinburgh (with Distinction), working with
         <a href="https://sites.google.com/site/paulindani/">Prof. Daniel Paulin</a>, and a
         Bachelor of Computer Science from the University of Waterloo.
-      </p>
-      <p class="contact-links">
-        <a href="mailto:wang.muxin@northeastern.edu">Email</a>
-        <span class="dot">·</span>
-        <a href="https://scholar.google.com/citations?user=wsdIDtsAAAAJ&amp;hl=en">Google Scholar</a>
-        <span class="dot">·</span>
-        <a href="https://github.com/leafstar">GitHub</a>
-        <span class="dot">·</span>
-        <a href="/Muxing_resume.pdf">CV</a>
       </p>
     </div>
   </section>
@@ -81,21 +71,21 @@ title: ""
     <h2>Education</h2>
     <ul class="timeline">
       <li class="timeline-entry">
-        <div class="timeline-period">2023 – Present</div>
+        <div class="timeline-period">2023 &ndash; Present</div>
         <div class="timeline-body">
           <p class="timeline-place"><strong>Northeastern University</strong>, Boston, MA, USA</p>
           <p class="timeline-detail">PhD Candidate in Computer Engineering &middot; Advisor: Prof. Lili Su</p>
         </div>
       </li>
       <li class="timeline-entry">
-        <div class="timeline-period">2021 – 2022</div>
+        <div class="timeline-period">2021 &ndash; 2022</div>
         <div class="timeline-body">
           <p class="timeline-place"><strong>University of Edinburgh</strong>, Edinburgh, UK</p>
           <p class="timeline-detail">MSc in Statistics and Operational Research, with Distinction &middot; Advisor: Prof. Daniel Paulin</p>
         </div>
       </li>
       <li class="timeline-entry">
-        <div class="timeline-period">2015 – 2020</div>
+        <div class="timeline-period">2015 &ndash; 2020</div>
         <div class="timeline-body">
           <p class="timeline-place"><strong>University of Waterloo</strong>, Waterloo, Canada</p>
           <p class="timeline-detail">Bachelor of Computer Science</p>

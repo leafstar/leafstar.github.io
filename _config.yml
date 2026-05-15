@@ -16,16 +16,10 @@ minimal: false             # use a dark header
 # Menu
 
 navigation:                # accepts {file, title, url, icon, sidebaricon}
-  - {url: "/", title: "Home"}
   - {url: "/#publications", title: "Publications"}
   - {url: "/#education", title: "Education"}
-  - {url: "/blog/", title: "Blog"}
-  - {url: "https://leafstar.github.io/Muxing_resume.pdf", title: "CV"}
 
-external:                  # shows a footer with social links - for available icons see fontawesome.com/icons
-  - {title: Mail, icon: envelope, url: "mailto:wang.muxin@northeastern.edu"}
-  - {title: Github, icon: github, url: "https://github.com/leafstar"}
-  - {title: Google Scholar, url: "https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en"}
+external: false
 
 comments:
 #  disqus_shortname: ""    # see https://disqus.com/
