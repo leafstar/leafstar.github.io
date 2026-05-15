@@ -9,15 +9,18 @@ date_format: "%B %d, %Y"
 # Layout
 
 show_excerpts: false       # show article excerpts on the home page
-show_frame: true           # adds a gray frame to the site
+show_frame: false          # standard centered layout with header nav
 show_sidebar: false        # show a sidebar instead of the usual header
 minimal: false             # use a dark header
 
 # Menu
 
 navigation:                # accepts {file, title, url, icon, sidebaricon}
+  - {url: "/", title: "Home"}
+  - {url: "/#publications", title: "Publications"}
+  - {url: "/#education", title: "Education"}
   - {url: "/blog/", title: "Blog"}
-  - {url: "https://leafstar.github.io/MuxingWang.pdf", title: "CV"}
+  - {url: "https://leafstar.github.io/Muxing_resume.pdf", title: "CV"}
 
 external:                  # shows a footer with social links - for available icons see fontawesome.com/icons
   - {title: Mail, icon: envelope, url: "mailto:wang.muxin@northeastern.edu"}
