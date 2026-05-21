@@ -11,12 +11,65 @@ from pathlib import Path
 OUTPUT = Path("assets/data/visitor-countries.json")
 
 
-def empty_payload(message):
-    return {
+def empty_payload(message, detail=None):
+    payload = {
         "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "countries": [],
         "error": message,
     }
+
+    if detail:
+        payload["detail"] = detail
+
+    return payload
+
+
+def read_error_detail(exc):
+    if isinstance(exc, urllib.error.HTTPError):
+        try:
+            body = exc.read().decode("utf-8", errors="replace").strip()
+        except Exception:
+            body = ""
+
+        return f"HTTP {exc.code} {exc.reason}: {body}"
+
+    return str(exc)
+
+
+def fetch_json(url, token):
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def fetch_locations(site, token):
+    urls = []
+
+    for params in (
+        {"start": "2000-01-01T00:00:00Z", "limit": "100"},
+        {"start": "2000-01-01T00:00:00+00:00", "limit": "100"},
+        {"limit": "100"},
+    ):
+        query = urllib.parse.urlencode(params)
+        urls.append(f"https://{site}.goatcounter.com/api/v0/stats/locations?{query}")
+
+    errors = []
+    for url in urls:
+        try:
+            return fetch_json(url, token)
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+            detail = read_error_detail(exc)
+            errors.append(detail)
+            print(f"Failed to fetch {url}: {detail}", file=sys.stderr)
+
+    raise RuntimeError(" | ".join(errors))
 
 
 def normalize_count(value):
@@ -87,28 +140,12 @@ def main():
         write_payload(empty_payload("missing GOATCOUNTER_TOKEN"))
         return 0
 
-    query = urllib.parse.urlencode(
-        {
-            "start": "2000-01-01T00:00:00Z",
-            "limit": "100",
-        }
-    )
-    url = f"https://{site}.goatcounter.com/api/v0/stats/locations?{query}"
-    request = urllib.request.Request(
-        url,
-        headers={
-            "Accept": "application/json",
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        },
-    )
-
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError) as exc:
-        print(f"Failed to fetch GoatCounter locations: {exc}", file=sys.stderr)
-        write_payload(empty_payload("fetch failed"))
+        payload = fetch_locations(site, token)
+    except (RuntimeError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        detail = read_error_detail(exc)
+        print(f"Failed to fetch GoatCounter locations: {detail}", file=sys.stderr)
+        write_payload(empty_payload("fetch failed", detail))
         return 0
 
     countries = []
