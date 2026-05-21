@@ -35,6 +35,7 @@ title: ""
       <li>Theoretical Guarantee</li>
       <li>Heterogeneous Environments</li>
       <li>Personalized Policy Training</li>
+      <li>Exoskeleton</li>
     </ul>
   </section>
 
@@ -116,21 +117,51 @@ title: ""
       </div>
     </div>
     <div class="hud-abilities">
-      <a href="/Muxing_resume.pdf" class="hud-skill" title="Curriculum Vitae">
+      <a href="/Muxing_resume.pdf" class="hud-skill" data-hotkey="d" title="Curriculum Vitae">
         <kbd>D</kbd><img class="skill-icon" src="/assets/images/hud/skill-cv.png" alt="CV" /><span class="skill-name">CV</span>
       </a>
-      <a href="{{ '/blog/' | relative_url }}" class="hud-skill" title="Blog">
+      <a href="{{ '/blog/' | relative_url }}" class="hud-skill" data-hotkey="t" title="Blog">
         <kbd>T</kbd><img class="skill-icon" src="/assets/images/hud/skill-blog.png" alt="Blog" /><span class="skill-name">Blog</span>
       </a>
-      <a href="https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en" class="hud-skill" title="Google Scholar">
+      <a href="https://scholar.google.com/citations?user=wsdIDtsAAAAJ&hl=en" class="hud-skill" data-hotkey="e" title="Google Scholar">
         <kbd>E</kbd><img class="skill-icon" src="/assets/images/hud/skill-scholar.png" alt="Scholar" /><span class="skill-name">Scholar</span>
       </a>
-      <a href="https://github.com/leafstar" class="hud-skill" title="GitHub">
+      <a href="https://github.com/leafstar" class="hud-skill" data-hotkey="f" title="GitHub">
         <kbd>F</kbd><img class="skill-icon" src="/assets/images/hud/skill-github.png" alt="GitHub" /><span class="skill-name">GitHub</span>
       </a>
-      <a href="mailto:wang.muxin@northeastern.edu" class="hud-skill" title="Email">
+      <a href="mailto:wang.muxin@northeastern.edu" class="hud-skill" data-hotkey="w" title="Email">
         <kbd>W</kbd><img class="skill-icon" src="/assets/images/hud/skill-mail.png" alt="Mail" /><span class="skill-name">Mail</span>
       </a>
     </div>
   </div>
 </div>
+
+<script>
+  (function() {
+    var skills = Array.prototype.slice.call(document.querySelectorAll('.hud-skill[data-hotkey]'));
+    if (!skills.length) return;
+
+    var hotkeys = skills.reduce(function(map, skill) {
+      map[skill.dataset.hotkey] = skill;
+      return map;
+    }, {});
+
+    document.addEventListener('keydown', function(event) {
+      var target = event.target;
+      var tagName = target && target.tagName ? target.tagName.toLowerCase() : '';
+
+      if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
+      if (target && (target.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select')) return;
+
+      var skill = hotkeys[event.key.toLowerCase()];
+      if (!skill) return;
+
+      event.preventDefault();
+      skill.classList.add('is-pressed');
+      window.setTimeout(function() {
+        skill.classList.remove('is-pressed');
+      }, 160);
+      skill.click();
+    });
+  })();
+</script>
