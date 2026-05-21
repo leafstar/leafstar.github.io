@@ -1,0 +1,29 @@
+name: Update visitor countries
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      GOATCOUNTER_SITE: leafstar
+      GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Fetch GoatCounter country stats
+        run: |
+          python3 scripts/update_visitor_countries.py
+
+      - name: Commit updated country stats
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Update visitor country stats
+          file_pattern: assets/data/visitor-countries.json
