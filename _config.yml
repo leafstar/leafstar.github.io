@@ -21,6 +21,10 @@ navigation:                # accepts {file, title, url, icon, sidebaricon}
 
 external: false
 
+# GoatCounter analytics. Create https://leafstar.goatcounter.com and enable
+# "Allow adding visitor counts on your website" before the public counter works.
+goatcounter_code: "leafstar"
+
 comments:
 #  disqus_shortname: ""    # see https://disqus.com/
 #  isso_domain: ""         # see https://posativ.org/isso/
