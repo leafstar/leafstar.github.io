@@ -1,5 +1,10 @@
 {
-  "countries": [],
-  "error": "fetch failed",
-  "updated_at": "2026-05-21T18:50:50+00:00"
+  "countries": [
+    {
+      "code": "US",
+      "count": 7,
+      "name": "United States"
+    }
+  ],
+  "updated_at": "2026-05-21T19:02:45+00:00"
 }
