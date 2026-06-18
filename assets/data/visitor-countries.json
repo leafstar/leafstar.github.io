@@ -2,7 +2,7 @@
   "countries": [
     {
       "code": "US",
-      "count": 17,
+      "count": 20,
       "name": "United States"
     },
     {
@@ -16,5 +16,5 @@
       "name": "Japan"
     }
   ],
-  "updated_at": "2026-06-18T15:53:18+00:00"
+  "updated_at": "2026-06-18T20:39:04+00:00"
 }
