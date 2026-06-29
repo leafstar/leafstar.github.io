@@ -2,7 +2,7 @@
   "countries": [
     {
       "code": "US",
-      "count": 32,
+      "count": 33,
       "name": "United States"
     },
     {
@@ -21,5 +21,5 @@
       "name": "Singapore"
     }
   ],
-  "updated_at": "2026-06-29T16:11:31+00:00"
+  "updated_at": "2026-06-29T20:15:44+00:00"
 }
