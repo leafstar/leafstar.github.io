@@ -2,7 +2,7 @@
   "countries": [
     {
       "code": "US",
-      "count": 30,
+      "count": 32,
       "name": "United States"
     },
     {
@@ -14,7 +14,12 @@
       "code": "JP",
       "count": 1,
       "name": "Japan"
+    },
+    {
+      "code": "SG",
+      "count": 1,
+      "name": "Singapore"
     }
   ],
-  "updated_at": "2026-06-29T05:00:07+00:00"
+  "updated_at": "2026-06-29T11:23:50+00:00"
 }
