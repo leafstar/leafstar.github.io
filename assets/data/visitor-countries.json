@@ -16,10 +16,15 @@
       "name": "Japan"
     },
     {
+      "code": "KR",
+      "count": 1,
+      "name": "South Korea"
+    },
+    {
       "code": "SG",
       "count": 1,
       "name": "Singapore"
     }
   ],
-  "updated_at": "2026-07-07T10:00:48+00:00"
+  "updated_at": "2026-07-07T15:15:34+00:00"
 }
