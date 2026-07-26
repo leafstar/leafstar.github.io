@@ -2,7 +2,7 @@
   "countries": [
     {
       "code": "US",
-      "count": 44,
+      "count": 47,
       "name": "United States"
     },
     {
@@ -16,6 +16,11 @@
       "name": "Japan"
     },
     {
+      "code": "IT",
+      "count": 1,
+      "name": "Italy"
+    },
+    {
       "code": "KR",
       "count": 1,
       "name": "South Korea"
@@ -26,5 +31,5 @@
       "name": "Singapore"
     }
   ],
-  "updated_at": "2026-07-26T13:57:29+00:00"
+  "updated_at": "2026-07-26T19:35:27+00:00"
 }
