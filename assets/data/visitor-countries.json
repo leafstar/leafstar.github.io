@@ -16,6 +16,11 @@
       "name": "Japan"
     },
     {
+      "code": "CH",
+      "count": 1,
+      "name": "Switzerland"
+    },
+    {
       "code": "IN",
       "count": 1,
       "name": "India"
@@ -36,5 +41,5 @@
       "name": "Singapore"
     }
   ],
-  "updated_at": "2026-08-12T13:48:16+00:00"
+  "updated_at": "2026-08-12T19:27:03+00:00"
 }
