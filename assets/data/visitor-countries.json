@@ -1,6 +1,45 @@
 {
-  "countries": [],
-  "detail": "HTTP 503 Backend fetch failed: <!DOCTYPE html>\n<html>\n  <head>\n    <title>503 Backend fetch failed</title>\n  </head>\n  <body>\n    <h1>Error 503 Backend fetch failed</h1>\n    <p>Backend fetch failed</p>\n    <h3>Guru Meditation:</h3>\n    <p>XID: 967540797</p>\n    <hr>\n    <p>Vinyl Cache server</p>\n  </body>\n</html> | HTTP 503 Backend fetch failed: <!DOCTYPE html>\n<html>\n  <head>\n    <title>503 Backend fetch failed</title>\n  </head>\n  <body>\n    <h1>Error 503 Backend fetch failed</h1>\n    <p>Backend fetch failed</p>\n    <h3>Guru Meditation:</h3>\n    <p>XID: 743114331</p>\n    <hr>\n    <p>Vinyl Cache server</p>\n  </body>\n</html> | The read operation timed out",
-  "error": "fetch failed",
-  "updated_at": "2026-08-20T19:00:38+00:00"
+  "countries": [
+    {
+      "code": "US",
+      "count": 61,
+      "name": "United States"
+    },
+    {
+      "code": "HK",
+      "count": 8,
+      "name": "Hong Kong"
+    },
+    {
+      "code": "JP",
+      "count": 2,
+      "name": "Japan"
+    },
+    {
+      "code": "CH",
+      "count": 1,
+      "name": "Switzerland"
+    },
+    {
+      "code": "IN",
+      "count": 1,
+      "name": "India"
+    },
+    {
+      "code": "IT",
+      "count": 1,
+      "name": "Italy"
+    },
+    {
+      "code": "KR",
+      "count": 1,
+      "name": "South Korea"
+    },
+    {
+      "code": "SG",
+      "count": 1,
+      "name": "Singapore"
+    }
+  ],
+  "updated_at": "2026-08-21T01:57:55+00:00"
 }
