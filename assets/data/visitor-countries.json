@@ -2,7 +2,7 @@
   "countries": [
     {
       "code": "US",
-      "count": 62,
+      "count": 63,
       "name": "United States"
     },
     {
@@ -41,5 +41,5 @@
       "name": "South Korea"
     }
   ],
-  "updated_at": "2026-08-21T18:56:34+00:00"
+  "updated_at": "2026-08-22T01:50:32+00:00"
 }
