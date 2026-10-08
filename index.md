@@ -36,6 +36,7 @@ title: ""
       <li>Heterogeneous Environments</li>
       <li>Personalized Policy Training</li>
       <li>Exoskeleton</li>
+      <li>Autonomous Driving</li>
     </ul>
   </section>
 
@@ -44,6 +45,12 @@ title: ""
 
     <h3 class="pub-group">Accepted</h3>
     <ol class="pub-list">
+      <li class="pub-item">
+        <p class="pub-title">Post-Training in End-to-End Autonomous Driving: Taxonomy, Methods, and Challenges</p>
+        <p class="pub-authors">Ruining Yang<sup>*</sup>, <strong>Muxing Wang</strong><sup>*</sup>, Yixiao Chen, Tongfei Guo, Yi Xu, Can Cui, Zichong Yang, Yitian Zhang, Ziran Wang, Yun Fu, Lili Su</p>
+        <p class="pub-venue">DriveX Workshop: Foundation Models for Autonomous Driving, <em>ECCV</em> 2026 <span class="pub-badge">Oral</span> <span class="pub-badge">Best Paper Award</span></p>
+        <p class="pub-notes"><sup>*</sup> Equal contribution &middot; <a href="https://openreview.net/forum?id=URrOiLxDd0">OpenReview</a> &middot; <a href="https://arxiv.org/abs/2607.08072">arXiv</a> &middot; <a href="https://github.com/RYNing/Awesome-Post-Training-In-Autonomous-Driving-Papers">GitHub</a> &middot; <a href="https://coe.northeastern.edu/news/su-and-fu-receive-best-paper-award-at-eccv-drivex-workshop/">News</a></p>
+      </li>
       <li class="pub-item">
         <p class="pub-title">On the Convergence Rates of Federated Q-Learning across Heterogeneous Environments</p>
         <p class="pub-authors"><strong>Muxing Wang</strong>, Pengkun Yang, Lili Su</p>
