@@ -26,12 +26,15 @@
     --se-plot: #262536; --se-grid: #34324A; --se-ink: #E6E1F2;
     --se-muted: #B9ADD6; --se-card: #232231;
   }
+  :root:not([data-theme="light"]) .se-root select { color-scheme: dark; }
 }
 :root[data-theme="dark"] .se-root,
 .se-root.se-dark {
   --se-plot: #262536; --se-grid: #34324A; --se-ink: #E6E1F2;
   --se-muted: #B9ADD6; --se-card: #232231;
 }
+:root[data-theme="dark"] .se-root select,
+.se-root.se-dark select { color-scheme: dark; }
 
 .se-root .se-row {
   display: flex; align-items: center; flex-wrap: wrap;
@@ -48,8 +51,11 @@
 }
 .se-root select {
   font: inherit; font-size: 14px; padding: 4px 6px; border-radius: 6px;
-  border: 1px solid var(--se-muted); background: transparent; color: var(--se-ink);
+  border: 1px solid var(--se-muted); background: var(--se-card); color: var(--se-ink);
 }
+/* The option list is drawn by the browser, which would otherwise pair the
+   light dark-mode text with its default white background. */
+.se-root select option { background: var(--se-card); color: var(--se-ink); }
 .se-root .se-check { font-size: 14px; color: var(--se-muted); margin-left: 8px; }
 
 .se-root .se-legend {
