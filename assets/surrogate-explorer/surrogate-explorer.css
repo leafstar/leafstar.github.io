@@ -1,0 +1,77 @@
+/* Surrogate explorer — scoped styles. Every rule lives under .se-root so it
+   will not leak into the host site. Override the --se-* variables to retheme. */
+
+.se-root {
+  --se-plot:  #DDE6F3;  /* plot background  (Pale Mist Blue)     */
+  --se-grid:  #FFFFFF;  /* grid lines                            */
+  --se-ink:   #3F345B;  /* text, anchor point (Indigo Plum)      */
+  --se-muted: #6A5A8F;  /* labels, ticks      (Muted Violet)     */
+  --se-eta:   #7FA4C8;  /* eta curve          (Periwinkle Blue)  */
+  --se-sur:   #D08AB6;  /* surrogate L        (Orchid Pink)      */
+  --se-lb:    #8FB79B;  /* TRPO lower bound   (Soft Mint Green)  */
+  --se-eval:  #B59BC8;  /* evaluation points  (Lilac Lavender)   */
+  --se-card:  #F3F5FA;  /* readout cards                         */
+  --se-height: 360px;   /* canvas height                         */
+
+  color: var(--se-ink);
+  font-family: inherit;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+.se-root *, .se-root *::before, .se-root *::after { box-sizing: inherit; }
+
+/* Dark theme: follows the OS unless the site pins data-theme="light". */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .se-root {
+    --se-plot: #262536; --se-grid: #34324A; --se-ink: #E6E1F2;
+    --se-muted: #B9ADD6; --se-card: #232231;
+  }
+}
+:root[data-theme="dark"] .se-root,
+.se-root.se-dark {
+  --se-plot: #262536; --se-grid: #34324A; --se-ink: #E6E1F2;
+  --se-muted: #B9ADD6; --se-card: #232231;
+}
+
+.se-root .se-row {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 12px; margin: 0 0 10px;
+}
+.se-root .se-row > label:first-child {
+  font-size: 14px; color: var(--se-muted); min-width: 150px;
+}
+.se-root input[type="range"] { flex: 1; min-width: 180px; accent-color: var(--se-muted); }
+.se-root input[type="checkbox"] { accent-color: var(--se-muted); }
+.se-root .se-val {
+  font-variant-numeric: tabular-nums; font-weight: 600;
+  min-width: 56px; text-align: right;
+}
+.se-root select {
+  font: inherit; font-size: 14px; padding: 4px 6px; border-radius: 6px;
+  border: 1px solid var(--se-muted); background: transparent; color: var(--se-ink);
+}
+.se-root .se-check { font-size: 14px; color: var(--se-muted); margin-left: 8px; }
+
+.se-root .se-legend {
+  display: flex; flex-wrap: wrap; gap: 18px;
+  font-size: 13px; color: var(--se-muted); margin: 10px 0 6px;
+}
+.se-root .se-legend i {
+  display: inline-block; width: 22px; height: 0; border-top: 3px solid;
+  vertical-align: middle; margin-right: 6px;
+}
+.se-root .se-legend .se-off { opacity: 0.4; }
+
+.se-root canvas {
+  display: block; width: 100%; height: var(--se-height); border-radius: 10px;
+}
+
+.se-root .se-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px; margin: 14px 0;
+}
+.se-root .se-card { background: var(--se-card); border-radius: 8px; padding: 10px 12px; }
+.se-root .se-card .se-l { font-size: 12px; color: var(--se-muted); }
+.se-root .se-card .se-n { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.se-root .se-note { font-size: 13px; color: var(--se-muted); margin: 0; }
