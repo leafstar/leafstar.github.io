@@ -1,6 +1,8 @@
 title: "Muxing Wang"
 author: "Muxing Wang"
-description: "NEU"
+tagline: "PhD Candidate at Northeastern University"
+description: "Muxing Wang is a PhD candidate in Computer Engineering at Northeastern University, working on reinforcement learning, federated learning, and representation learning."
+url: "https://leafstar.github.io"
 permalink: /:title/
 lang: "en"
 excerpt_separator: "\n\n\n"
@@ -31,3 +33,11 @@ comments:
 
 plugins:
  - jekyll-feed
+ - jekyll-seo-tag
+
+# Profiles linked from the homepage's structured data (jekyll-seo-tag)
+social:
+  name: "Muxing Wang"
+  links:
+    - "https://scholar.google.com/citations?user=wsdIDtsAAAAJ"
+    - "https://github.com/leafstar"

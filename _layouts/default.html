@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang | default: "en" }}">
-<title>{% if page.title %}{{ page.title | escape }} | {% endif %}{{ site.title | escape }}</title>
 <meta charset="{{ site.encoding }}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="author" content="{{ page.author | default: site.author | escape }}">
-<meta name="generator" content="Jekyll v{{ jekyll.version }}">
-<link rel="canonical" href="{{ page.url | absolute_url }}">
+{% seo %}
+<link rel="icon" href="{{ "/favicon.ico" | relative_url }}" sizes="any">
+<link rel="apple-touch-icon" href="{{ "/assets/images/apple-touch-icon.png" | relative_url }}">
 {% if site.show_frame %}
 <link rel="stylesheet" href="{{ "/assets/css/frame.css" | relative_url }}?v={{ site.github.build_revision | default: site.time | date: "%s" }}">
 {% else %}
@@ -43,7 +42,7 @@
 
 {% if site.goatcounter_code %}
 <script data-goatcounter="https://{{ site.goatcounter_code }}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-<div id="site-counter" data-goatcounter-code="{{ site.goatcounter_code }}" data-countries-url="{{ "/assets/data/visitor-countries.json" | relative_url }}" style="position:fixed;bottom:1.2rem;right:1.2rem;z-index:10000;background:rgba(0,0,0,.45);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;font-family:'Courier New',monospace;font-size:11px;backdrop-filter:blur(4px);display:flex;gap:10px;user-select:none">
+<div id="site-counter" data-goatcounter-code="{{ site.goatcounter_code }}" data-countries-url="{{ "/assets/data/visitor-countries.json" | relative_url }}">
   <span>&#x1F4DC; Visits <span id="goatcounter-site-visits">-</span></span>
   <span id="visitor-countries" hidden>&#x1F30E; <span id="visitor-country-list"></span></span>
 </div>

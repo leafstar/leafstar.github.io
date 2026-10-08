@@ -7,7 +7,7 @@ $rule: #e3e3e3
 .academic-page
   max-width: 56rem
   margin: 0 auto
-  padding-bottom: 7rem   // room for the fixed HUD bar
+  padding: 0 1.5em 7rem   // side gutter for narrow screens; room at the bottom for the fixed HUD bar
 
 // ─── Profile (photo + bio) ─────────────────────────────────────────────────
 
@@ -75,6 +75,30 @@ $rule: #e3e3e3
 
 .academic-section p
   line-height: 1.65
+
+// ─── News ──────────────────────────────────────────────────────────────────
+
+.news-list
+  list-style: none
+  padding: 0
+  margin: 0
+
+.news-list li
+  display: grid
+  grid-template-columns: 5.5rem 1fr
+  gap: 1rem
+  margin: 0
+  padding: .3rem 0
+  line-height: 1.55
+
+.news-date
+  color: $muted
+  font-size: .92rem
+  font-weight: 600
+  white-space: nowrap
+  padding-top: .05rem
+
+// ─── Research interests ────────────────────────────────────────────────────
 
 .research-badges
   display: flex
@@ -145,6 +169,11 @@ $rule: #e3e3e3
   color: $muted
   font-size: .88rem
 
+.pub-item .pub-links
+  color: $muted
+  font-size: .88rem
+  margin-top: .15rem
+
 .pub-badge
   display: inline-block
   font-style: normal
@@ -210,6 +239,17 @@ $rule: #e3e3e3
   .profile-text h1
     font-size: 1.7rem
 
+  .profile-text .affiliation
+    text-align: center
+
+  // justified text leaves wide gaps between words on narrow screens
+  .profile-text .bio
+    text-align: left
+
+  .news-list li
+    grid-template-columns: 4.6rem 1fr
+    gap: .8rem
+
   .timeline-entry
     grid-template-columns: 1fr
     gap: .25rem
@@ -234,8 +274,8 @@ $rule: #e3e3e3
   .pub-authors
     color: #d0d0d0
 
-  .profile-text .affiliation, .pub-venue, .pub-notes, .pub-group,
-  .contact-links, .timeline-period, .timeline-detail
+  .profile-text .affiliation, .pub-venue, .pub-notes, .pub-item .pub-links, .pub-group,
+  .contact-links, .timeline-period, .timeline-detail, .news-date
     color: rgba(255,255,255,.65)
 
   .pub-badge
@@ -427,3 +467,40 @@ $rule: #e3e3e3
   .hud-abilities
     margin-left: .6rem
     gap: 3px
+  .hud ~ #site-counter
+    bottom: calc(88px + .5rem)   // HUD height on small screens
+
+// Phones: drop the name/bars (the header already shows the name) so the bar fits on screen
+@media (max-width: 480px)
+  .hud-info
+    display: none
+
+@media (max-width: 340px)
+  .hud-portrait
+    display: none
+  .hud-abilities
+    margin-left: 0
+
+// ─── Visit counter ─────────────────────────────────────────────────────────
+
+#site-counter
+  position: fixed
+  bottom: 1.2rem
+  right: 1.2rem
+  z-index: 10000
+  display: flex
+  gap: 10px
+  padding: 4px 10px
+  border: 1px solid rgba(255,255,255,.15)
+  border-radius: 6px
+  background: rgba(0,0,0,.45)
+  color: rgba(255,255,255,.7)
+  font-family: "Courier New", monospace
+  font-size: 11px
+  backdrop-filter: blur(4px)
+  user-select: none
+
+// Too narrow for the counter to sit beside the HUD bar (~575px wide): stack it above the bar instead
+@media (min-width: 641px) and (max-width: 70em)
+  .hud ~ #site-counter
+    bottom: calc(108px + .5rem)   // HUD height: 90px + padding + border
