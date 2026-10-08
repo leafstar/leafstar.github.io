@@ -81,8 +81,11 @@
     reward: 0.3,          // reward c for action L in s1
     showLowerBound: false,
     thetaRange: 6,        // theta axis spans [-thetaRange, thetaRange]
-    samples: 400          // curve resolution
+    samples: 400,         // curve resolution
+    equalAspect: true     // in policy space, use one scale for both axes
   };
+
+  const MARGIN = { l: 56, r: 16, t: 14, b: 40 };  // canvas space around the plot box
 
   function template(id) {
     return `
@@ -131,10 +134,13 @@
       </p>`;
   }
 
-  function niceTicks(lo, hi, n) {
-    const raw = (hi - lo) / n;
+  function niceStep(span, n) {
+    const raw = span / n;
     const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || 10 * mag;
+    return [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || 10 * mag;
+  }
+
+  function ticks(lo, hi, step) {
     const out = [];
     for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-12; v += step) out.push(+v.toFixed(10));
     return out;
@@ -170,40 +176,74 @@
     el.gam.value = Math.round(opt.gamma * 100);
     el.cval.textContent = opt.reward;
 
-    function draw(series, points, xr, yr, xlabel) {
+    // One vertical range for every gamma on the slider, so the plot neither
+    // rescales nor changes height while gamma is dragged.
+    const yr = (() => {
+      let lo = Infinity, hi = -Infinity;
+      for (let gi = +el.gam.min; gi <= +el.gam.max; gi++) {
+        for (let i = 0; i <= opt.samples; i++) {
+          const e = eta(i / opt.samples, gi / 100, opt.reward);
+          lo = Math.min(lo, e); hi = Math.max(hi, e);
+        }
+      }
+      const span = (hi - lo) || 1;
+      return [lo - 0.15 * span, hi + 0.3 * span];
+    })();
+
+    // With equal axes the policy-space plot box is (width) x (width * eta range),
+    // since p spans [0, 1]. The canvas keeps that height in both modes, up to --se-height.
+    function fitHeight() {
+      const W = el.canvas.clientWidth;
+      if (!W) return;
+      const cap = parseFloat(css('--se-height')) || 480;
+      const natural = (W - MARGIN.l - MARGIN.r) * (yr[1] - yr[0]) + MARGIN.t + MARGIN.b;
+      const H = `${Math.round(opt.equalAspect ? Math.min(cap, natural) : cap)}px`;
+      if (el.canvas.style.height !== H) el.canvas.style.height = H;
+    }
+
+    function draw(series, points, xr, yr, xlabel, equal) {
       const dpr = window.devicePixelRatio || 1;
       const W = el.canvas.clientWidth, H = el.canvas.clientHeight;
       if (!W || !H) return;
       el.canvas.width = W * dpr; el.canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const m = { l: 56, r: 16, t: 14, b: 40 };
-      const pw = W - m.l - m.r, ph = H - m.t - m.b;
-      const X = x => m.l + (x - xr[0]) / (xr[1] - xr[0]) * pw;
+      const m = MARGIN;
+      let pw = W - m.l - m.r, ph = H - m.t - m.b, ox = m.l;
+      if (equal) {
+        // Same pixels per unit on both axes; centre the box if the height cap narrows it.
+        const k = Math.min(pw / (xr[1] - xr[0]), ph / (yr[1] - yr[0]));
+        ox += (pw - k * (xr[1] - xr[0])) / 2;
+        pw = k * (xr[1] - xr[0]); ph = k * (yr[1] - yr[0]);
+      }
+      const X = x => ox + (x - xr[0]) / (xr[1] - xr[0]) * pw;
       const Y = y => m.t + (1 - (y - yr[0]) / (yr[1] - yr[0])) * ph;
       const font = getComputedStyle(container).fontFamily || 'sans-serif';
 
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = css('--se-plot');
-      ctx.fillRect(m.l, m.t, pw, ph);
+      ctx.fillRect(ox, m.t, pw, ph);
 
+      // Equal axes also share one tick step, so the grid cells are square.
+      const xstep = niceStep(xr[1] - xr[0], 8);
+      const ystep = equal ? xstep : niceStep(yr[1] - yr[0], 6);
       ctx.strokeStyle = css('--se-grid'); ctx.lineWidth = 1;
       ctx.fillStyle = css('--se-muted'); ctx.font = `12px ${font}`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      for (const t of niceTicks(xr[0], xr[1], 8)) {
+      for (const t of ticks(xr[0], xr[1], xstep)) {
         ctx.beginPath(); ctx.moveTo(X(t), m.t); ctx.lineTo(X(t), m.t + ph); ctx.stroke();
         ctx.fillText(String(+t.toFixed(3)), X(t), m.t + ph + 6);
       }
       ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-      for (const t of niceTicks(yr[0], yr[1], 6)) {
-        ctx.beginPath(); ctx.moveTo(m.l, Y(t)); ctx.lineTo(m.l + pw, Y(t)); ctx.stroke();
-        ctx.fillText(String(+t.toFixed(3)), m.l - 6, Y(t));
+      for (const t of ticks(yr[0], yr[1], ystep)) {
+        ctx.beginPath(); ctx.moveTo(ox, Y(t)); ctx.lineTo(ox + pw, Y(t)); ctx.stroke();
+        ctx.fillText(String(+t.toFixed(3)), ox - 6, Y(t));
       }
       ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = css('--se-ink');
-      ctx.fillText(xlabel, m.l + pw / 2, H - 2);
+      ctx.fillText(xlabel, ox + pw / 2, m.t + ph + m.b - 2);
 
       ctx.save();
-      ctx.beginPath(); ctx.rect(m.l, m.t, pw, ph); ctx.clip();
+      ctx.beginPath(); ctx.rect(ox, m.t, pw, ph); ctx.clip();
       for (const s of series) {
         if (s.hidden) continue;
         ctx.strokeStyle = s.color; ctx.lineWidth = 2.5;
@@ -229,6 +269,7 @@
     }
 
     function update() {
+      fitHeight();
       const mode = el.mode.value, g = el.gam.value / 100, c = opt.reward;
       const xa = fromSlider(+el.anc.value, mode), xe = fromSlider(+el.ev.value, mode);
       const pa = toP(xa, mode), pe = toP(xe, mode);
@@ -236,16 +277,12 @@
       const [x0, x1] = range(mode);
 
       const etaPts = [], surPts = [], lbPts = [];
-      let mn = Infinity, mx = -Infinity;
       for (let i = 0; i <= opt.samples; i++) {
         const x = x0 + (x1 - x0) * i / opt.samples, p = toP(x, mode);
-        const e = eta(p, g, c);
-        etaPts.push({ x, y: e });
+        etaPts.push({ x, y: eta(p, g, c) });
         surPts.push({ x, y: S.L(p) });
         lbPts.push({ x, y: S.lower(p) });
-        mn = Math.min(mn, e); mx = Math.max(mx, e);
       }
-      const span = (mx - mn) || 1;
       const showLB = el.lb.checked;
       const ee = eta(pe, g, c), le = S.L(pe);
 
@@ -261,8 +298,9 @@
           { x: xe, y: le, fill: css('--se-eval'), stroke: css('--se-sur'), diamond: true }
         ],
         [x0, x1],
-        [mn - 0.4 * span, mx + 0.5 * span],
-        mode === 'p' ? 'p = π(R|s)' : 'θ   (p = σ(θ))'
+        yr,
+        mode === 'p' ? 'p = π(R|s)' : 'θ   (p = σ(θ))',
+        opt.equalAspect && mode === 'p'
       );
 
       const sym = mode === 'p' ? 'p' : 'θ';
@@ -298,7 +336,9 @@
     el.lb.addEventListener('change', update);
     el.mode.addEventListener('change', onModeChange);
 
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    // update() may resize the canvas it observes; deferring a frame avoids a ResizeObserver loop.
+    const ro = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => requestAnimationFrame(update)) : null;
     if (ro) ro.observe(el.canvas); else window.addEventListener('resize', update);
     const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
     if (mq && mq.addEventListener) mq.addEventListener('change', update);

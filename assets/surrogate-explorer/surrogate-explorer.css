@@ -11,7 +11,7 @@
   --se-lb:    #8FB79B;  /* TRPO lower bound   (Soft Mint Green)  */
   --se-eval:  #B59BC8;  /* evaluation points  (Lilac Lavender)   */
   --se-card:  #F3F5FA;  /* readout cards                         */
-  --se-height: 360px;   /* canvas height                         */
+  --se-height: 480px;   /* maximum canvas height                 */
 
   color: var(--se-ink);
   font-family: inherit;
