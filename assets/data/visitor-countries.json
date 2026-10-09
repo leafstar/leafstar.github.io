@@ -2,7 +2,7 @@
   "countries": [
     {
       "code": "US",
-      "count": 90,
+      "count": 91,
       "name": "United States"
     },
     {
@@ -41,5 +41,5 @@
       "name": "Italy"
     }
   ],
-  "updated_at": "2026-10-08T23:22:12+00:00"
+  "updated_at": "2026-10-09T06:11:23+00:00"
 }
